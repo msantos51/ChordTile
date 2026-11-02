@@ -77,8 +77,8 @@ sons Sonivox (Apache 2.0) vêm no pacote do alphaTab; o script copia também os 
 
 ### Fontes
 
-Geist e Geist Mono (OFL) vêm do [Fontsource](https://fontsource.org) e são servidas pelo próprio
-site (`src/fonts.ts`). Não há pedidos a servidores de terceiros, o que evita enviar o IP de quem visita à Google.
+Geist, Geist Mono e Plus Jakarta Sans (títulos da página inicial), todas OFL, vêm do [Fontsource](https://fontsource.org)
+e são servidas pelo próprio site (`src/fonts.ts`, `src/landing.ts`). Não há pedidos a servidores de terceiros, o que evita enviar o IP de quem visita à Google.
 
 ## Músicas guardadas e tutorial
 

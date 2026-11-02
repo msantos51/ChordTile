@@ -12,16 +12,22 @@
 <meta name="description" content="Carrega um ficheiro Guitar Pro e aprende a música por secções e compassos, com cores por nota, tablatura sincronizada, loop e velocidade ajustável.">
 </head>
 <body class="landing">
-<div class="l-bg" aria-hidden="true">
-  <svg class="l-notes" viewBox="0 0 600 300" preserveAspectRatio="xMidYMid slice">
-    <path d="M40 210 C160 120 300 250 600 90" />
-    <path d="M40 222 C160 132 300 262 600 102" />
-    <path d="M40 234 C160 144 300 274 600 114" />
-    <path d="M40 246 C160 156 300 286 600 126" />
-    <path d="M40 258 C160 168 300 298 600 138" />
-    <g class="l-note"><ellipse cx="250" cy="196" rx="11" ry="8" transform="rotate(-20 250 196)"/><path d="M260 192 V120"/></g>
-    <g class="l-note"><ellipse cx="380" cy="168" rx="11" ry="8" transform="rotate(-20 380 168)"/><ellipse cx="430" cy="150" rx="11" ry="8" transform="rotate(-20 430 150)"/><path d="M390 164 V96 L440 80 V146"/></g>
-    <g class="l-note"><ellipse cx="520" cy="118" rx="11" ry="8" transform="rotate(-20 520 118)"/><path d="M530 114 V44 q14 10 18 26"/></g>
+<!-- Decoração: pauta com notas e ondas de luz azul (como no design escolhido) -->
+<div class="l-deco" aria-hidden="true">
+  <svg class="l-staff" viewBox="0 0 800 420" preserveAspectRatio="xMidYMin slice">
+    <g class="l-staff-lines">
+      <path d="M0 330 C180 300 300 120 520 110 S760 40 800 20"/>
+      <path d="M0 346 C180 316 300 136 520 126 S760 56 800 36"/>
+      <path d="M0 362 C180 332 300 152 520 142 S760 72 800 52"/>
+      <path d="M0 378 C180 348 300 168 520 158 S760 88 800 68"/>
+      <path d="M0 394 C180 364 300 184 520 174 S760 104 800 84"/>
+    </g>
+    <g class="l-staff-notes">
+      <ellipse cx="330" cy="236" rx="15" ry="11" transform="rotate(-22 330 236)"/><rect x="342" y="140" width="3.5" height="92" rx="1.5"/><path d="M345.5 140 q22 18 20 46 q-6 -22 -20 -26z"/>
+      <ellipse cx="470" cy="150" rx="15" ry="11" transform="rotate(-22 470 150)"/><ellipse cx="540" cy="128" rx="15" ry="11" transform="rotate(-22 540 128)"/>
+      <rect x="482" y="60" width="3.5" height="86" rx="1.5"/><rect x="552" y="38" width="3.5" height="86" rx="1.5"/><path d="M482 60 L555.5 38 V50 L482 72z"/>
+      <ellipse cx="700" cy="88" rx="15" ry="11" transform="rotate(-22 700 88)"/><rect x="712" y="0" width="3.5" height="84" rx="1.5"/>
+    </g>
   </svg>
 </div>
 
@@ -39,61 +45,76 @@
 </header>
 
 <main>
-  <section class="l-wrap l-hero">
-    <div class="l-hero-text">
-      <span class="l-pill"><i aria-hidden="true"></i>Para ficheiros Guitar Pro</span>
-      <h1>Aprende a música compasso a <em>compasso.</em></h1>
-      <p class="l-lead">Carrega a tablatura e vê logo a estrutura: secções, o tom de cada compasso numa cor e a tablatura a acompanhar o som. Põe o refrão em loop, abranda e toca por cima.</p>
-      <div class="l-ctas">
-        <button type="button" class="l-btn primary" data-pick>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>Carregar ficheiro
-        </button>
-        <a class="l-btn dark" href="./leitor.html?exemplo">
-          <svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Experimentar com um exemplo
-        </a>
-      </div>
-      <p class="l-note-line">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-        O ficheiro é lido só no teu browser. Nada é enviado para um servidor.
-      </p>
-      <p class="l-error" id="landingErr" role="alert" hidden></p>
-    </div>
+  <section class="l-hero-band">
+    <svg class="l-waves" viewBox="0 0 1440 360" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="lw1" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#3b8ff0" stop-opacity="0"/><stop offset=".55" stop-color="#3b8ff0" stop-opacity=".55"/><stop offset="1" stop-color="#7cc0ff" stop-opacity=".95"/></linearGradient>
+        <linearGradient id="lw2" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#1e6fd0" stop-opacity="0"/><stop offset=".6" stop-color="#1e6fd0" stop-opacity=".45"/><stop offset="1" stop-color="#4fa3ff" stop-opacity=".7"/></linearGradient>
+        <filter id="lglow" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+      </defs>
+      <path d="M0 330 C420 330 760 300 1000 220 S1330 70 1440 40 V360 H0z" fill="#0b4a86" opacity=".35"/>
+      <path d="M0 345 C460 340 820 310 1060 240 S1360 110 1440 90" fill="none" stroke="url(#lw2)" stroke-width="10" filter="url(#lglow)"/>
+      <path d="M0 345 C460 340 820 310 1060 240 S1360 110 1440 90" fill="none" stroke="url(#lw1)" stroke-width="2"/>
+      <path d="M200 360 C600 350 900 320 1120 260 S1380 160 1440 140" fill="none" stroke="url(#lw1)" stroke-width="1.5" opacity=".7"/>
+    </svg>
 
-    <figure class="l-mock" aria-label="Exemplo do esquema de uma música no leitor">
-      <div class="l-mock-head">
-        <div>
-          <strong>Música de exemplo</strong>
-          <span>Guitarra 1 · 4/4 · 112 bpm</span>
+    <div class="l-wrap l-hero">
+      <div class="l-hero-text">
+        <span class="l-pill"><i aria-hidden="true"></i>Para ficheiros Guitar Pro</span>
+        <h1>Aprende a música compasso a <em>compasso.</em></h1>
+        <p class="l-lead">Carrega a tablatura e vê logo a estrutura: secções, o tom de cada compasso numa cor e a tablatura a acompanhar o som. Põe o refrão em loop, abranda e toca por cima.</p>
+        <div class="l-ctas">
+          <button type="button" class="l-btn primary" data-pick>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>Carregar ficheiro
+          </button>
+          <a class="l-btn outline" href="./leitor.html?exemplo">
+            <svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Experimentar com um exemplo
+          </a>
         </div>
-        <span class="l-chip">Esquema</span>
+        <p class="l-note-line">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          O ficheiro é lido só no teu browser. Nada é enviado para um servidor.
+        </p>
+        <p class="l-error" id="landingErr" role="alert" hidden></p>
       </div>
-      <div class="l-mock-body">
-        <div class="l-sec">
-          <p><b>Intro</b> <span>4 compassos</span></p>
-          <div class="l-bars"><i class="n9">Am</i><i class="n5">F</i><i class="n0">C</i><i class="n7">G</i></div>
+
+      <figure class="l-mock" aria-label="Exemplo do esquema de uma música no leitor">
+        <div class="l-mock-head">
+          <div>
+            <strong>Música de exemplo</strong>
+            <span>Guitarra 1 · 4/4 · 112 bpm</span>
+          </div>
+          <span class="l-chip">Esquema</span>
         </div>
-        <div class="l-sec">
-          <p><b>Verso</b> <span>8 compassos</span></p>
-          <div class="l-bars"><i class="n9">Am</i><i class="n9">Am</i><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n7">G</i><i class="n9">Am</i><i class="n9">Am</i></div>
+        <div class="l-mock-body">
+          <div class="l-sec">
+            <p><b>Intro</b> <span>4 compassos</span></p>
+            <div class="l-bars"><i class="n9">Am</i><i class="n5">F</i><i class="n0">C</i><i class="n7">G</i></div>
+          </div>
+          <div class="l-sec">
+            <p><b>Verso</b> <span>8 compassos</span></p>
+            <div class="l-bars"><i class="n9">Am</i><i class="n9">Am</i><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n7">G</i><i class="n9">Am</i><i class="n9">Am</i></div>
+          </div>
+          <div class="l-sec">
+            <p><b>Refrão</b> <span>8 compassos</span> <em>Loop</em></p>
+            <div class="l-bars"><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n9">Am</i><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n0">C</i></div>
+          </div>
+          <div class="l-sec">
+            <p><b>Ponte</b> <span>4 compassos</span></p>
+            <div class="l-bars"><i class="n2">Dm</i><i class="n4">E</i><i class="n9">Am</i><i class="n9">Am</i></div>
+          </div>
         </div>
-        <div class="l-sec">
-          <p><b>Refrão</b> <span>8 compassos</span> <em>Loop</em></p>
-          <div class="l-bars"><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n9">Am</i><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n0">C</i></div>
+        <div class="l-mock-player">
+          <a class="l-play" href="./leitor.html?exemplo" aria-label="Ouvir a música de exemplo">
+            <svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          </a>
+          <span class="l-progress" aria-hidden="true"><i></i></span>
+          <span class="l-mono">75%</span>
+          <span class="l-sep" aria-hidden="true"></span>
+          <span class="l-mono">1 &amp; 2 &amp;</span>
         </div>
-        <div class="l-sec">
-          <p><b>Ponte</b> <span>4 compassos</span></p>
-          <div class="l-bars"><i class="n2">Dm</i><i class="n4">E</i><i class="n9">Am</i><i class="n9">Am</i></div>
-        </div>
-      </div>
-      <div class="l-mock-player">
-        <a class="l-play" href="./leitor.html?exemplo" aria-label="Ouvir a música de exemplo">
-          <svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-        </a>
-        <span class="l-progress" aria-hidden="true"><i></i></span>
-        <span class="l-mono">75%</span>
-        <span class="l-mono">1 &amp; 2 &amp;</span>
-      </div>
-    </figure>
+      </figure>
+    </div>
   </section>
 
   <section class="l-notekey" aria-label="Cor de cada nota">
@@ -118,16 +139,18 @@
 
   <section class="l-wrap l-section l-section-tight" aria-label="Funcionalidades">
     <ul class="l-features">
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><h3>Tom por compasso</h3><p>Cada compasso mostra o acorde detetado, com a cor da nota. Vês a harmonia antes de tocar.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 10h18M3 14h18M3 18h18"/></svg></span><h3>Tablatura sincronizada</h3><p>O cursor segue o som e o esquema acompanha. Clica num compasso para saltar para lá.</p></li>
+      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></span><h3>Tom por compasso</h3><p>Cada compasso mostra o acorde detetado, com a cor da nota. Vês a harmonia antes de tocar.</p></li>
+      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></svg></span><h3>Tablatura sincronizada</h3><p>O cursor segue o som e o esquema acompanha. Clica num compasso para saltar para lá.</p></li>
       <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></span><h3>Loop por secção</h3><p>Repete só o refrão ou só aquele compasso até sair limpo.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 14l4-4"/><path d="M3.3 19a10 10 0 1 1 17.4 0"/></svg></span><h3>Velocidade 25–150 %</h3><p>Abranda sem mudar o tom e vai subindo à medida que ganhas confiança.</p></li>
+      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19 5L5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span><h3>Velocidade 25–150 %</h3><p>Abranda sem mudar o tom e vai subindo à medida que ganhas confiança.</p></li>
       <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span><h3>Tocar por cima</h3><p>Silencia a tua pista e toca com a banda, ou ouve só o teu instrumento.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15l3 3 3-3"/></svg></span><h3>Esquema em PDF</h3><p>Edita tons e nomes das secções e exporta o mapa para levar para o ensaio.</p></li>
+      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg></span><h3>Esquema em PDF</h3><p>Edita tons e nomes das secções e exporta o mapa para levar para o ensaio.</p></li>
+      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 21h8l-1.5-17h-5z"/><path d="M12 14l5-7"/></svg></span><h3>Metrónomo e contagem</h3><p>Contagem antes de entrar e subdivisão (1 &amp; 2 &amp;) para não perderes o tempo.</p></li>
+      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg></span><h3>As minhas músicas</h3><p>As músicas que importas ficam guardadas neste browser e abrem onde as deixaste.</p></li>
     </ul>
   </section>
 
-  <section class="l-wrap l-section l-section-tight">
+  <section class="l-wrap l-section l-section-cta">
     <div class="l-cta">
       <div>
         <h2>Qual é a próxima música?</h2>
@@ -140,10 +163,18 @@
 
 <footer class="l-foot">
   <div class="l-wrap">
-    <span>© 2026 Mapa de Compassos · Guitar Pro é uma marca da Arobas Music; este site não é afiliado.</span>
+    <span>© 2026 Mapa de Compassos</span>
     <span><a href="./ajuda.html">Como funciona</a> · <a href="./licencas.html">Termos, privacidade e licenças</a></span>
   </div>
 </footer>
+<div class="l-tail" aria-hidden="true">
+  <svg viewBox="0 0 1440 260" preserveAspectRatio="none">
+    <path d="M0 200 C300 120 560 230 860 170 S1260 60 1440 90 V260 H0z" fill="#0b4a86" opacity=".45"/>
+    <path d="M0 200 C300 120 560 230 860 170 S1260 60 1440 90" fill="none" stroke="url(#lw2)" stroke-width="10" filter="url(#lglow)"/>
+    <path d="M0 200 C300 120 560 230 860 170 S1260 60 1440 90" fill="none" stroke="url(#lw1)" stroke-width="2"/>
+    <path d="M0 236 C360 170 640 250 940 200 S1300 120 1440 140" fill="none" stroke="url(#lw1)" stroke-width="1.5" opacity=".6"/>
+  </svg>
+</div>
 
 <input type="file" id="landingFile" class="l-sr" tabindex="-1" aria-hidden="true">
 <div class="l-drop" id="landingDrop" hidden><div>Larga o ficheiro aqui</div></div>

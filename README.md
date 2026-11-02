@@ -31,7 +31,8 @@ npm run dev        # servidor local em http://localhost:5173
 ## Estrutura
 
 ```
-index.html                 Página principal (estrutura e ícones)
+index.html                 Página inicial (apresentação; design "Azul profundo")
+leitor.html                O leitor: esquema, tablatura e leitor (estrutura e ícones)
 licencas.html              Termos, privacidade e licenças
 ajuda.html                 Página "Como funciona" (guia e perguntas frequentes)
 src/

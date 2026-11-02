@@ -10,7 +10,7 @@ import { autoSub, beatInfo, countLabels, slotOf, type Sub } from './app/count';
 import { VisualDelay } from './app/sync';
 import { releaseAudio, unlockAudio } from './app/audio-unlock';
 import { TOUR_STEPS, markTourSeen, tourSeen, visibleTarget } from './app/tour';
-import { askPersistentStorage, deleteSong, getSong, listSongs, relativeDay, saveSong, touchSong } from './app/library';
+import { askPersistentStorage, deleteSong, getSong, listSongs, relativeDay, saveSong, takePendingFile, touchSong } from './app/library';
 import { TAB_COLORS, applyTheme, currentTheme, type Theme } from './app/theme';
 
 type Score = AlphaTab.model.Score;
@@ -863,18 +863,20 @@ setView('chart');
 function readFile(f: File | undefined) {
   if (!f) return;
   const r = new FileReader();
-  r.onload = () => {
-    st.api?.stop(); clearLoop();
-    const bytes = new Uint8Array(r.result as ArrayBuffer);
-    if (!loadBytes(bytes, f.name, false)) return;
-    // Guarda a música neste browser para a próxima vez
-    const s = score();
-    saveSong({ id: st.fileKey, fileName: f.name, title: $('songTitle').textContent || f.name, artist: s.artist || '', bars: s.masterBars.length }, bytes)
-      .then(() => { askPersistentStorage(); renderLibrary(); toast('Guardada em “As minhas músicas”.'); })
-      .catch(() => toast('Não foi possível guardar a música neste browser (modo privado?).'));
-    openLibrary(false);
-  };
+  r.onload = () => openImported(new Uint8Array(r.result as ArrayBuffer), f.name);
   r.readAsArrayBuffer(f);
+}
+/** Abre um ficheiro importado (daqui ou da página inicial) e guarda-o em "As minhas músicas". */
+function openImported(bytes: Uint8Array, name: string): boolean {
+  st.api?.stop(); clearLoop();
+  if (!loadBytes(bytes, name, false)) return false;
+  // Guarda a música neste browser para a próxima vez
+  const s = score();
+  saveSong({ id: st.fileKey, fileName: name, title: $('songTitle').textContent || name, artist: s.artist || '', bars: s.masterBars.length }, bytes)
+    .then(() => { askPersistentStorage(); renderLibrary(); toast('Guardada em “As minhas músicas”.'); })
+    .catch(() => toast('Não foi possível guardar a música neste browser (modo privado?).'));
+  openLibrary(false);
+  return true;
 }
 
 // ---------- As minhas músicas ----------
@@ -998,9 +1000,21 @@ $('tourPrev').addEventListener('click', () => { if (tour.i > 0) { tour.i--; show
 $('tourSkip').addEventListener('click', endTour);
 addEventListener('resize', () => { if (tour.open) placeTour(visibleTarget(TOUR_STEPS[tour.i])); });
 
-// Ao abrir: a última música aberta neste browser; se não houver, a música de exemplo.
-listSongs()
-  .then(songs => (songs.length ? openSaved(songs[0].id) : openSample()))
+// Ao abrir: o ficheiro escolhido na página inicial; ou a música de exemplo (?exemplo);
+// ou a última música aberta neste browser; se não houver, a música de exemplo.
+const params = new URLSearchParams(location.search);
+if (params.has('exemplo') || params.has('abrir')) history.replaceState(null, '', location.pathname + location.hash);
+async function boot(): Promise<unknown> {
+  if (params.has('abrir')) {
+    const f = await takePendingFile().catch(() => null);
+    if (f && openImported(f.bytes, f.name)) return;
+  }
+  if (params.has('exemplo')) return openSample();
+  const songs = await listSongs();
+  return songs.length ? openSaved(songs[0].id) : openSample();
+}
+boot()
   .catch(() => openSample())
+  .then(() => { if (location.hash === '#musicas') openLibrary(true); })
   // Primeira visita: tutorial (depois de a música aparecer, para os destaques ficarem no sítio certo)
   .finally(() => { if (!tourSeen()) setTimeout(startTour, 600); });

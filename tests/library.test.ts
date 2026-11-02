@@ -51,3 +51,17 @@ describe('biblioteca de músicas', () => {
     expect(relativeDay(now - 65 * 86_400_000, now)).toBe('há 2 meses');
   });
 });
+
+describe('ficheiro escolhido na página inicial', () => {
+  it('fica à espera até o leitor o abrir, uma só vez', async () => {
+    const { setPendingFile, takePendingFile } = await import('../src/app/library');
+    const idb = new IDBFactory();
+    expect(await takePendingFile(idb)).toBeNull();
+    await setPendingFile('musica.gp5', new Uint8Array([7, 8, 9]), idb);
+    const f = await takePendingFile(idb);
+    expect(f?.name).toBe('musica.gp5');
+    expect(Array.from(f!.bytes)).toEqual([7, 8, 9]);
+    expect(await takePendingFile(idb)).toBeNull();
+    expect(await listSongs(idb)).toEqual([]); // não aparece em "As minhas músicas" antes de abrir
+  });
+});

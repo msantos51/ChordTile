@@ -3,7 +3,7 @@
   "short_name": "Compassos",
   "description": "Aprende músicas a partir de ficheiros Guitar Pro: secções, compassos com a cor da nota e tablatura sincronizada.",
   "lang": "pt-PT",
-  "start_url": "./",
+  "start_url": "./leitor.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",

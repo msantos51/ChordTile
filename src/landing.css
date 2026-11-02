@@ -216,8 +216,50 @@ body.landing > header, body.landing > main, body.landing > footer { position: re
   .l-deco { width: 100vw; height: 420px; }
   .l-tail { height: 120px; }
 }
+/* ---------- Animação (motion) ---------- */
+/* Pré-visualização a "tocar": o compasso atual acende, a contagem marca os tempos e a barra avança. */
+.l-bars i { transition: transform .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease; }
+.l-bars i.is-on {
+  transform: scale(1.1); z-index: 1; position: relative;
+  background: var(--c); color: var(--l-black); text-shadow: none;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 24px color-mix(in srgb, var(--c) 70%, transparent);
+}
+.l-sec p b { transition: color .2s ease; }
+.l-sec.is-active p b { color: var(--l-orange-soft); }
+.l-sec em.is-looping { animation: l-pulse 1s ease-in-out infinite; }
+.l-progress i { transition: width .25s linear; }
+.l-beats { display: inline-flex; gap: 5px; }
+.l-beats i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700;
+  background: #121520; color: #9aa5b1; transition: background .1s ease, color .1s ease, transform .1s ease; }
+.l-beats i.on { background: var(--l-orange); color: var(--l-black); transform: scale(1.15); }
+
+/* Luz a percorrer as ondas */
+.l-wave-run { stroke-dasharray: 70 930; stroke-dashoffset: 1000; opacity: 0; filter: drop-shadow(0 0 6px #7cc0ff); animation: l-wave-run 7s linear infinite; }
+.l-wave-run-2 { animation-duration: 9s; animation-delay: 3s; }
+
+/* Notas da pauta a flutuar e entrada suave do destaque */
+.l-staff-notes { animation: l-float 6s ease-in-out infinite alternate; transform-box: fill-box; }
+.l-hero-text > * { animation: l-rise .7s cubic-bezier(.2, .7, .2, 1) both; }
+.l-hero-text > :nth-child(2) { animation-delay: .08s; }
+.l-hero-text > :nth-child(3) { animation-delay: .16s; }
+.l-hero-text > :nth-child(4) { animation-delay: .24s; }
+.l-hero-text > :nth-child(5) { animation-delay: .32s; }
+.l-mock { animation: l-rise .9s .2s cubic-bezier(.2, .7, .2, 1) both; }
+
+@keyframes l-wave-run {
+  0% { stroke-dashoffset: 1000; opacity: 0; }
+  10% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+@keyframes l-float { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+@keyframes l-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes l-pulse { 50% { box-shadow: 0 0 0 4px rgba(219, 82, 39, .35); } }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .l-wave-run { display: none; }
+  .l-staff-notes, .l-hero-text > *, .l-mock, .l-sec em.is-looping { animation: none; }
   .l-btn { transition: none; }
   .l-btn:hover { transform: none; }
 }

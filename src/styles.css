@@ -40,32 +40,35 @@
 
 /* Tema claro (escolhido no botão sol/lua; guardado no browser) */
 :root[data-theme="light"] {
-  color-scheme: light;
-  --bg: #eef2f7;
-  --bg-grad: linear-gradient(180deg, #f3f6fa 0%, #e8eef5 100%);
+  /* Tema claro: o fundo do site continua azul; só o que é escuro (painéis, leitor, botões,
+     janelas) passa a claro. Os tokens de texto escuro aplicam-se dentro desses painéis (abaixo). */
   --panel: #ffffff;
   --panel-2: #e9eef5;
   --dock: #ffffff;
-  --line: #d6dee8;
-  --line-2: #c3cdd9;
+  --tint: 30%;
+  --shadow: 0 16px 44px rgba(2, 10, 24, .35), 0 2px 6px rgba(2, 10, 24, .15);
+}
+/* Dentro dos painéis claros: texto escuro, linhas cinzentas, fundo de campos claro */
+:root[data-theme="light"] :is(.btn, .tbtn, .speed, .viewswitch, .bar, .chart-empty, .tabpanel, .dock, .sheet, .bar-modal,
+  .tour-card, .barbar, .help-menu, .drop > div, .toc a, .table-wrap, .doc-body details, .doc-body code, .track-pick select option, .mark:focus, .notekey span, .note-legend span) {
+  color-scheme: light;
+  --bg: #eef2f7;
   --ink: #0A0C12;
   --ink-strong: #0A0C12;
   --ink-soft: #4a5563;
-  --accent: #DB5227;
-  --accent-2: #ff7a3d;
-  --accent-ink: #0A0C12;
+  --line: #d6dee8;
+  --line-2: #c3cdd9;
+  --hover-line: #8fa3bb;
   --accent-text: #a8391a;
   --focus: #023661;
-  --err-bg: #fdecea; --err-ink: #8a1c12;
-  --shadow: 0 12px 36px rgba(2, 54, 97, .14), 0 2px 6px rgba(2, 54, 97, .08);
-  --tint: 30%;
   --rep-bg: rgba(10, 12, 18, .08);
-  --overlay: rgba(238, 242, 247, .82);
-  --scrim: rgba(2, 30, 60, .35);
   --underline: rgba(10, 12, 18, .3);
   --hover-on-strong: rgba(255, 255, 255, .14);
-  --hover-line: #8fa3bb;
+  --overlay: rgba(255, 255, 255, .8);
 }
+:root[data-theme="light"] :is(.chart-empty, .tabpanel, .dock, .sheet, .bar-modal, .tour-card, .barbar, .help-menu, .drop > div,
+  .table-wrap, .doc-body details, .doc-body code, .notekey span, .note-legend span) { color: var(--ink); }
+:root[data-theme="light"] .doc-body details summary { color: var(--ink); }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -322,7 +325,7 @@ svg.f { fill: currentColor; stroke: none; }
   .btn.icon { width: 44px; }
   .ibtn { width: 44px; height: 44px; }
   .sbtn { height: 36px; padding: 0 10px; }
-  .seg button, .viewswitch button { min-height: 40px; }
+  .viewswitch button { min-height: 40px; }
   .barbar button { padding: 10px 12px; }
   .bar:hover { transform: none; }
   .progress { height: 6px; }
@@ -415,10 +418,8 @@ a.btn { color: inherit; text-decoration: none; }
 .bm-count span.hit { color: var(--ink-strong); }
 .bm-count span.on { background: var(--accent); color: var(--accent-ink); }
 .bm-subrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 22px; }
+.bm-subname { padding: 5px 12px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent-text); font-size: 13px; font-weight: 600; }
 .bm-label { font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
-.seg { display: flex; flex-wrap: wrap; padding: 3px; border-radius: 9px; background: var(--bg); border: 1px solid var(--line); }
-.seg button { height: 30px; padding: 0 11px; border: 0; border-radius: 7px; background: transparent; color: var(--ink-soft); font-size: 13px; font-weight: 500; }
-.seg button[aria-pressed="true"] { background: var(--ink-strong); color: var(--bg); font-weight: 600; }
 .bm-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 16px 20px 18px; margin-top: 16px; border-top: 1px solid var(--line); }
 .bm-play { display: inline-flex; align-items: center; gap: 10px; height: 46px; padding: 0 20px 0 16px; border-radius: 999px; border: 0; background: var(--accent); color: var(--accent-ink); font-size: 15px; font-weight: 700; }
 .bm-play svg.i { width: 18px; height: 18px; }
@@ -517,7 +518,7 @@ h1, h2, h3, #songTitle, .brand, .sheet-head h2, .tour-card h2, .bm-head h2 { fon
 }
 .btn.primary:hover { filter: brightness(1.06); color: var(--accent-ink); }
 .play { background: linear-gradient(180deg, var(--accent-2), var(--accent)); color: var(--accent-ink); box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent); }
-.tbtn[aria-pressed="true"], .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tbtn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .sbtn { border-radius: 999px; }
 .panel-head h2 { color: var(--ink); }
 

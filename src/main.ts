@@ -460,7 +460,6 @@ const modal = {
   open: false,
   bar: -1,
   view: null as BarView | null,
-  sub: 'auto' as 'auto' | Sub,
   usedSub: 2 as Sub,
   beatTicks: 960,
   slots: 8,
@@ -518,7 +517,8 @@ function setModalBar(i: number) {
 function renderBarModal() {
   const v = modal.view; if (!v) return;
   const { beats, beatTicks } = beatInfo(v.numerator, v.denominator);
-  const sub: Sub = modal.sub === 'auto' ? autoSub(v.notes.map(n => n.start), beatTicks) : modal.sub;
+  // A contagem é sempre automática: a mais simples que acerta em todas as notas do compasso.
+  const sub: Sub = autoSub(v.notes.map(n => n.start), beatTicks);
   modal.usedSub = sub; modal.beatTicks = beatTicks;
   const labels = countLabels(beats, sub);
   modal.slots = labels.length;
@@ -569,10 +569,9 @@ function renderBarModal() {
     pulses.append(e);
   });
 
-  // Subdivisão
-  $('bmSubs').querySelectorAll<HTMLButtonElement>('button').forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.sub === String(modal.sub))));
-  const names2: Record<Sub, string> = { 1: 'beats only', 2: 'eighth notes (1 & 2 &)', 4: 'sixteenth notes (1 e & a)' };
-  $('bmSubHint').textContent = modal.sub === 'auto' ? 'Counting in ' + names2[sub] + ', based on the shortest note in the bar.' : '';
+  // Subdivisão (automática)
+  const names2: Record<Sub, string> = { 1: 'beats (1 2 3)', 2: 'eighth notes (1 & 2 &)', 4: 'sixteenth notes (1 e & a)' };
+  $('bmSubName').textContent = names2[sub];
   modal.lastSlot = -1;
 }
 
@@ -613,11 +612,6 @@ input('bmCountIn').addEventListener('change', () => { if (st.api) { st.api.count
 input('bmSpeed').addEventListener('input', () => {
   input('speed').value = input('bmSpeed').value;
   input('speed').dispatchEvent(new Event('input'));
-});
-$('bmSubs').addEventListener('click', e => {
-  const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-sub]'); if (!b) return;
-  modal.sub = b.dataset.sub === 'auto' ? 'auto' : (+b.dataset.sub! as Sub);
-  renderBarModal();
 });
 $('bmPrev').addEventListener('click', () => setModalBar(modal.bar - 1));
 $('bmNext').addEventListener('click', () => setModalBar(modal.bar + 1));

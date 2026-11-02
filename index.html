@@ -56,6 +56,9 @@
       <path d="M0 345 C460 340 820 310 1060 240 S1360 110 1440 90" fill="none" stroke="url(#lw2)" stroke-width="10" filter="url(#lglow)"/>
       <path d="M0 345 C460 340 820 310 1060 240 S1360 110 1440 90" fill="none" stroke="url(#lw1)" stroke-width="2"/>
       <path d="M200 360 C600 350 900 320 1120 260 S1380 160 1440 140" fill="none" stroke="url(#lw1)" stroke-width="1.5" opacity=".7"/>
+      <!-- Luz que percorre a onda (animação) -->
+      <path class="l-wave-run" pathLength="1000" d="M0 345 C460 340 820 310 1060 240 S1360 110 1440 90" fill="none" stroke="#bfe0ff" stroke-width="3" stroke-linecap="round"/>
+      <path class="l-wave-run l-wave-run-2" pathLength="1000" d="M200 360 C600 350 900 320 1120 260 S1380 160 1440 140" fill="none" stroke="#9cc8ff" stroke-width="2" stroke-linecap="round"/>
     </svg>
 
     <div class="l-wrap l-hero">
@@ -88,30 +91,30 @@
         </div>
         <div class="l-mock-body">
           <div class="l-sec">
-            <p><b>Intro</b> <span>4 compassos</span></p>
+            <p><b>Intro</b> <span>4 bars</span></p>
             <div class="l-bars"><i class="n9">Am</i><i class="n5">F</i><i class="n0">C</i><i class="n7">G</i></div>
           </div>
           <div class="l-sec">
-            <p><b>Verse</b> <span>8 compassos</span></p>
+            <p><b>Verse</b> <span>8 bars</span></p>
             <div class="l-bars"><i class="n9">Am</i><i class="n9">Am</i><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n7">G</i><i class="n9">Am</i><i class="n9">Am</i></div>
           </div>
           <div class="l-sec">
-            <p><b>Chorus</b> <span>8 compassos</span> <em>Loop</em></p>
+            <p><b>Chorus</b> <span>8 bars</span> <em>Loop</em></p>
             <div class="l-bars"><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n9">Am</i><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n0">C</i></div>
           </div>
           <div class="l-sec">
-            <p><b>Bridge</b> <span>4 compassos</span></p>
+            <p><b>Bridge</b> <span>4 bars</span></p>
             <div class="l-bars"><i class="n2">Dm</i><i class="n4">E</i><i class="n9">Am</i><i class="n9">Am</i></div>
           </div>
         </div>
         <div class="l-mock-player">
           <a class="l-play" href="./player.html?sample" aria-label="Listen to the sample song">
-            <svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            <svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path id="mockPlayIcon" d="M8 5v14l11-7z"/></svg>
           </a>
           <span class="l-progress" aria-hidden="true"><i></i></span>
           <span class="l-mono">75%</span>
           <span class="l-sep" aria-hidden="true"></span>
-          <span class="l-mono">1 &amp; 2 &amp;</span>
+          <span class="l-beats" id="mockBeats" aria-hidden="true"><i>1</i><i>2</i><i>3</i><i>4</i></span>
         </div>
       </figure>
     </div>
@@ -172,6 +175,7 @@
     <path d="M0 200 C300 120 560 230 860 170 S1260 60 1440 90 V260 H0z" fill="#0b4a86" opacity=".45"/>
     <path d="M0 200 C300 120 560 230 860 170 S1260 60 1440 90" fill="none" stroke="url(#lw2)" stroke-width="10" filter="url(#lglow)"/>
     <path d="M0 200 C300 120 560 230 860 170 S1260 60 1440 90" fill="none" stroke="url(#lw1)" stroke-width="2"/>
+    <path class="l-wave-run" pathLength="1000" d="M0 200 C300 120 560 230 860 170 S1260 60 1440 90" fill="none" stroke="#bfe0ff" stroke-width="3" stroke-linecap="round"/>
     <path d="M0 236 C360 170 640 250 940 200 S1300 120 1440 140" fill="none" stroke="url(#lw1)" stroke-width="1.5" opacity=".6"/>
   </svg>
 </div>

@@ -206,7 +206,25 @@
   <ul class="lib-list" id="libList"></ul>
   <p class="lib-empty hint" id="libEmpty" hidden>You haven’t loaded any songs yet. The ones you load stay here, ready to open.</p>
   <button class="btn" id="libSample" type="button">Open the sample song</button>
-  <p class="hint">Songs are saved only in this browser on this device. They are never sent to a server.</p>
+  <p class="hint" id="libLocalHint">Songs are saved only in this browser on this device. They are never sent to a server.</p>
+  <section class="account" id="account" hidden aria-labelledby="accountTitle">
+    <h3 id="accountTitle">Sync across devices</h3>
+    <form class="account-in" id="signInForm">
+      <p class="hint">Sign in with your email to keep “My songs” on your phone, tablet and computer. No password: we send you a link.</p>
+      <div class="account-row">
+        <input type="email" id="signInEmail" required autocomplete="email" placeholder="you@example.com" aria-label="Email">
+        <button class="btn primary" type="submit" id="signInBtn">Send link</button>
+      </div>
+    </form>
+    <div class="account-on" id="accountOn" hidden>
+      <p class="account-who"><span class="hint">Signed in as</span> <strong id="accountEmail"></strong></p>
+      <p class="hint" id="syncStatus"></p>
+      <div class="account-row">
+        <button class="btn sm" type="button" id="syncBtn">Sync now</button>
+        <button class="btn sm" type="button" id="signOutBtn">Sign out</button>
+      </div>
+    </div>
+  </section>
 </aside>
 <aside class="sheet" id="settings" hidden aria-label="Settings">
   <div class="sheet-head"><h2>Settings</h2><button class="ibtn" id="closeSettings" type="button" aria-label="Close">✕</button></div>

@@ -11,7 +11,7 @@ Plataforma para aprender músicas a partir de ficheiros Guitar Pro. Carregas o f
 
 O site está em **inglês**; o código e esta documentação continuam em português.
 
-Os ficheiros são lidos só no browser: nada é enviado para um servidor.
+Os ficheiros são lidos só no browser. Só são enviados para um servidor se a pessoa **iniciar sessão** para sincronizar "My songs" entre dispositivos (opcional, ver abaixo).
 
 ## Começar
 
@@ -111,3 +111,21 @@ Cada push para a `main` publica o site no GitHub Pages (`.github/workflows/deplo
 Na primeira vez, ativa em **Settings → Pages → Source: GitHub Actions**.
 
 Cada PR corre os testes, a verificação de tipos e o build (`.github/workflows/ci.yml`).
+
+## Contas e sincronização (Supabase)
+
+Quem inicia sessão (link mágico por email, sem palavra-passe) tem "My songs" em todos os dispositivos. É a base para a futura versão Premium. Sem configuração, o site funciona como antes e a secção de conta não aparece.
+
+1. Cria um projeto em [supabase.com](https://supabase.com) (o plano grátis chega para começar).
+2. No **SQL Editor**, corre `supabase/migrations/001_songs.sql` (tabela `songs`, bucket privado `songs` e regras de acesso por utilizador).
+3. Em **Authentication → URL Configuration**, põe o endereço do site em *Site URL* e acrescenta `https://<utilizador>.github.io/learnfast/player.html` e `http://localhost:5173/player.html` em *Redirect URLs*.
+4. Copia a *Project URL* e a chave *anon public* (**Project Settings → API**):
+   - localmente: `cp .env.example .env.local` e preenche;
+   - no GitHub: **Settings → Secrets and variables → Actions**, segredos `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` (o deploy usa-os no build).
+
+A chave *anon* é pública por natureza; quem protege os dados são as regras RLS do ficheiro SQL (cada pessoa só lê e escreve as suas músicas).
+
+Como funciona a sincronização (`src/app/cloud.ts`, plano em `src/app/cloud-plan.ts`, testado):
+- ao iniciar sessão, ao voltar ao separador e em "Sync now", junta as duas bibliotecas: o que falta de cada lado passa para o outro;
+- importar uma música envia-a logo; apagar marca-a como apagada na conta, e os outros dispositivos apagam-na também;
+- uma música reimportada depois de apagada volta para a conta.

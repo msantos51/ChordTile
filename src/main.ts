@@ -10,6 +10,7 @@ import { autoSub, beatInfo, countLabels, slotOf, type Sub } from './app/count';
 import { VisualDelay } from './app/sync';
 import { releaseAudio, unlockAudio } from './app/audio-unlock';
 import { TOUR_STEPS, markTourSeen, tourSeen, visibleTarget } from './app/tour';
+import { cloudEnabled, deleteRemoteSong, sendSignInLink, signOut, syncLibrary, uploadSong, watchAccount, type Account } from './app/cloud';
 import { askPersistentStorage, deleteSong, getSong, listSongs, relativeDay, saveSong, takePendingFile, touchSong } from './app/library';
 import { TAB_COLORS, applyTheme, currentTheme, type Theme } from './app/theme';
 
@@ -867,7 +868,7 @@ function openImported(bytes: Uint8Array, name: string): boolean {
   // Guarda a música neste browser para a próxima vez
   const s = score();
   saveSong({ id: st.fileKey, fileName: name, title: $('songTitle').textContent || name, artist: s.artist || '', bars: s.masterBars.length }, bytes)
-    .then(() => { askPersistentStorage(); renderLibrary(); toast('Saved to “My songs”.'); })
+    .then(() => { askPersistentStorage(); renderLibrary(); toast('Saved to “My songs”.'); if (account) uploadSong(st.fileKey).catch(() => setSyncStatus('Couldn’t upload the last song. Try “Sync now”.')); })
     .catch(() => toast('Couldn’t save the song in this browser (private mode?).'));
   openLibrary(false);
   return true;
@@ -906,7 +907,11 @@ async function renderLibrary() {
       const c = document.createElement('span'); c.className = 'lib-confirm';
       const yes = document.createElement('button'); yes.type = 'button'; yes.className = 'danger'; yes.textContent = 'Delete';
       const no = document.createElement('button'); no.type = 'button'; no.textContent = 'Cancel';
-      yes.addEventListener('click', async () => { await deleteSong(song.id).catch(() => {}); renderLibrary(); toast('“' + song.title + '” deleted from this browser.'); });
+      yes.addEventListener('click', async () => {
+        await deleteSong(song.id).catch(() => {});
+        if (account) deleteRemoteSong(song.id).catch(() => setSyncStatus('Couldn’t delete it from your account. Try “Sync now”.'));
+        renderLibrary(); toast('“' + song.title + '” deleted' + (account ? '.' : ' from this browser.'));
+      });
       no.addEventListener('click', () => renderLibrary());
       c.append(yes, no); del.replaceWith(c); no.focus();
     });
@@ -933,6 +938,56 @@ addEventListener('dragenter', e => { if ([...(e.dataTransfer?.types ?? [])].incl
 addEventListener('dragleave', () => { dragN = Math.max(0, dragN - 1); if (!dragN) $('drop').hidden = true; });
 addEventListener('dragover', e => e.preventDefault());
 addEventListener('drop', e => { e.preventDefault(); dragN = 0; $('drop').hidden = true; readFile(e.dataTransfer?.files[0]); });
+
+// ---------- Conta e sincronização ----------
+let account: Account | null = null;
+let syncing = false;
+function setSyncStatus(t: string) { $('syncStatus').textContent = t; }
+function plural(n: number, w: string) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+async function runSync(quiet: boolean) {
+  if (!account || syncing) return;
+  syncing = true; $<HTMLButtonElement>('syncBtn').disabled = true; setSyncStatus('Syncing…');
+  try {
+    const r = await syncLibrary();
+    const parts = [r.uploaded && plural(r.uploaded, 'song') + ' uploaded', r.downloaded && plural(r.downloaded, 'song') + ' downloaded', r.deleted && plural(r.deleted, 'song') + ' removed'].filter(Boolean);
+    setSyncStatus('Up to date' + (parts.length ? ': ' + parts.join(', ') : '') + '.');
+    if (parts.length) renderLibrary();
+    if (!quiet && parts.length) toast('“My songs” synced.');
+    // Primeira sincronização num dispositivo novo: abre a última música em vez do exemplo
+    if (r.downloaded && st.isSample) { const songs = await listSongs(); if (songs[0]) openSaved(songs[0].id); }
+  } catch {
+    setSyncStatus('Couldn’t sync. Check your connection and try again.');
+  } finally { syncing = false; $<HTMLButtonElement>('syncBtn').disabled = false; }
+}
+function showAccount(a: Account | null) {
+  const was = account?.id; account = a;
+  $('signInForm').hidden = !!a; $('accountOn').hidden = !a;
+  $('libLocalHint').textContent = a
+    ? 'Songs are kept in your account and in this browser.'
+    : 'Songs are saved only in this browser on this device. Sign in below to use them on your other devices.';
+  if (a) { $('accountEmail').textContent = a.email; if (a.id !== was) runSync(true); }
+}
+if (cloudEnabled) {
+  $('account').hidden = false;
+  watchAccount(showAccount).catch(() => { $('account').hidden = true; });
+  // Ao voltar ao separador, apanha o que mudou noutros dispositivos
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') runSync(true); });
+}
+$('signInForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = input('signInEmail').value.trim(), btn = $<HTMLButtonElement>('signInBtn');
+  btn.disabled = true;
+  try {
+    await sendSignInLink(email);
+    toast('Check your inbox: we sent a sign-in link to ' + email + '.');
+  } catch { toast('Couldn’t send the link. Check the email address and try again.'); }
+  finally { btn.disabled = false; }
+});
+$('syncBtn').addEventListener('click', () => runSync(false));
+$('signOutBtn').addEventListener('click', async () => {
+  await signOut().catch(() => {});
+  setSyncStatus(''); toast('Signed out. Your songs stay in this browser.');
+});
 
 // ---------- Ajuda e tutorial ----------
 function openHelp(v: boolean) {

@@ -45,10 +45,10 @@ describe('biblioteca de músicas', () => {
 
   it('mostra datas relativas', () => {
     const now = Date.UTC(2026, 10, 1, 12);
-    expect(relativeDay(now, now)).toBe('hoje');
-    expect(relativeDay(now - 86_400_000, now)).toBe('ontem');
-    expect(relativeDay(now - 5 * 86_400_000, now)).toBe('há 5 dias');
-    expect(relativeDay(now - 65 * 86_400_000, now)).toBe('há 2 meses');
+    expect(relativeDay(now, now)).toBe('today');
+    expect(relativeDay(now - 86_400_000, now)).toBe('yesterday');
+    expect(relativeDay(now - 5 * 86_400_000, now)).toBe('5 days ago');
+    expect(relativeDay(now - 65 * 86_400_000, now)).toBe('2 months ago');
   });
 });
 

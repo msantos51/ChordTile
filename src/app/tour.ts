@@ -11,42 +11,42 @@ export const TOUR_KEY = 'mapa:tour-visto';
 
 export const TOUR_STEPS: TourStep[] = [
   {
-    title: 'Bem-vindo ao Mapa de Compassos',
-    text: 'Carregas um ficheiro Guitar Pro e vês a música dividida por secções e compassos, com o tom de cada compasso numa cor. Depois praticas parte a parte, com a tablatura a acompanhar. Mostro-te tudo em 1 minuto.',
+    title: 'Welcome to Mapa de Compassos',
+    text: 'Load a Guitar Pro file and see the song split into sections and bars, with the chord of each bar in a colour. Then practise it part by part, with the tab following along. Here’s the tour in 1 minute.',
   },
   {
-    title: 'Carrega a tua música',
-    text: 'Aceita ficheiros Guitar Pro (.gp3, .gp4, .gp5, .gpx, .gp) e MusicXML. Também podes arrastar o ficheiro para a página. O ficheiro é lido só no teu browser.',
+    title: 'Load your song',
+    text: 'Guitar Pro (.gp3, .gp4, .gp5, .gpx, .gp) and MusicXML files work. You can also drag the file onto the page. The file is only read in your browser.',
     targets: ['label.btn.primary[for="fileInput"]'],
   },
   {
-    title: 'As tuas músicas ficam guardadas',
-    text: 'Cada música que carregas fica em “As minhas músicas”, neste browser, com as tuas correções. Da próxima vez abre logo a última.',
+    title: 'Your songs are saved',
+    text: 'Every song you load is kept in “My songs”, in this browser, with your edits. Next time the last one opens straight away.',
     targets: ['#libraryBtn'],
   },
   {
-    title: 'Escolhe o teu instrumento',
-    text: 'O tom de cada compasso é detetado a partir do instrumento escolhido. Se a música tiver baixo, começa por ele.',
+    title: 'Pick your instrument',
+    text: 'The chord of each bar is detected from the instrument you pick. If the song has a bass, it starts with that.',
     targets: ['.top-actions .track-pick'],
   },
   {
-    title: 'O esquema da música',
-    text: 'Cada quadrado é um compasso, com a cor da nota (Dó vermelho, Ré laranja, Mi amarelo…). Toca num compasso para ir para lá; “Praticar” repete a secção em loop. Se o tom não estiver certo, podes corrigi-lo.',
+    title: 'The song chart',
+    text: 'Each square is a bar, coloured by its note (C red, D orange, E yellow…). Tap a bar to jump there; “Practise” loops the section. If a chord isn’t right, you can fix it.',
     targets: ['#chart .section', '#chart'],
   },
   {
-    title: 'A tablatura acompanha',
-    text: 'Clica num compasso da tablatura e escolhe “Expandir” para o ver em grande, com a contagem (1 & 2 & 3 & 4 &) por baixo, ou “Loop” para o repetir.',
+    title: 'The tab follows along',
+    text: 'Click a bar in the tab and choose “Expand” to see it large, with the count (1 & 2 & 3 & 4 &) underneath, or “Loop” to repeat it.',
     targets: ['.tabpanel', '#vTab'],
   },
   {
-    title: 'O leitor',
-    text: 'Tocar, compasso anterior e seguinte, velocidade, loop, metrónomo, contagem e “tocar por cima” (silencia o teu instrumento) ou “só o meu” (ouves só o teu instrumento). No computador, Espaço toca e pausa.',
+    title: 'The player',
+    text: 'Play, previous and next bar, speed, loop, metronome, count-in and “play along” (mutes your instrument) or “solo” (you hear only your instrument). On a computer, Space plays and pauses.',
     targets: ['#dock'],
   },
   {
-    title: 'Pronto!',
-    text: 'Podes rever este tutorial ou ler o guia completo em “Como funciona”, no ícone “?” lá em cima.',
+    title: 'All set!',
+    text: 'You can replay this tour or read the full guide in “How it works”, under the “?” icon at the top.',
     targets: ['#helpBtn'],
   },
 ];

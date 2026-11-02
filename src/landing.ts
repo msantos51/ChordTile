@@ -1,5 +1,5 @@
 // Página inicial: apresentação do site. O ficheiro escolhido aqui fica guardado neste browser
-// (IndexedDB) e o leitor abre-o logo (leitor.html?abrir). Nada é enviado para um servidor.
+// (IndexedDB) e o leitor abre-o logo (player.html?open). Nada é enviado para um servidor.
 import '@fontsource/geist/latin-400.css';
 import '@fontsource/geist/latin-500.css';
 import '@fontsource/geist/latin-600.css';
@@ -25,9 +25,9 @@ async function openInReader(f: File | undefined) {
   try {
     const bytes = new Uint8Array(await f.arrayBuffer());
     await setPendingFile(f.name, bytes);
-    location.href = './leitor.html?abrir';
+    location.href = './player.html?open';
   } catch {
-    fail('Não foi possível passar o ficheiro ao leitor neste browser (modo privado?). Abre o leitor e carrega-o lá.');
+    fail('Couldn’t hand the file to the player in this browser (private mode?). Open the player and load it there.');
   }
 }
 

@@ -9,9 +9,9 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        leitor: resolve(__dirname, 'leitor.html'),
-        licencas: resolve(__dirname, 'licencas.html'),
-        ajuda: resolve(__dirname, 'ajuda.html'),
+        player: resolve(__dirname, 'player.html'),
+        licenses: resolve(__dirname, 'licenses.html'),
+        help: resolve(__dirname, 'help.html'),
       },
     },
   },

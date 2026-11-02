@@ -88,8 +88,8 @@ export function buildPdf(JsPdf: typeof JsPDF, chart: PdfChart): JsPDF {
 
 /** Nome de ficheiro seguro a partir do título da música. */
 export function pdfFileName(title: string): string {
-  const base = title.normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').toLowerCase() || 'musica';
-  return base + '-esquema.pdf';
+  const base = title.normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').toLowerCase() || 'song';
+  return base + '-chart.pdf';
 }
 
 /** Carrega o jsPDF só quando é preciso (não pesa no arranque do site) e descarrega o PDF. */

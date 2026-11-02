@@ -7,8 +7,8 @@ export const THEME_KEY = 'mapa:theme';
 /** Cores da tablatura (alphaTab) para cada tema. */
 export const TAB_COLORS: Record<Theme, Record<string, string>> = {
   dark: {
-    staffLineColor: '#3a3f4d', barSeparatorColor: '#4a5060', barNumberColor: '#8a90a2',
-    mainGlyphColor: '#e9ebf2', secondaryGlyphColor: '#8a90a2', scoreInfoColor: '#e9ebf2',
+    staffLineColor: '#33415a', barSeparatorColor: '#4a5a75', barNumberColor: '#a9b6c4',
+    mainGlyphColor: '#eef2f7', secondaryGlyphColor: '#a9b6c4', scoreInfoColor: '#eef2f7',
   },
   light: {
     staffLineColor: '#c9ced8', barSeparatorColor: '#9aa1af', barNumberColor: '#5f6676',

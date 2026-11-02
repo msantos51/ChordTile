@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-PT">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -8,11 +8,11 @@
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#023661">
-<title>Mapa de Compassos · Aprende músicas compasso a compasso</title>
-<meta name="description" content="Carrega um ficheiro Guitar Pro e aprende a música por secções e compassos, com cores por nota, tablatura sincronizada, loop e velocidade ajustável.">
+<title>Mapa de Compassos · Learn songs bar by bar</title>
+<meta name="description" content="Load a Guitar Pro file and learn the song by sections and bars, with colours per note, synced tablature, looping and adjustable speed.">
 </head>
 <body class="landing">
-<!-- Decoração: pauta com notas e ondas de luz azul (como no design escolhido) -->
+<!-- Decoration: staff with notes and blue light waves -->
 <div class="l-deco" aria-hidden="true">
   <svg class="l-staff" viewBox="0 0 800 420" preserveAspectRatio="xMidYMin slice">
     <g class="l-staff-lines">
@@ -36,11 +36,11 @@
     <span class="l-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
     Mapa de Compassos
   </a>
-  <nav class="l-nav" aria-label="Principal">
-    <a href="#como">Como funciona</a>
-    <a href="./leitor.html#musicas">As minhas músicas</a>
-    <a href="./ajuda.html">Ajuda</a>
-    <a class="l-btn l-btn-sm primary" href="./leitor.html">Abrir o leitor</a>
+  <nav class="l-nav" aria-label="Main">
+    <a href="#how">How it works</a>
+    <a href="./player.html#songs">My songs</a>
+    <a href="./help.html">Help</a>
+    <a class="l-btn l-btn-sm primary" href="./player.html">Open the player</a>
   </nav>
 </header>
 
@@ -60,31 +60,31 @@
 
     <div class="l-wrap l-hero">
       <div class="l-hero-text">
-        <span class="l-pill"><i aria-hidden="true"></i>Para ficheiros Guitar Pro</span>
-        <h1>Aprende a música compasso a <em>compasso.</em></h1>
-        <p class="l-lead">Carrega a tablatura e vê logo a estrutura: secções, o tom de cada compasso numa cor e a tablatura a acompanhar o som. Põe o refrão em loop, abranda e toca por cima.</p>
+        <span class="l-pill"><i aria-hidden="true"></i>For Guitar Pro files</span>
+        <h1>Learn the song bar by <em>bar.</em></h1>
+        <p class="l-lead">Load the tab and see the structure right away: sections, the chord of each bar in a colour and the tab following the sound. Loop the chorus, slow it down and play along.</p>
         <div class="l-ctas">
           <button type="button" class="l-btn primary" data-pick>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>Carregar ficheiro
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>Load file
           </button>
-          <a class="l-btn outline" href="./leitor.html?exemplo">
-            <svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Experimentar com um exemplo
+          <a class="l-btn outline" href="./player.html?sample">
+            <svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Try a sample song
           </a>
         </div>
         <p class="l-note-line">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-          O ficheiro é lido só no teu browser. Nada é enviado para um servidor.
+          Your file is only read in your browser. Nothing is sent to a server.
         </p>
         <p class="l-error" id="landingErr" role="alert" hidden></p>
       </div>
 
-      <figure class="l-mock" aria-label="Exemplo do esquema de uma música no leitor">
+      <figure class="l-mock" aria-label="Example of a song chart in the player">
         <div class="l-mock-head">
           <div>
-            <strong>Música de exemplo</strong>
-            <span>Guitarra 1 · 4/4 · 112 bpm</span>
+            <strong>Sample song</strong>
+            <span>Guitar 1 · 4/4 · 112 bpm</span>
           </div>
-          <span class="l-chip">Esquema</span>
+          <span class="l-chip">Chart</span>
         </div>
         <div class="l-mock-body">
           <div class="l-sec">
@@ -92,20 +92,20 @@
             <div class="l-bars"><i class="n9">Am</i><i class="n5">F</i><i class="n0">C</i><i class="n7">G</i></div>
           </div>
           <div class="l-sec">
-            <p><b>Verso</b> <span>8 compassos</span></p>
+            <p><b>Verse</b> <span>8 compassos</span></p>
             <div class="l-bars"><i class="n9">Am</i><i class="n9">Am</i><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n7">G</i><i class="n9">Am</i><i class="n9">Am</i></div>
           </div>
           <div class="l-sec">
-            <p><b>Refrão</b> <span>8 compassos</span> <em>Loop</em></p>
+            <p><b>Chorus</b> <span>8 compassos</span> <em>Loop</em></p>
             <div class="l-bars"><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n9">Am</i><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n0">C</i></div>
           </div>
           <div class="l-sec">
-            <p><b>Ponte</b> <span>4 compassos</span></p>
+            <p><b>Bridge</b> <span>4 compassos</span></p>
             <div class="l-bars"><i class="n2">Dm</i><i class="n4">E</i><i class="n9">Am</i><i class="n9">Am</i></div>
           </div>
         </div>
         <div class="l-mock-player">
-          <a class="l-play" href="./leitor.html?exemplo" aria-label="Ouvir a música de exemplo">
+          <a class="l-play" href="./player.html?sample" aria-label="Listen to the sample song">
             <svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
           </a>
           <span class="l-progress" aria-hidden="true"><i></i></span>
@@ -117,46 +117,46 @@
     </div>
   </section>
 
-  <section class="l-notekey" aria-label="Cor de cada nota">
+  <section class="l-notekey" aria-label="Colour of each note">
     <div class="l-wrap">
-      <span>Cada nota tem a sua cor:</span>
+      <span>Every note has its colour:</span>
       <ul>
-        <li class="n0">Dó</li><li class="n1">Dó#</li><li class="n2">Ré</li><li class="n3">Ré#</li><li class="n4">Mi</li><li class="n5">Fá</li>
-        <li class="n6">Fá#</li><li class="n7">Sol</li><li class="n8">Sol#</li><li class="n9">Lá</li><li class="n10">Lá#</li><li class="n11">Si</li>
+        <li class="n0">C</li><li class="n1">C#</li><li class="n2">D</li><li class="n3">D#</li><li class="n4">E</li><li class="n5">F</li>
+        <li class="n6">F#</li><li class="n7">G</li><li class="n8">G#</li><li class="n9">A</li><li class="n10">A#</li><li class="n11">B</li>
       </ul>
     </div>
   </section>
 
-  <section class="l-wrap l-section" id="como">
-    <p class="l-eyebrow">Como funciona</p>
-    <h2>Do ficheiro ao ensaio em três passos.</h2>
+  <section class="l-wrap l-section" id="how">
+    <p class="l-eyebrow">How it works</p>
+    <h2>From file to rehearsal in three steps.</h2>
     <ol class="l-steps">
-      <li><span>1</span><h3>Carrega a tablatura</h3><p>Escolhe um ficheiro Guitar Pro da música que queres tocar e o instrumento que é teu.</p></li>
-      <li><span>2</span><h3>Vê o mapa da música</h3><p>Intro, verso, refrão: cada secção com os seus compassos e o tom de cada um numa cor.</p></li>
-      <li><span>3</span><h3>Pratica por partes</h3><p>Loop na secção difícil, velocidade de 25 % a 150 %, metrónomo e contagem antes de entrar.</p></li>
+      <li><span>1</span><h3>Load the tab</h3><p>Pick a Guitar Pro file of the song you want to play and choose your instrument.</p></li>
+      <li><span>2</span><h3>See the song map</h3><p>Intro, verse, chorus: each section with its bars and the chord of each one in a colour.</p></li>
+      <li><span>3</span><h3>Practise in parts</h3><p>Loop the hard section, set the speed from 25% to 150%, use the metronome and a count-in.</p></li>
     </ol>
   </section>
 
-  <section class="l-wrap l-section l-section-tight" aria-label="Funcionalidades">
+  <section class="l-wrap l-section l-section-tight" aria-label="Features">
     <ul class="l-features">
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></span><h3>Tom por compasso</h3><p>Cada compasso mostra o acorde detetado, com a cor da nota. Vês a harmonia antes de tocar.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></svg></span><h3>Tablatura sincronizada</h3><p>O cursor segue o som e o esquema acompanha. Clica num compasso para saltar para lá.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></span><h3>Loop por secção</h3><p>Repete só o refrão ou só aquele compasso até sair limpo.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19 5L5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span><h3>Velocidade 25–150 %</h3><p>Abranda sem mudar o tom e vai subindo à medida que ganhas confiança.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span><h3>Tocar por cima</h3><p>Silencia a tua pista e toca com a banda, ou ouve só o teu instrumento.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg></span><h3>Esquema em PDF</h3><p>Edita tons e nomes das secções e exporta o mapa para levar para o ensaio.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 21h8l-1.5-17h-5z"/><path d="M12 14l5-7"/></svg></span><h3>Metrónomo e contagem</h3><p>Contagem antes de entrar e subdivisão (1 &amp; 2 &amp;) para não perderes o tempo.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg></span><h3>As minhas músicas</h3><p>As músicas que importas ficam guardadas neste browser e abrem onde as deixaste.</p></li>
+      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></span><h3>Chord per bar</h3><p>Each bar shows the detected chord in the colour of its note. You see the harmony before you play.</p></li>
+      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></svg></span><h3>Synced tablature</h3><p>The cursor follows the sound and the chart keeps up. Click a bar to jump straight to it.</p></li>
+      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></span><h3>Loop any section</h3><p>Repeat just the chorus, or just that one bar, until it sounds clean.</p></li>
+      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19 5L5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span><h3>Speed 25–150%</h3><p>Slow down without changing the pitch and speed up as you gain confidence.</p></li>
+      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span><h3>Play along</h3><p>Mute your track and play with the band, or hear only your instrument.</p></li>
+      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg></span><h3>Chart as PDF</h3><p>Edit chords and section names and export the map to take to rehearsal.</p></li>
+      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 21h8l-1.5-17h-5z"/><path d="M12 14l5-7"/></svg></span><h3>Metronome and count-in</h3><p>A count-in before you start and subdivisions (1 &amp; 2 &amp;) so you never lose the beat.</p></li>
+      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg></span><h3>My songs</h3><p>The songs you import are saved in this browser and open where you left them.</p></li>
     </ul>
   </section>
 
   <section class="l-wrap l-section l-section-cta">
     <div class="l-cta">
       <div>
-        <h2>Qual é a próxima música?</h2>
-        <p>Arrasta o ficheiro para esta página e começa a tocar em segundos.</p>
+        <h2>What’s your next song?</h2>
+        <p>Drag the file onto this page and start playing in seconds.</p>
       </div>
-      <button type="button" class="l-btn black" data-pick>Carregar ficheiro</button>
+      <button type="button" class="l-btn black" data-pick>Load file</button>
     </div>
   </section>
 </main>
@@ -164,7 +164,7 @@
 <footer class="l-foot">
   <div class="l-wrap">
     <span>© 2026 Mapa de Compassos</span>
-    <span><a href="./ajuda.html">Como funciona</a> · <a href="./licencas.html">Termos, privacidade e licenças</a></span>
+    <span><a href="./help.html">How it works</a> · <a href="./licenses.html">Terms, privacy and licenses</a></span>
   </div>
 </footer>
 <div class="l-tail" aria-hidden="true">
@@ -177,7 +177,7 @@
 </div>
 
 <input type="file" id="landingFile" class="l-sr" tabindex="-1" aria-hidden="true">
-<div class="l-drop" id="landingDrop" hidden><div>Larga o ficheiro aqui</div></div>
+<div class="l-drop" id="landingDrop" hidden><div>Drop the file here</div></div>
 
 <script type="module" src="/src/landing.ts"></script>
 </body>

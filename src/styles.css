@@ -1,68 +1,76 @@
-/* Mapa de Compassos — estilos (design "Estúdio": escuro por defeito, com tema claro opcional; ao estilo de um programa de produção musical)
+/* Mapa de Compassos — estilos (design "Azul profundo", igual à página inicial: azul escuro por defeito, com tema claro opcional)
    Layout: barra de topo com a música; o esquema (quadrados com a cor da nota) ao lado da tablatura;
    em baixo o leitor, com uma barra de progresso neutra. */
 :root {
   color-scheme: dark;
-  --bg: #0e0f13;
-  --panel: #16181f;
-  --panel-2: #1d2029;
-  --dock: #121319;
-  --line: #23262f;
-  --line-2: #2c303b;
-  --ink: #e9ebf2;
-  --ink-strong: #f6f7fa;
-  --ink-soft: #8a90a2;
-  --accent: #c9ff5c;        /* loop, estado ativo (fundos) */
-  --accent-ink: #0e0f13;    /* texto sobre --accent */
-  --accent-text: #c9ff5c;   /* texto e contornos na cor de destaque */
-  --on-note: #0e0f13;       /* texto sobre um quadrado com a cor cheia da nota */
-  --tint: 20%;              /* quanto da cor da nota entra no fundo dos quadrados */
-  --rep-bg: rgba(255, 255, 255, .1);
-  --overlay: rgba(14, 15, 19, .75);
-  --scrim: rgba(0, 0, 0, .55);
-  --underline: rgba(233, 235, 242, .35);
-  --hover-on-strong: rgba(14, 15, 19, .1);
-  --focus: #8fb2ff;
+  /* Paleta "Azul profundo": #0A0C12 · #023661 · #3F3A42 · #76828E · #DB5227 */
+  --bg: #022c55;
+  --bg-grad: radial-gradient(1000px 600px at 90% -10%, rgba(47, 120, 206, .32), transparent 70%), linear-gradient(180deg, #03315d 0%, #022a52 100%);
+  --panel: #0A0C12;
+  --panel-2: #161a24;
+  --dock: #0A0C12;
+  --line: rgba(110, 165, 230, .2);
+  --line-2: rgba(110, 165, 230, .34);
+  --ink: #eef2f7;
+  --ink-strong: #ffffff;
+  --ink-soft: #a9b6c4;
+  --accent: #DB5227;        /* loop, estado ativo (fundos) */
+  --accent-2: #ff7a3d;      /* início do gradiente laranja */
+  --accent-ink: #0A0C12;    /* texto sobre --accent */
+  --accent-text: #f6a487;   /* texto e contornos na cor de destaque */
+  --on-note: #0A0C12;       /* texto sobre um quadrado com a cor cheia da nota */
+  --tint: 34%;              /* quanto da cor da nota entra no fundo dos quadrados */
+  --rep-bg: rgba(255, 255, 255, .12);
+  --overlay: rgba(2, 30, 60, .78);
+  --scrim: rgba(0, 8, 20, .6);
+  --underline: rgba(238, 242, 247, .35);
+  --hover-on-strong: rgba(10, 12, 18, .12);
+  --hover-line: rgba(110, 165, 230, .55);
+  --focus: #ffd2c2;
   --err-bg: #3a1714; --err-ink: #ffc2b8;
-  --shadow: 0 16px 48px rgba(0, 0, 0, .5), 0 2px 6px rgba(0, 0, 0, .35);
+  --shadow: 0 20px 56px rgba(2, 10, 24, .6), 0 0 40px rgba(47, 120, 206, .18);
   /* Cores das notas (convenção Boomwhackers): Dó vermelho → Si rosa */
   --n0: #ff4d4d; --n1: #ff6d3a; --n2: #ff9a2e; --n3: #ffbe1f; --n4: #f2d40a; --n5: #9bd13b;
   --n6: #3ccf6e; --n7: #1cc2b0; --n8: #3b9cff; --n9: #7c5cff; --n10: #c056f0; --n11: #ff5fa8;
   --f-body: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-head: "Plus Jakarta Sans", "Geist", system-ui, sans-serif;
   --f-mono: "Geist Mono", ui-monospace, Menlo, Consolas, monospace;
-  --r-lg: 14px; --r-md: 10px; --r-sm: 8px;
+  --r-lg: 16px; --r-md: 12px; --r-sm: 10px;
 }
 
 /* Tema claro (escolhido no botão sol/lua; guardado no browser) */
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f5f6f8;
+  --bg: #eef2f7;
+  --bg-grad: linear-gradient(180deg, #f3f6fa 0%, #e8eef5 100%);
   --panel: #ffffff;
-  --panel-2: #eceef3;
+  --panel-2: #e9eef5;
   --dock: #ffffff;
-  --line: #e2e5eb;
-  --line-2: #d3d7df;
-  --ink: #1b1e27;
-  --ink-strong: #0e0f13;
-  --ink-soft: #5f6676;
-  --accent: #c9ff5c;
-  --accent-ink: #0e0f13;
-  --accent-text: #3f6212;
-  --focus: #2f5fdb;
+  --line: #d6dee8;
+  --line-2: #c3cdd9;
+  --ink: #0A0C12;
+  --ink-strong: #0A0C12;
+  --ink-soft: #4a5563;
+  --accent: #DB5227;
+  --accent-2: #ff7a3d;
+  --accent-ink: #0A0C12;
+  --accent-text: #a8391a;
+  --focus: #023661;
   --err-bg: #fdecea; --err-ink: #8a1c12;
-  --shadow: 0 12px 36px rgba(16, 19, 31, .12), 0 2px 6px rgba(16, 19, 31, .06);
-  --tint: 28%;
-  --rep-bg: rgba(14, 15, 19, .08);
-  --overlay: rgba(245, 246, 248, .8);
-  --scrim: rgba(16, 19, 31, .35);
-  --underline: rgba(27, 30, 39, .3);
+  --shadow: 0 12px 36px rgba(2, 54, 97, .14), 0 2px 6px rgba(2, 54, 97, .08);
+  --tint: 30%;
+  --rep-bg: rgba(10, 12, 18, .08);
+  --overlay: rgba(238, 242, 247, .82);
+  --scrim: rgba(2, 30, 60, .35);
+  --underline: rgba(10, 12, 18, .3);
   --hover-on-strong: rgba(255, 255, 255, .14);
+  --hover-line: #8fa3bb;
 }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html { padding-top: env(safe-area-inset-top, 0px); }
-body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+body { margin: 0; background-color: var(--bg); background-image: var(--bg-grad); background-repeat: no-repeat; background-attachment: scroll; min-height: 100vh; color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
 img { max-width: 100%; }
 button, select, input { font: inherit; color: inherit; }
@@ -90,7 +98,7 @@ svg.f { fill: currentColor; stroke: none; }
 
 .btn { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 13px; border-radius: var(--r-sm); border: 1px solid var(--line-2);
   background: var(--panel); color: var(--ink); font-size: 13px; font-weight: 500; transition: border-color .15s, background .15s; }
-.btn:hover:not(:disabled) { border-color: #3d4250; background: var(--panel-2); }
+.btn:hover:not(:disabled) { border-color: var(--hover-line); background: var(--panel-2); }
 .btn.primary { background: var(--ink-strong); color: var(--bg); border-color: var(--ink-strong); font-weight: 600; }
 .btn.primary:hover { filter: brightness(1.08); }
 .btn.primary input { display: none; }
@@ -153,7 +161,7 @@ svg.f { fill: currentColor; stroke: none; }
 .bar.playing .ch { color: var(--bg); }
 .bar.playing .num { color: color-mix(in srgb, var(--bg) 65%, transparent); }
 .chart.colored .bar[data-pc].playing .ch { color: var(--on-note); }
-.chart.colored .bar[data-pc].playing .num { color: rgba(14, 15, 19, .65); }
+.chart.colored .bar[data-pc].playing .num { color: rgba(10, 12, 18, .65); }
 .chart.colored .bar[data-pc].playing { background: var(--nc); box-shadow: 0 0 0 2px var(--ink-strong), 0 0 26px color-mix(in srgb, var(--nc) 60%, transparent); }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12.5px; color: var(--ink-soft); margin-top: 24px; }
 .legend i { font-style: normal; color: var(--focus); }
@@ -178,7 +186,7 @@ svg.f { fill: currentColor; stroke: none; }
   display: flex; flex-direction: column; gap: 10px; }
 .progress { position: relative; height: 4px; border-radius: 999px; background: var(--line-2); cursor: pointer; }
 .progress::before { content: ""; position: absolute; inset: -8px 0; }
-.progress-fill { height: 100%; width: 0; border-radius: inherit; background: var(--ink-strong); transition: width .15s linear; }
+.progress-fill { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .15s linear; }
 .dock-row { display: flex; align-items: center; gap: 10px 20px; flex-wrap: wrap; }
 .tp { display: flex; align-items: center; gap: 4px; }
 .ibtn { width: 38px; height: 38px; border-radius: 50%; border: 0; background: transparent; color: var(--ink); display: grid; place-items: center; }
@@ -466,8 +474,8 @@ a.btn { color: inherit; text-decoration: none; }
 
 /* ---------- Tutorial ---------- */
 .tour { position: fixed; inset: 0; z-index: 40; }
-.tour-spot { position: fixed; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(7, 8, 11, .72), 0 0 0 2px var(--accent-text); transition: all .25s ease; pointer-events: none; }
-.tour-spot.none { left: 50%; top: 50%; width: 0; height: 0; box-shadow: 0 0 0 9999px rgba(7, 8, 11, .72); }
+.tour-spot { position: fixed; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(1, 12, 26, .72), 0 0 0 2px var(--accent-text); transition: all .25s ease; pointer-events: none; }
+.tour-spot.none { left: 50%; top: 50%; width: 0; height: 0; box-shadow: 0 0 0 9999px rgba(1, 12, 26, .72); }
 .tour-card { position: fixed; width: min(380px, calc(100% - 32px)); padding: 18px 18px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line-2); box-shadow: var(--shadow); transition: left .25s ease, top .25s ease; }
 .tour-step { font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-text); }
 .tour-card h2 { margin: 6px 0 6px; font-size: 18px; font-weight: 600; text-wrap: balance; }
@@ -488,3 +496,56 @@ a.btn { color: inherit; text-decoration: none; }
 .doc-body details { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); padding: 0 14px; margin-bottom: 8px; max-width: 70ch; }
 .doc-body summary { cursor: pointer; padding: 12px 0; font-weight: 600; }
 .doc-body details p { margin: 0 0 12px; color: var(--ink); }
+
+/* ---------- Design "Azul profundo" (igual à página inicial) ---------- */
+h1, h2, h3, #songTitle, .brand, .sheet-head h2, .tour-card h2, .bm-head h2 { font-family: var(--f-head); }
+.brand { font-weight: 700; font-size: 15px; }
+.logo { grid-template-columns: repeat(2, 9px); gap: 3px; }
+.logo i { width: 9px; height: 9px; background: var(--accent); }
+.logo i:nth-child(2) { background: var(--accent-2); }
+.logo i:nth-child(3) { background: #8fb6e0; }
+.logo i:nth-child(4) { background: #76828E; }
+#songTitle { font-weight: 700; }
+.top { background: color-mix(in srgb, var(--bg) 70%, transparent); backdrop-filter: blur(6px); }
+
+/* Botões em forma de pílula; o principal em laranja */
+.btn, .tbtn { border-radius: 999px; }
+.btn.icon { border-radius: 50%; }
+.btn.primary, a.btn.primary {
+  background: linear-gradient(180deg, var(--accent-2), var(--accent)); color: var(--accent-ink); border-color: transparent;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 40%, transparent), inset 0 1px 0 rgba(255, 255, 255, .25);
+}
+.btn.primary:hover { filter: brightness(1.06); color: var(--accent-ink); }
+.play { background: linear-gradient(180deg, var(--accent-2), var(--accent)); color: var(--accent-ink); box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent); }
+.tbtn[aria-pressed="true"], .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.sbtn { border-radius: 999px; }
+.panel-head h2 { color: var(--ink); }
+
+/* Painéis escuros com contorno azul, como a pré-visualização da página inicial */
+.tabpanel, .sheet, .bar-modal, .tour-card, .barbar, .help-menu { border-color: var(--line-2); }
+.dock { border-top-color: var(--line-2); box-shadow: 0 -10px 40px rgba(2, 10, 24, .35); }
+
+/* Quadrados dos compassos: cor cheia com brilho e contorno da nota */
+.bar { border-radius: 10px; }
+:root:not([data-theme="light"]) .chart.colored .bar[data-pc] {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--nc) 58%, #0A0C12), color-mix(in srgb, var(--nc) 36%, #0A0C12));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nc) 80%, #ffffff), inset 0 1px 0 rgba(255, 255, 255, .22), 0 4px 12px color-mix(in srgb, var(--nc) 22%, transparent);
+}
+:root:not([data-theme="light"]) .chart.colored .bar[data-pc].two {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--nc) 48%, #0A0C12) 50%, color-mix(in srgb, var(--nc2) 48%, #0A0C12) 50%);
+}
+:root:not([data-theme="light"]) .chart.colored .bar[data-pc] .ch { text-shadow: 0 1px 2px rgba(0, 0, 0, .45); }
+:root:not([data-theme="light"]) .chart.colored .bar[data-pc] .num { color: rgba(255, 255, 255, .7); }
+:root:not([data-theme="light"]) .chart.colored .bar[data-pc].playing { background: var(--nc); box-shadow: 0 0 0 2px #ffffff, 0 0 26px color-mix(in srgb, var(--nc) 60%, transparent); }
+:root:not([data-theme="light"]) .chart.colored .bar[data-pc].playing .ch { text-shadow: none; }
+:root:not([data-theme="light"]) .chart.colored .bar[data-pc].playing .num { color: rgba(10, 12, 18, .65); }
+
+/* Páginas de texto (Como funciona, Termos) */
+body.doc .top { position: sticky; top: 0; z-index: 5; border-bottom: 1px solid var(--line); }
+.doc-body h1 { font-weight: 800; font-size: clamp(30px, 4.4vw, 48px); letter-spacing: -.03em; }
+.doc-body h2 { font-weight: 800; font-size: 22px; letter-spacing: -.01em; }
+.doc-body h2::before { content: ""; display: block; width: 28px; height: 3px; border-radius: 2px; background: var(--accent); margin-bottom: 12px; }
+.toc a { border-radius: 999px; }
+.toc a:hover { border-color: var(--hover-line); }
+.doc-body details { border-color: var(--line-2); }
+.doc-body .table-wrap { border-color: var(--line-2); }

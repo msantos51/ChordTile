@@ -1,9 +1,15 @@
 # Gera tests/fixtures/exemplo.gp5: progressão conhecida (Intro, Verso, Refrão, Verso, Solo)
-# com guitarra e baixo, para testar a deteção do tom. Uso: pip install pyguitarpro && python scripts/make-fixture.py
-import guitarpro as gp, copy
+# com guitarra e baixo, para testar a deteção do tom (nomes em português, com acentos).
+# Com --en gera a música de exemplo do site, em inglês: public/sample.gp5.
+# Uso: pip install pyguitarpro && python scripts/make-fixture.py [--en]
+import guitarpro as gp, copy, sys
+EN = "--en" in sys.argv
 song = gp.Song()
-song.title="Exemplo"; song.artist="Esquema de demonstração"; song.tempo=100
-prog = [("INTRO",["A","B","A","B"]),("VERSO",["B","C","B","G"]*4),("REFRÃO",["A","B","G","D"]*2),("VERSO",["B","C","B","G"]*4),("SOLO",["B","C","B","G","A","B","A","B"])]
+if EN: song.title="Sample song"; song.artist="Demo chart"
+else: song.title="Exemplo"; song.artist="Esquema de demonstração"
+song.tempo=100
+VERSE, CHORUS = ("VERSE","CHORUS") if EN else ("VERSO","REFRÃO")
+prog = [("INTRO",["A","B","A","B"]),(VERSE,["B","C","B","G"]*4),(CHORUS,["A","B","G","D"]*2),(VERSE,["B","C","B","G"]*4),("SOLO",["B","C","B","G","A","B","A","B"])]
 PC={"C":0,"D":2,"E":4,"F":5,"G":7,"A":9,"B":11}
 def chord(n):
     r=PC[n[0]]; m='m' in n
@@ -17,8 +23,8 @@ for i,(sec,c) in enumerate(bars):
     h=gp.MeasureHeader(); h.number=i+1; h.start=960+i*3840
     if sec: h.marker=gp.Marker(title=sec)
     song.measureHeaders.append(h)
-gtr=song.tracks[0]; gtr.name="Guitarra"
-bass=gp.Track(song,number=2,name="Baixo",channel=gp.MidiChannel(channel=1,effectChannel=1,instrument=33))
+gtr=song.tracks[0]; gtr.name="Guitar" if EN else "Guitarra"
+bass=gp.Track(song,number=2,name="Bass" if EN else "Baixo",channel=gp.MidiChannel(channel=1,effectChannel=1,instrument=33))
 bass.strings=[gp.GuitarString(n,v) for n,v in [(1,43),(2,38),(3,33),(4,28)]]
 song.tracks.append(bass)
 for t in song.tracks:
@@ -41,5 +47,5 @@ for i,(sec,c) in enumerate(bars):
     br=28+((r-4)%12)
     # bass: root, fifth, root, passing note (third)
     add(song.tracks[1].measures[i],[([br],4),([br+7],4),([br],4),([br+iv[1]+12 if br+iv[1]<28 else br+iv[1]],4)],bass.strings)
-gp.write(song,"tests/fixtures/exemplo.gp5")
+gp.write(song,"public/sample.gp5" if EN else "tests/fixtures/exemplo.gp5")
 print("ok",len(bars))

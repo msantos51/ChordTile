@@ -37,7 +37,7 @@ function tx<T>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest<
     const req = run(t.objectStore(store));
     t.oncomplete = () => { db.close(); resolve(req.result); };
     t.onerror = () => { db.close(); reject(t.error ?? req.error); };
-    t.onabort = () => { db.close(); reject(t.error ?? new Error('Operação cancelada')); };
+    t.onabort = () => { db.close(); reject(t.error ?? new Error('Operation aborted')); };
   }));
 }
 
@@ -97,9 +97,9 @@ export function askPersistentStorage(): void {
 /** "há 3 dias", "hoje", … */
 export function relativeDay(ts: number, now = Date.now()): string {
   const days = Math.floor((now - ts) / 86_400_000);
-  if (days <= 0) return 'hoje';
-  if (days === 1) return 'ontem';
-  if (days < 30) return 'há ' + days + ' dias';
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 30) return days + ' days ago';
   const months = Math.floor(days / 30);
-  return months === 1 ? 'há 1 mês' : 'há ' + months + ' meses';
+  return months === 1 ? '1 month ago' : months + ' months ago';
 }

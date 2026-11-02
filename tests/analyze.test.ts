@@ -70,11 +70,11 @@ describe('label', () => {
   it('mostra letras, menores, Dó Ré Mi e bemóis', () => {
     expect(label({ pc: 9, minor: true })).toBe('A');
     expect(label({ pc: 9, minor: true }, { showMinor: true })).toBe('Am');
-    expect(label({ pc: 0, minor: false }, { latin: true })).toBe('Dó');
+    expect(label({ pc: 0, minor: false }, { latin: true })).toBe('Do');
     expect(label({ pc: 10, minor: false }, { accidentals: 'flat' })).toBe('Bb');
     expect(label({ pc: 10, minor: false }, { accidentals: 'auto' }, -2)).toBe('Bb');
     expect(label({ pc: 10, minor: false }, { accidentals: 'auto' }, 2)).toBe('A#');
-    expect(label({ pc: 6, minor: false }, { latin: true, accidentals: 'sharp' })).toBe('Fá#');
+    expect(label({ pc: 6, minor: false }, { latin: true, accidentals: 'sharp' })).toBe('Fa#');
     expect(label(null)).toBe('–');
   });
 });

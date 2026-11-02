@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<script>
+  // Apply the saved theme before the page paints (avoids a flash)
+  try { if (localStorage.getItem('mapa:theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<title>How it works · Mapa de Compassos</title>
+<meta name="description" content="Mapa de Compassos guide: loading Guitar Pro files, reading the colour chart, practising bars with a count and using the site on your phone.">
+</head>
+<body class="doc">
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./">
+      <span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      Mapa de Compassos
+    </a>
+    <a class="btn primary" href="./player.html">Open the player</a>
+  </div>
+</header>
+
+<main class="wrap doc-body">
+  <h1>How it works</h1>
+  <p class="lead">Mapa de Compassos reads a Guitar Pro file and shows you the song as a map: sections, bars and the chord of each bar in a colour. Then you practise it part by part, with the tab and the sound following along.</p>
+
+  <nav class="toc" aria-label="On this page">
+    <a href="#start">Getting started</a>
+    <a href="#the-chart">The chart</a>
+    <a href="#the-tab">The tab</a>
+    <a href="#practise-a-bar">Practising a bar</a>
+    <a href="#the-player">The player</a>
+    <a href="#songs">My songs</a>
+    <a href="#phone">On your phone</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+
+  <section id="start">
+    <h2>Get started in three steps</h2>
+    <ol class="steps">
+      <li><strong>Load the song.</strong> Press “Load file” or drag the file onto the page. Guitar Pro 3 to 8 (<code>.gp3</code>, <code>.gp4</code>, <code>.gp5</code>, <code>.gpx</code>, <code>.gp</code>) and MusicXML are supported.</li>
+      <li><strong>Pick your instrument</strong> in the menu in the top bar. The chord of each bar is detected from it. If the song has a bass, it starts with that.</li>
+      <li><strong>Practise.</strong> Press ▶, pick a section and press “Practise” to loop it, or open a bar to study it in detail.</li>
+    </ol>
+  </section>
+
+  <section id="the-chart">
+    <h2>The chart</h2>
+    <p>Each square is a bar. The letter is the main note (the chord) of that bar on your instrument, and the colour tells you which note it is without reading:</p>
+    <div class="note-legend" aria-label="Colour of each note">
+      <span style="--nc:var(--n0)"><b>C</b> Do</span>
+      <span style="--nc:var(--n1)"><b>C#</b> Do#</span>
+      <span style="--nc:var(--n2)"><b>D</b> Re</span>
+      <span style="--nc:var(--n3)"><b>D#</b> Re#</span>
+      <span style="--nc:var(--n4)"><b>E</b> Mi</span>
+      <span style="--nc:var(--n5)"><b>F</b> Fa</span>
+      <span style="--nc:var(--n6)"><b>F#</b> Fa#</span>
+      <span style="--nc:var(--n7)"><b>G</b> Sol</span>
+      <span style="--nc:var(--n8)"><b>G#</b> Sol#</span>
+      <span style="--nc:var(--n9)"><b>A</b> La</span>
+      <span style="--nc:var(--n10)"><b>A#</b> La#</span>
+      <span style="--nc:var(--n11)"><b>B</b> Si</span>
+    </div>
+    <ul>
+      <li><strong>Sections.</strong> Bars are grouped by the sections marked in the file (Intro, Verse, Chorus…). Click a section name to rename it.</li>
+      <li><strong>Go to a bar.</strong> Click (or tap) a square: the player and the tab jump to that bar.</li>
+      <li><strong>Practise a section.</strong> The “Practise” button next to the name loops the section. Press it again to stop.</li>
+      <li><strong>Fix a chord.</strong> On a computer, click the letter and type (for example <code>G</code>, <code>F#m</code> or <code>Sol</code>). On a phone, tap the square and choose “Edit”. Bars you fixed show a ✎.</li>
+      <li><strong>New section.</strong> Pick a bar and press “New section here” to start a section at that point.</li>
+      <li><strong>Export PDF.</strong> Creates an A4 sheet with the colour chart, to print or take to rehearsal.</li>
+    </ul>
+    <p class="hint">In Settings you can show minor chords (Am, Em…), show two chords when the chord changes mid-bar, use Do Re Mi instead of letters, and choose 2, 4 or 8 bars per row.</p>
+  </section>
+
+  <section id="the-tab">
+    <h2>The tab</h2>
+    <p>The tab of your instrument follows the chart and the sound: the cursor shows what is playing, and the bar being played lights up in the chart.</p>
+    <ul>
+      <li>Click a bar in the tab to select it. A bar with <strong>Expand</strong> and <strong>Loop</strong> appears.</li>
+      <li><strong>Loop</strong> repeats just that bar.</li>
+      <li><strong>Expand</strong> (or double-click) opens the bar large. See the next section.</li>
+    </ul>
+  </section>
+
+  <section id="practise-a-bar">
+    <h2>Practising a bar</h2>
+    <p>In the bar window you see the strings and frets large and, underneath, <strong>how to count</strong>: “1 & 2 & 3 & 4 &”, lined up with the notes. While it plays, the right note and count light up, and a dot above blinks on each beat.</p>
+    <ul>
+      <li><strong>Count in:</strong> “Automatic” picks the simplest count that hits every note. You can also choose beats only (1 2 3 4), eighth notes (1 & 2 &) or sixteenth notes (1 e & a). In 3/4 you count “1 & 2 & 3 &”; in 6/8, “1 2 3 4 5 6”.</li>
+      <li><strong>Play on loop</strong> with a <strong>1-bar count-in</strong> before it starts, <strong>metronome</strong> and <strong>speed</strong> (25% to 150%). The counter shows how many repeats you have done.</li>
+      <li>The arrows move to the previous or next bar without losing the loop. Esc closes.</li>
+    </ul>
+  </section>
+
+  <section id="the-player">
+    <h2>The player</h2>
+    <ul>
+      <li><strong>▶ / ❚❚</strong> plays and pauses; <strong>‹ ›</strong> move bar by bar; the progress bar takes you anywhere in the song.</li>
+      <li><strong>Speed:</strong> slows the song down without changing the pitch.</li>
+      <li><strong>Loop, Metronome and Count-in</strong> (one bar of counting before it starts).</li>
+      <li><strong>Play along:</strong> mutes your instrument and keeps the rest of the band, so you play that part.</li>
+      <li><strong>Solo</strong> (only my instrument): mutes the rest of the band and keeps only your instrument, so you can hear exactly what to play. The two options are never on at the same time.</li>
+    </ul>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Key</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>Space</code></td><td>Play / pause</td></tr>
+          <tr><td><code>←</code> <code>→</code></td><td>Previous / next bar</td></tr>
+          <tr><td><code>Enter</code> / <code>Tab</code></td><td>While fixing a chord, moves to the next bar</td></tr>
+          <tr><td><code>Esc</code></td><td>Closes windows and panels</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="songs">
+    <h2>My songs</h2>
+    <p>Every song you load is saved in “My songs”, <strong>only in this browser on this device</strong>, with your edits, the instrument you picked and the sections. When you come back, the last song you used opens.</p>
+    <ul>
+      <li>To delete a song, use the bin icon next to it.</li>
+      <li>If you clear the site’s data in your browser, the saved songs are deleted too.</li>
+      <li>On another device or browser you need to load the song again: nothing is stored on a server.</li>
+    </ul>
+  </section>
+
+  <section id="phone">
+    <h2>On your phone</h2>
+    <ul>
+      <li>Use the <strong>Chart / Tab</strong> switch to move between the two views.</li>
+      <li>Tapping a square goes to that bar; to fix the chord use “Edit”.</li>
+      <li>The player options (speed, loop, metronome…) are behind the settings button next to ▶.</li>
+      <li><strong>Add to Home Screen</strong> to open it like an app: on iPhone, Share → “Add to Home Screen”; on Android, menu ⋮ → “Install app” or “Add to Home screen”.</li>
+    </ul>
+  </section>
+
+  <section id="faq">
+    <h2>Frequently asked questions</h2>
+    <details>
+      <summary>My file won’t open</summary>
+      <p>Check that it is a Guitar Pro (3 to 8) or MusicXML file. If it opens in Guitar Pro but not here, save it as <code>.gp5</code> there and try again.</p>
+    </details>
+    <details>
+      <summary>The chord of a bar is wrong</summary>
+      <p>The chord is worked out from the notes of the chosen instrument, and some bars are ambiguous (passing notes, inverted chords). Check you picked the right instrument and fix the bar by hand: your fix is saved.</p>
+    </details>
+    <details>
+      <summary>The tab runs ahead of the sound</summary>
+      <p>This happens mostly with Bluetooth headphones. In Settings → Sync, increase the delay (usually between 150 and 300 ms) until the tab and the squares match what you hear.</p>
+    </details>
+    <details>
+      <summary>I can’t hear anything on my phone</summary>
+      <p>Turn up the media volume and press ▶ again. On iPhone, the site plays even in silent mode; if you still hear nothing, turn silent mode off and reload the page.</p>
+    </details>
+    <details>
+      <summary>Why are the drums not in the instrument list?</summary>
+      <p>Drums have no pitched notes, so there is no chord to show. You still hear them in the backing sound.</p>
+    </details>
+    <details>
+      <summary>Are my files sent anywhere?</summary>
+      <p>No. Files are read and stored only in your browser. See the <a href="./licenses.html#privacy">terms and privacy</a>.</p>
+    </details>
+  </section>
+</main>
+
+<script type="module" src="/src/doc.ts"></script>
+</body>
+</html>

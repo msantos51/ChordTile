@@ -33,7 +33,7 @@ export interface Section {
 
 const NAMES_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const NAMES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-const LATIN: Record<string, string> = { C: 'Dó', D: 'Ré', E: 'Mi', F: 'Fá', G: 'Sol', A: 'Lá', B: 'Si' };
+const LATIN: Record<string, string> = { C: 'Do', D: 'Re', E: 'Mi', F: 'Fa', G: 'Sol', A: 'La', B: 'Si' };
 const LETTER_PC: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 
 const mod12 = (n: number) => ((n % 12) + 12) % 12;
@@ -178,7 +178,7 @@ export function sectionsFromScore(score: Score): Section[] {
   const out: Section[] = [];
   score.masterBars.forEach((mb, i) => {
     const t = mb.section ? (mb.section.text || mb.section.marker || '').trim() : '';
-    if (i === 0 || t) out.push({ name: (t || 'Música').toUpperCase(), start: i });
+    if (i === 0 || t) out.push({ name: (t || 'Song').toUpperCase(), start: i });
   });
   return out;
 }

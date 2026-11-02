@@ -122,7 +122,7 @@ function loadBytes(bytes: Uint8Array, name: string, isSample: boolean): boolean 
   let s: Score;
   try { s = parseScore(at, bytes); }
   catch (e) {
-    showErr('Não consegui ler “' + name + '”: o ficheiro está danificado ou num formato que não é suportado. Aceita ficheiros Guitar Pro 3 a 8 (.gp3, .gp4, .gp5, .gpx, .gp) e MusicXML. Se o ficheiro abre no Guitar Pro, experimenta guardá-lo como .gp5.');
+    showErr('Couldn’t read “' + name + '”: the file is damaged or in an unsupported format. Guitar Pro 3 to 8 (.gp3, .gp4, .gp5, .gpx, .gp) and MusicXML files are supported. If the file opens in Guitar Pro, try saving it as .gp5.');
     console.error(e);
     return false;
   }
@@ -151,16 +151,16 @@ function renderInfo(name: string) {
   $('songTitle').textContent = s.title || name.replace(/\.[^.]+$/, '');
   document.title = $('songTitle').textContent + ' · Mapa de Compassos';
   const mb = s.masterBars[0];
-  const parts = [s.artist, s.masterBars.length + ' compassos', Math.round(s.tempo) + ' bpm', mb ? mb.timeSignatureNumerator + '/' + mb.timeSignatureDenominator : ''];
+  const parts = [s.artist, s.masterBars.length + ' bars', Math.round(s.tempo) + ' bpm', mb ? mb.timeSignatureNumerator + '/' + mb.timeSignatureDenominator : ''];
   const m = $('songMeta'); m.textContent = parts.filter(Boolean).join(' · ');
-  if (st.isSample) { const b = document.createElement('span'); b.className = 'sample'; b.textContent = 'Exemplo'; m.append(b); }
+  if (st.isSample) { const b = document.createElement('span'); b.className = 'sample'; b.textContent = 'Sample'; m.append(b); }
 }
 
 const isPercussion = (t: Track) => t.staves.every(x => x.isPercussion);
 function trackLabel(t: Track, i: number) {
-  const name = t.name || 'Pista ' + (i + 1);
+  const name = t.name || 'Track ' + (i + 1);
   // Só acrescenta "baixo" quando o nome ainda não o diz ("Baixo" fica "Baixo", não "Baixo · baixo").
-  return isBassTrack(t) && !/bass|baixo|bajo/i.test(name) ? name + ' · baixo' : name;
+  return isBassTrack(t) && !/bass|baixo|bajo/i.test(name) ? name + ' · bass' : name;
 }
 
 /** Preenche os dois seletores de instrumento (ajustes e barra de topo). A bateria fica de fora: não tem tom. */
@@ -182,7 +182,7 @@ function setTrack(i: number) {
   st.viewTrack = i;
   select('viewTrack').value = String(i); select('trackQuick').value = String(i);
   save(); detect(); renderChart(); renderTab();
-  toast('Tom detetado a partir de: ' + trackLabel(score().tracks[i], i));
+  toast('Key detected from: ' + trackLabel(score().tracks[i], i));
 }
 
 // ---------- Deteção ----------
@@ -236,7 +236,7 @@ function renderChart() {
   renderNoteKey();
   if (!st.score?.tracks.some(t => !isPercussion(t))) {
     const note = document.createElement('p'); note.className = 'chart-empty';
-    note.textContent = 'Esta música não tem nenhum instrumento com notas (só bateria), por isso não há tom para mostrar.';
+    note.textContent = 'This song has no pitched instrument (drums only), so there is no key to show.';
     chart.append(note);
   }
   st.sections.forEach((sec, k) => {
@@ -244,15 +244,15 @@ function renderChart() {
     const wrap = document.createElement('div'); wrap.className = 'section' + (st.loopSection === k ? ' looping' : ''); wrap.dataset.sec = String(k);
     const head = document.createElement('div'); head.className = 'sec-head';
     const mark = document.createElement('div'); mark.className = 'mark'; mark.contentEditable = 'true'; mark.spellcheck = false;
-    mark.textContent = sec.name; mark.setAttribute('aria-label', 'Nome da secção');
-    mark.addEventListener('input', () => { sec.name = mark.textContent?.trim() || 'SECÇÃO'; save(); });
+    mark.textContent = sec.name; mark.setAttribute('aria-label', 'Section name');
+    mark.addEventListener('input', () => { sec.name = mark.textContent?.trim() || 'SECTION'; save(); });
     mark.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); mark.blur(); } });
     const meta = document.createElement('span'); meta.className = 'sec-meta';
-    meta.textContent = 'c. ' + (sec.start + 1) + '–' + end + ' · ' + (end - sec.start) + ' comp.';
+    meta.textContent = 'b. ' + (sec.start + 1) + '–' + end + ' · ' + (end - sec.start) + ' bars';
     const acts = document.createElement('div'); acts.className = 'sec-actions';
     const loopB = document.createElement('button'); loopB.type = 'button'; loopB.className = 'sbtn' + (st.loopSection === k ? ' on' : '');
-    loopB.innerHTML = ICON_LOOP + '<span>' + (st.loopSection === k ? 'A praticar' : 'Praticar') + '</span>';
-    loopB.title = 'Repetir esta secção em loop'; loopB.setAttribute('aria-label', 'Praticar ' + sec.name + ' em loop');
+    loopB.innerHTML = ICON_LOOP + '<span>' + (st.loopSection === k ? 'Practising' : 'Practise') + '</span>';
+    loopB.title = 'Loop this section'; loopB.setAttribute('aria-label', 'Practise ' + sec.name + ' on loop');
     loopB.addEventListener('click', () => practiceSection(k));
     loopB.setAttribute('aria-pressed', String(st.loopSection === k));
     acts.append(loopB);
@@ -276,7 +276,7 @@ function barCell(i: number) {
   if (st.fileFlag[i] && ov()[i] == null) cell.classList.add('file');
   const num = document.createElement('span'); num.className = 'num'; num.textContent = (mb.isRepeatStart ? '‖: ' : '') + (i + 1);
   const ch = document.createElement('div'); ch.className = 'ch'; ch.contentEditable = coarse ? 'false' : 'true'; ch.spellcheck = false;
-  ch.textContent = barText(i); ch.setAttribute('aria-label', 'Tom do compasso ' + (i + 1));
+  ch.textContent = barText(i); ch.setAttribute('aria-label', 'Chord of bar ' + (i + 1));
   ch.addEventListener('focus', () => { selectBar(i); if (st.ready && st.playingBar !== i) goBar(i, true); });
   ch.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); focusBar(i + 1); }
@@ -310,7 +310,7 @@ function focusBar(i: number) {
 }
 function selectBar(i: number) {
   st.selBar = i;
-  $('bbLabel').textContent = 'Compasso ' + (i + 1);
+  $('bbLabel').textContent = 'Bar ' + (i + 1);
   $<HTMLButtonElement>('bbSplit').disabled = st.sections.some(s => s.start === i);
   $<HTMLButtonElement>('bbReset').disabled = ov()[i] == null;
   $('barbar').hidden = false;
@@ -355,13 +355,13 @@ function updateNow(i: number, frac: number) {
   const total = st.score ? st.score.masterBars.length : 1;
   $('progressFill').style.width = (i < 0 ? 0 : ((i + frac) / total) * 100) + '%';
   if (i < 0) {
-    $('nowTitle').textContent = st.sections[0] ? st.sections[0].name + ' · compasso 1' : 'Início';
+    $('nowTitle').textContent = st.sections[0] ? st.sections[0].name + ' · bar 1' : 'Start';
     $('nowChip').textContent = '';
     return;
   }
   const k = secOf(i);
-  $('nowTitle').textContent = st.sections[k].name + ' · compasso ' + (i + 1);
-  $('nowChip').textContent = st.sections[k].name + ' · c. ' + (i + 1);
+  $('nowTitle').textContent = st.sections[k].name + ' · bar ' + (i + 1);
+  $('nowChip').textContent = st.sections[k].name + ' · b. ' + (i + 1);
 }
 $('progress').addEventListener('click', e => {
   if (!st.ready || !st.score) return;
@@ -375,31 +375,31 @@ $('pdfBtn').addEventListener('click', async () => {
   if (!st.score) return;
   const s = score(), t = s.tracks[st.viewTrack];
   const mb = s.masterBars[0];
-  const meta = [s.artist, trackLabel(t, st.viewTrack), Math.round(s.tempo) + ' bpm', mb ? mb.timeSignatureNumerator + '/' + mb.timeSignatureDenominator : '', s.masterBars.length + ' compassos']
+  const meta = [s.artist, trackLabel(t, st.viewTrack), Math.round(s.tempo) + ' bpm', mb ? mb.timeSignatureNumerator + '/' + mb.timeSignatureDenominator : '', s.masterBars.length + ' bars']
     .filter(Boolean).join(' · ');
   const btn = $<HTMLButtonElement>('pdfBtn'); btn.disabled = true;
   try {
     await exportPdf({
-      title: $('songTitle').textContent || 'Música',
+      title: $('songTitle').textContent || 'Song',
       meta,
       perRow: st.perRow,
       colors: input('optColors').checked,
       sections: st.sections.map((sec, k) => {
         const end = secEnd(k), bars = [];
         for (let i = sec.start; i < end; i++) bars.push({ n: i + 1, text: barText(i), pcs: pitchClassesOf(barText(i)) });
-        return { name: sec.name, range: 'c. ' + (sec.start + 1) + '–' + end, bars };
+        return { name: sec.name, range: 'b. ' + (sec.start + 1) + '–' + end, bars };
       }),
     });
-    toast('PDF do esquema descarregado.');
-  } catch { toast('Não foi possível criar o PDF.'); }
+    toast('Chart PDF downloaded.');
+  } catch { toast('Couldn’t create the PDF.'); }
   finally { btn.disabled = false; }
 });
 
 // ---------- Tema claro / escuro ----------
 function setTheme(theme: Theme) {
   applyTheme(theme);
-  const next = theme === 'light' ? 'escuro' : 'claro';
-  $('themeBtn').setAttribute('aria-label', 'Mudar para o tema ' + next);
+  const next = theme === 'light' ? 'dark' : 'light';
+  $('themeBtn').setAttribute('aria-label', 'Switch to ' + next + ' theme');
   if (st.api) {
     // A tablatura é desenhada em SVG com cores próprias: trocar e voltar a desenhar.
     const res = st.api.settings.display.resources as unknown as Record<string, unknown>;
@@ -409,7 +409,7 @@ function setTheme(theme: Theme) {
   }
 }
 $('themeBtn').addEventListener('click', () => setTheme(currentTheme() === 'light' ? 'dark' : 'light'));
-$('themeBtn').setAttribute('aria-label', 'Mudar para o tema ' + (currentTheme() === 'light' ? 'escuro' : 'claro'));
+$('themeBtn').setAttribute('aria-label', 'Switch to ' + (currentTheme() === 'light' ? 'dark' : 'light') + ' theme');
 
 // ---------- Ajustes ----------
 function openSettings(v: boolean, focus = true) {
@@ -424,7 +424,7 @@ input('optColors').addEventListener('change', renderChart);
 ['optMinor', 'optSplit', 'optFileChords', 'optNames', 'optAcc'].forEach(id => $(id).addEventListener('change', () => { detect(); renderChart(); }));
 select('perRow').addEventListener('change', () => { st.perRow = +select('perRow').value; save(); renderChart(); });
 $('resetBtn').addEventListener('click', () => {
-  st.overridesByTrack[st.viewTrack] = {}; st.sections = sectionsFromScore(score()); clearLoop(); save(); renderChart(); toast('Esquema reposto a partir do ficheiro.');
+  st.overridesByTrack[st.viewTrack] = {}; st.sections = sectionsFromScore(score()); clearLoop(); save(); renderChart(); toast('Chart reset from the file.');
 });
 select('viewTrack').addEventListener('change', () => setTrack(+select('viewTrack').value));
 select('trackQuick').addEventListener('change', () => setTrack(+select('trackQuick').value));
@@ -444,11 +444,11 @@ function placeTabSel() {
   el.style.top = tab.offsetTop + b.y - 3 + 'px';
   el.style.width = b.w + 6 + 'px';
   el.style.height = b.h + 6 + 'px';
-  $('tsLabel').textContent = 'Compasso ' + (i + 1) + ' · ' + barText(i);
+  $('tsLabel').textContent = 'Bar ' + (i + 1) + ' · ' + barText(i);
   $('tabSelBar').classList.toggle('below', b.y < 60);
   const on = st.loopBar === i;
   $('tsLoop').setAttribute('aria-pressed', String(on));
-  $('tsLoop').querySelector('span')!.textContent = on ? 'Parar loop' : 'Loop';
+  $('tsLoop').querySelector('span')!.textContent = on ? 'Stop loop' : 'Loop';
   el.hidden = false;
 }
 $('tsExpand').addEventListener('click', () => { if (st.tabSel >= 0) openBarModal(st.tabSel); });
@@ -484,7 +484,7 @@ function closeBarModal() {
   // Ao fechar, o loop do compasso termina.
   if (st.loopBar >= 0) {
     st.api?.pause(); clearLoop();
-    if (st.ready) setStatus('Em pausa');
+    if (st.ready) setStatus('Paused');
   }
   if (st.tabSel >= 0) placeTabSel();
 }
@@ -496,7 +496,7 @@ function setModalBar(i: number) {
   modal.view = barView(s, i, st.viewTrack);
   const k = secOf(i);
   $('bmTitle').innerHTML = '';
-  $('bmTitle').append('Compasso ' + (i + 1) + ' ');
+  $('bmTitle').append('Bar ' + (i + 1) + ' ');
   const sp = document.createElement('span'); sp.textContent = '· ' + st.sections[k].name; $('bmTitle').append(sp);
   const v = modal.view, t = s.tracks[st.viewTrack];
   $('bmMeta').textContent = v.numerator + '/' + v.denominator + ' · ' + Math.round(s.tempo) + ' bpm · ' + trackLabel(t, st.viewTrack);
@@ -505,8 +505,8 @@ function setModalBar(i: number) {
   if (pc != null && input('optColors').checked) chord.style.setProperty('--nc', 'var(--n' + pc + ')'); else chord.style.removeProperty('--nc');
   $<HTMLButtonElement>('bmPrev').disabled = i === 0;
   $<HTMLButtonElement>('bmNext').disabled = i === s.masterBars.length - 1;
-  $('bmPrevN').textContent = 'Compasso ' + i;
-  $('bmNextN').textContent = 'Compasso ' + (i + 2);
+  $('bmPrevN').textContent = 'Bar ' + i;
+  $('bmNextN').textContent = 'Bar ' + (i + 2);
   $('bmReps').textContent = '0';
   renderBarModal();
   st.tabSel = i; st.selBar = i;
@@ -571,8 +571,8 @@ function renderBarModal() {
 
   // Subdivisão
   $('bmSubs').querySelectorAll<HTMLButtonElement>('button').forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.sub === String(modal.sub))));
-  const names2: Record<Sub, string> = { 1: 'só os tempos', 2: 'colcheias (1 & 2 &)', 4: 'semicolcheias (1 e & a)' };
-  $('bmSubHint').textContent = modal.sub === 'auto' ? 'A contar em ' + names2[sub] + ', pela nota mais curta do compasso.' : '';
+  const names2: Record<Sub, string> = { 1: 'beats only', 2: 'eighth notes (1 & 2 &)', 4: 'sixteenth notes (1 e & a)' };
+  $('bmSubHint').textContent = modal.sub === 'auto' ? 'Counting in ' + names2[sub] + ', based on the shortest note in the bar.' : '';
   modal.lastSlot = -1;
 }
 
@@ -595,10 +595,10 @@ function clearModalHighlight() {
 function syncModalPlay() {
   const playing = !!st.api && st.api.playerState === PLAYING && st.loopBar === modal.bar;
   $('bmPlayIcon').innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
-  $('bmPlayText').textContent = playing ? 'A tocar em loop' : 'Tocar em loop';
+  $('bmPlayText').textContent = playing ? 'Playing on loop' : 'Play on loop';
 }
 $('bmPlay').addEventListener('click', () => {
-  if (!st.ready) { toast('Os sons ainda estão a carregar.'); return; }
+  if (!st.ready) { toast('The sounds are still loading.'); return; }
   if (api().playerState === PLAYING && st.loopBar === modal.bar) { api().pause(); return; }
   // Contagem e metrónomo conforme as opções da janela (e os botões do leitor acompanham)
   api().countInVolume = input('bmCountIn').checked ? 1 : 0; setPressed('countBtn', input('bmCountIn').checked);
@@ -651,11 +651,11 @@ function initApi() {
   });
   st.api = a;
   a.customCursorHandler = delay.cursorHandler(at.midi.MidiTickLookupFindBeatResultCursorMode.ToNextBext);
-  a.soundFontLoad.on(e => { if (e.total) $('status').textContent = 'A carregar os sons… ' + Math.round((e.loaded / e.total) * 100) + '%'; });
+  a.soundFontLoad.on(e => { if (e.total) $('status').textContent = 'Loading sounds… ' + Math.round((e.loaded / e.total) * 100) + '%'; });
   a.playerReady.on(() => {
     st.ready = true;
     ['playBtn', 'stopBtn', 'prevBtn', 'nextBtn', 'loopBtn', 'metroBtn', 'countBtn', 'muteBtn', 'soloBtn'].forEach(id => ($<HTMLButtonElement>(id).disabled = false));
-    $('status').textContent = 'Pronto a tocar';
+    $('status').textContent = 'Ready to play';
     a.playbackSpeed = +input('speed').value / 100;
     applyMute();
   });
@@ -665,8 +665,8 @@ function initApi() {
     const playing = e.state === PLAYING;
     if (!playing) { delay.clear(); releaseAudio(); }
     $('playIcon').innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
-    $('playBtn').setAttribute('aria-label', playing ? 'Pausa' : 'Tocar');
-    setStatus(playing ? 'A tocar' : 'Em pausa');
+    $('playBtn').setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    setStatus(playing ? 'Playing' : 'Paused');
     syncModalPlay();
     if (!playing && modal.open) clearModalHighlight();
   });
@@ -694,12 +694,12 @@ function initApi() {
     Object.assign(a.settings.display, tabLayout());
     a.updateSettings(); a.render();
   });
-  a.error.on(e => { $('status').textContent = 'Erro no leitor: ' + (e?.message ?? e); });
+  a.error.on(e => { $('status').textContent = 'Player error: ' + (e?.message ?? e); });
 }
 function setStatus(txt: string) {
   const s = $('status'); s.textContent = txt;
-  const what = st.loopSection >= 0 ? st.sections[st.loopSection].name : st.loopBar >= 0 ? 'compasso ' + (st.loopBar + 1) : '';
-  if (what) { const l = document.createElement('span'); l.className = 'loopinfo'; l.textContent = ' · loop em ' + what; s.append(l); }
+  const what = st.loopSection >= 0 ? st.sections[st.loopSection].name : st.loopBar >= 0 ? 'bar ' + (st.loopBar + 1) : '';
+  if (what) { const l = document.createElement('span'); l.className = 'loopinfo'; l.textContent = ' · looping ' + what; s.append(l); }
   s.append(' · ' + input('speed').value + '%');
 }
 
@@ -753,13 +753,13 @@ function goBar(i: number, fromChart = false) {
   try { api().scrollToCursor(); } catch { /* ainda sem cursor */ }
 }
 function playFrom(i: number) {
-  if (!st.ready) { toast('Os sons ainda estão a carregar.'); return; }
+  if (!st.ready) { toast('The sounds are still loading.'); return; }
   goBar(i);
   if (api().playerState !== PLAYING) api().play();
 }
 function practiceSection(k: number) {
-  if (!st.ready) { toast('Os sons ainda estão a carregar.'); return; }
-  if (st.loopSection === k) { clearLoop(); renderChart(); setStatus(api().playerState === PLAYING ? 'A tocar' : 'Em pausa'); return; }
+  if (!st.ready) { toast('The sounds are still loading.'); return; }
+  if (st.loopSection === k) { clearLoop(); renderChart(); setStatus(api().playerState === PLAYING ? 'Playing' : 'Paused'); return; }
   st.loopSection = k; st.loopBar = -1;
   const s = st.sections[k], end = secEnd(k);
   api().playbackRange = { startTick: barTick(s.start), endTick: barEndTick(end - 1) } as AlphaTab.synth.PlaybackRange;
@@ -767,7 +767,7 @@ function practiceSection(k: number) {
   renderChart();
   delay.clear();
   api().tickPosition = barTick(s.start);
-  if (api().playerState !== PLAYING) api().play(); else setStatus('A tocar');
+  if (api().playerState !== PLAYING) api().play(); else setStatus('Playing');
 }
 /** Loop de um só compasso (sem mudar a posição de reprodução). */
 function setLoopBar(i: number) {
@@ -775,12 +775,12 @@ function setLoopBar(i: number) {
   st.loopBar = i;
   api().playbackRange = { startTick: barTick(i), endTick: barEndTick(i) } as AlphaTab.synth.PlaybackRange;
   api().isLooping = true; setPressed('loopBtn', true);
-  setStatus(api().playerState === PLAYING ? 'A tocar' : 'Em pausa');
+  setStatus(api().playerState === PLAYING ? 'Playing' : 'Paused');
 }
 /** Liga/desliga o loop do compasso i e começa a tocar. */
 function practiceBar(i: number) {
-  if (!st.ready) { toast('Os sons ainda estão a carregar.'); return; }
-  if (st.loopBar === i) { clearLoop(); placeTabSel(); setStatus(api().playerState === PLAYING ? 'A tocar' : 'Em pausa'); return; }
+  if (!st.ready) { toast('The sounds are still loading.'); return; }
+  if (st.loopBar === i) { clearLoop(); placeTabSel(); setStatus(api().playerState === PLAYING ? 'Playing' : 'Paused'); return; }
   setLoopBar(i);
   delay.clear();
   api().tickPosition = barTick(i);
@@ -811,7 +811,7 @@ input('speed').addEventListener('input', () => {
   const v = +input('speed').value; $('speedOut').textContent = v + '%';
   input('bmSpeed').value = String(v); $('bmSpeedOut').textContent = v + '%';
   if (st.api) st.api.playbackSpeed = v / 100;
-  if (st.ready) setStatus(api().playerState === PLAYING ? 'A tocar' : 'Em pausa');
+  if (st.ready) setStatus(api().playerState === PLAYING ? 'Playing' : 'Paused');
 });
 $('loopBtn').addEventListener('click', () => {
   const v = toggle('loopBtn'); api().isLooping = v;
@@ -873,8 +873,8 @@ function openImported(bytes: Uint8Array, name: string): boolean {
   // Guarda a música neste browser para a próxima vez
   const s = score();
   saveSong({ id: st.fileKey, fileName: name, title: $('songTitle').textContent || name, artist: s.artist || '', bars: s.masterBars.length }, bytes)
-    .then(() => { askPersistentStorage(); renderLibrary(); toast('Guardada em “As minhas músicas”.'); })
-    .catch(() => toast('Não foi possível guardar a música neste browser (modo privado?).'));
+    .then(() => { askPersistentStorage(); renderLibrary(); toast('Saved to “My songs”.'); })
+    .catch(() => toast('Couldn’t save the song in this browser (private mode?).'));
   openLibrary(false);
   return true;
 }
@@ -902,17 +902,17 @@ async function renderLibrary() {
     const open = document.createElement('button'); open.type = 'button'; open.className = 'lib-open';
     const t = document.createElement('span'); t.className = 'lib-title'; t.textContent = song.title;
     const m = document.createElement('span'); m.className = 'lib-meta';
-    m.textContent = [song.artist, song.bars + ' compassos', 'aberta ' + relativeDay(song.openedAt)].filter(Boolean).join(' · ');
+    m.textContent = [song.artist, song.bars + ' bars', 'opened ' + relativeDay(song.openedAt)].filter(Boolean).join(' · ');
     open.append(t, m);
     open.addEventListener('click', () => openSaved(song.id));
     const del = document.createElement('button'); del.type = 'button'; del.className = 'lib-del'; del.innerHTML = ICON_TRASH;
-    del.setAttribute('aria-label', 'Apagar ' + song.title);
+    del.setAttribute('aria-label', 'Delete ' + song.title);
     del.addEventListener('click', () => {
       // Confirmação no próprio item (sem janelas do browser)
       const c = document.createElement('span'); c.className = 'lib-confirm';
-      const yes = document.createElement('button'); yes.type = 'button'; yes.className = 'danger'; yes.textContent = 'Apagar';
-      const no = document.createElement('button'); no.type = 'button'; no.textContent = 'Cancelar';
-      yes.addEventListener('click', async () => { await deleteSong(song.id).catch(() => {}); renderLibrary(); toast('“' + song.title + '” apagada deste browser.'); });
+      const yes = document.createElement('button'); yes.type = 'button'; yes.className = 'danger'; yes.textContent = 'Delete';
+      const no = document.createElement('button'); no.type = 'button'; no.textContent = 'Cancel';
+      yes.addEventListener('click', async () => { await deleteSong(song.id).catch(() => {}); renderLibrary(); toast('“' + song.title + '” deleted from this browser.'); });
       no.addEventListener('click', () => renderLibrary());
       c.append(yes, no); del.replaceWith(c); no.focus();
     });
@@ -921,15 +921,15 @@ async function renderLibrary() {
 }
 async function openSaved(id: string) {
   const song = await getSong(id).catch(() => null);
-  if (!song) { toast('Não encontrei essa música neste browser.'); renderLibrary(); return; }
+  if (!song) { toast('That song isn’t in this browser any more.'); renderLibrary(); return; }
   st.api?.stop(); clearLoop();
   if (loadBytes(song.bytes, song.fileName, false)) { touchSong(id).catch(() => {}); openLibrary(false); }
 }
 function openSample() {
-  return fetch(base + 'exemplo.gp5')
+  return fetch(base + 'sample.gp5')
     .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.arrayBuffer(); })
-    .then(b => { st.api?.stop(); clearLoop(); loadBytes(new Uint8Array(b), 'Exemplo', true); })
-    .catch(() => { $('songTitle').textContent = 'Carrega um ficheiro Guitar Pro para começar'; });
+    .then(b => { st.api?.stop(); clearLoop(); loadBytes(new Uint8Array(b), 'Sample', true); })
+    .catch(() => { $('songTitle').textContent = 'Load a Guitar Pro file to get started'; });
 }
 input('fileInput').addEventListener('change', e => {
   const el = e.target as HTMLInputElement; readFile(el.files?.[0]); el.value = '';
@@ -967,7 +967,7 @@ function showTourStep() {
   $('tourText').textContent = step.text;
   $('tourDots').querySelectorAll('i').forEach((d, j) => d.classList.toggle('on', j === tour.i));
   $<HTMLButtonElement>('tourPrev').hidden = tour.i === 0;
-  $('tourNext').textContent = last ? 'Começar' : tour.i === 0 ? 'Mostrar' : 'Seguinte';
+  $('tourNext').textContent = last ? 'Start' : tour.i === 0 ? 'Show me' : 'Next';
   $<HTMLButtonElement>('tourSkip').hidden = last;
   const target = visibleTarget(step);
   if (target) target.scrollIntoView({ block: 'nearest' });
@@ -1000,21 +1000,24 @@ $('tourPrev').addEventListener('click', () => { if (tour.i > 0) { tour.i--; show
 $('tourSkip').addEventListener('click', endTour);
 addEventListener('resize', () => { if (tour.open) placeTour(visibleTarget(TOUR_STEPS[tour.i])); });
 
-// Ao abrir: o ficheiro escolhido na página inicial; ou a música de exemplo (?exemplo);
+// Ao abrir: o ficheiro escolhido na página inicial (?open); ou a música de exemplo (?sample);
 // ou a última música aberta neste browser; se não houver, a música de exemplo.
 const params = new URLSearchParams(location.search);
-if (params.has('exemplo') || params.has('abrir')) history.replaceState(null, '', location.pathname + location.hash);
+// (Also accepts the old Portuguese names: ?exemplo, ?abrir, #musicas.)
+const wantSample = params.has('sample') || params.has('exemplo');
+const wantOpen = params.has('open') || params.has('abrir');
+if (wantSample || wantOpen) history.replaceState(null, '', location.pathname + location.hash);
 async function boot(): Promise<unknown> {
-  if (params.has('abrir')) {
+  if (wantOpen) {
     const f = await takePendingFile().catch(() => null);
     if (f && openImported(f.bytes, f.name)) return;
   }
-  if (params.has('exemplo')) return openSample();
+  if (wantSample) return openSample();
   const songs = await listSongs();
   return songs.length ? openSaved(songs[0].id) : openSample();
 }
 boot()
   .catch(() => openSample())
-  .then(() => { if (location.hash === '#musicas') openLibrary(true); })
+  .then(() => { if (location.hash === '#songs' || location.hash === '#musicas') openLibrary(true); })
   // Primeira visita: tutorial (depois de a música aparecer, para os destaques ficarem no sítio certo)
   .finally(() => { if (!tourSeen()) setTimeout(startTour, 600); });

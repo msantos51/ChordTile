@@ -52,7 +52,7 @@ describe('PDF do esquema', () => {
   });
 
   it('dá um nome de ficheiro limpo', () => {
-    expect(pdfFileName('Refrão da Música!')).toBe('refrao-da-musica-esquema.pdf');
-    expect(pdfFileName('')).toBe('musica-esquema.pdf');
+    expect(pdfFileName('Refrão da Música!')).toBe('refrao-da-musica-chart.pdf');
+    expect(pdfFileName('')).toBe('song-chart.pdf');
   });
 });

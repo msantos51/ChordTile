@@ -6,8 +6,10 @@ Plataforma para aprender músicas a partir de ficheiros Guitar Pro. Carregas o f
 - deteta o **tom de cada compasso** e mostra-o num quadrado com a **cor da nota** (convenção Boomwhackers: Dó vermelho … Si rosa);
 - mostra a **tablatura** sincronizada e toca a música, com **loop por secção**, velocidade de 25 % a 150 %, metrónomo, contagem e "tocar por cima" (silencia a tua pista) ou "só o meu instrumento" (ouve-se só a tua pista);
 - deixa **editar** tudo (tons, nomes, dividir secções) e **exportar o esquema para PDF**;
-- **guarda as músicas importadas** neste browser ("As minhas músicas") e abre a última ao voltar;
-- tem um **tutorial** na primeira visita e uma página **Como funciona** (`ajuda.html`).
+- **guarda as músicas importadas** neste browser ("My songs") e abre a última ao voltar;
+- tem um **tutorial** na primeira visita e uma página **How it works** (`help.html`).
+
+O site está em **inglês**; o código e esta documentação continuam em português.
 
 Os ficheiros são lidos só no browser: nada é enviado para um servidor.
 
@@ -31,14 +33,16 @@ npm run dev        # servidor local em http://localhost:5173
 ## Estrutura
 
 ```
-index.html                 Página inicial (apresentação; design "Azul profundo")
-leitor.html                O leitor: esquema, tablatura e leitor (estrutura e ícones)
-licencas.html              Termos, privacidade e licenças
-ajuda.html                 Página "Como funciona" (guia e perguntas frequentes)
+index.html                 Página inicial (apresentação)
+player.html                O leitor: esquema, tablatura e leitor (estrutura e ícones)
+licenses.html              Termos, privacidade e licenças
+help.html                  Página "How it works" (guia e perguntas frequentes)
+public/leitor.html, ajuda.html, licencas.html   Redirecionam os endereços antigos para os novos
 src/
   main.ts                  Interface: esquema, tablatura sincronizada, leitor, ajustes
   fonts.ts                 Fontes alojadas no site (Fontsource)
-  styles.css               Estilos (design "Estúdio": tema escuro e tema claro, tokens de cor)
+  styles.css               Estilos do leitor e das páginas de texto (design "Azul profundo": tema escuro e claro, tokens de cor)
+  landing.css              Estilos da página inicial (mesma paleta)
   analysis/
     analyze.ts             Deteção do tom por compasso e secções (módulo puro, testado)
     parse.ts               Leitura dos ficheiros, com recurso a Windows-1252 nos GP3–GP5
@@ -50,9 +54,10 @@ src/
     sync.ts                Atraso do cursor/esquema para compensar a latência do áudio
     theme.ts               Tema claro/escuro (guardado no browser) e cores da tablatura
     audio-unlock.ts        Som no iPhone mesmo com o interruptor de silêncio ligado
-    library.ts             "As minhas músicas": ficheiros importados guardados no browser (IndexedDB)
+    library.ts             "My songs": ficheiros importados guardados no browser (IndexedDB)
     tour.ts                Tutorial da primeira visita (passos e destaques)
-tests/                     Testes (Vitest) e ficheiro .gp5 de exemplo
+tests/                     Testes (Vitest) e ficheiro .gp5 de teste
+public/sample.gp5          Música de exemplo do site (gerada com `make-fixture.py --en`)
 scripts/
   copy-alphatab.mjs        Copia o alphaTab, a fonte e os sons para public/vendor
   make-fixture.py          Gera o .gp5 de teste (precisa de `pip install pyguitarpro`)
@@ -88,7 +93,7 @@ servidor. O tutorial aparece só na primeira visita (`mapa:tour-visto`) e pode s
 
 ## Termos, privacidade e licenças
 
-A página `licencas.html` (ligada no rodapé) tem os termos de utilização, a nota de privacidade e as licenças de
+A página `licenses.html` (ligada no rodapé) tem os termos de utilização, a nota de privacidade e as licenças de
 todos os componentes de terceiros. Se acrescentares uma dependência que vá para o site, acrescenta-a lá.
 
 O código deste repositório é © 2026 Miguel Santos, todos os direitos reservados (ver `LICENSE`).

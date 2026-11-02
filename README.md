@@ -119,9 +119,7 @@ Quem inicia sessão (link mágico por email, sem palavra-passe) tem "My songs" e
 1. Cria um projeto em [supabase.com](https://supabase.com) (o plano grátis chega para começar).
 2. No **SQL Editor**, corre `supabase/migrations/001_songs.sql` (tabela `songs`, bucket privado `songs` e regras de acesso por utilizador).
 3. Em **Authentication → URL Configuration**, põe o endereço do site em *Site URL* e acrescenta `https://<utilizador>.github.io/learnfast/player.html` e `http://localhost:5173/player.html` em *Redirect URLs*.
-4. Copia a *Project URL* e a chave *anon public* (**Project Settings → API**):
-   - localmente: `cp .env.example .env.local` e preenche;
-   - no GitHub: **Settings → Secrets and variables → Actions**, segredos `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` (o deploy usa-os no build).
+4. Põe a *Project URL* e a chave pública (*publishable* ou *anon*) em `.env.production`. Esse ficheiro já tem o projeto do site e é usado no build (`npm run build` e o deploy). Para testar com outro projeto em `npm run dev`, cria um `.env.local` a partir de `.env.example`.
 
 A chave *anon* é pública por natureza; quem protege os dados são as regras RLS do ficheiro SQL (cada pessoa só lê e escreve as suas músicas).
 

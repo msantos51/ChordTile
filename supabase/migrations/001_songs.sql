@@ -17,21 +17,21 @@ create table if not exists public.songs (
 alter table public.songs enable row level security;
 
 -- Cada pessoa só vê e altera as suas músicas
-create policy "songs: dono lê"     on public.songs for select using (auth.uid() = user_id);
-create policy "songs: dono cria"   on public.songs for insert with check (auth.uid() = user_id);
-create policy "songs: dono altera" on public.songs for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "songs: dono apaga"  on public.songs for delete using (auth.uid() = user_id);
+create policy "songs: dono lê"     on public.songs for select to authenticated using ((select auth.uid()) = user_id);
+create policy "songs: dono cria"   on public.songs for insert to authenticated with check ((select auth.uid()) = user_id);
+create policy "songs: dono altera" on public.songs for update to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+create policy "songs: dono apaga"  on public.songs for delete to authenticated using ((select auth.uid()) = user_id);
 
 -- Ficheiros: bucket privado, cada pessoa na sua pasta (<user_id>/<sha256 do id>)
 insert into storage.buckets (id, name, public, file_size_limit)
 values ('songs', 'songs', false, 20971520)   -- 20 MB por ficheiro
 on conflict (id) do nothing;
 
-create policy "ficheiros: dono lê" on storage.objects for select
-  using (bucket_id = 'songs' and (storage.foldername(name))[1] = auth.uid()::text);
-create policy "ficheiros: dono cria" on storage.objects for insert
-  with check (bucket_id = 'songs' and (storage.foldername(name))[1] = auth.uid()::text);
-create policy "ficheiros: dono altera" on storage.objects for update
-  using (bucket_id = 'songs' and (storage.foldername(name))[1] = auth.uid()::text);
-create policy "ficheiros: dono apaga" on storage.objects for delete
-  using (bucket_id = 'songs' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "ficheiros: dono lê" on storage.objects for select to authenticated
+  using (bucket_id = 'songs' and (storage.foldername(name))[1] = (select auth.uid())::text);
+create policy "ficheiros: dono cria" on storage.objects for insert to authenticated
+  with check (bucket_id = 'songs' and (storage.foldername(name))[1] = (select auth.uid())::text);
+create policy "ficheiros: dono altera" on storage.objects for update to authenticated
+  using (bucket_id = 'songs' and (storage.foldername(name))[1] = (select auth.uid())::text);
+create policy "ficheiros: dono apaga" on storage.objects for delete to authenticated
+  using (bucket_id = 'songs' and (storage.foldername(name))[1] = (select auth.uid())::text);

@@ -550,3 +550,13 @@ body.doc .top { position: sticky; top: 0; z-index: 5; border-bottom: 1px solid v
 .toc a:hover { border-color: var(--hover-line); }
 .doc-body details { border-color: var(--line-2); }
 .doc-body .table-wrap { border-color: var(--line-2); }
+
+/* Conta e sincronização ("My songs") */
+.account { border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 10px; }
+.account h3 { margin: 0; font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); }
+.account p { margin: 0; }
+.account-in, .account-on { display: grid; gap: 10px; }
+.account-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.account-row input { flex: 1; min-width: 0; height: 36px; padding: 0 12px; border: 1px solid var(--line-2); border-radius: var(--r-sm); background: var(--bg); color: var(--ink); font: inherit; }
+.account-row input:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 1px; }
+.account-who { font-size: 14px; overflow-wrap: anywhere; }

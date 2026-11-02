@@ -64,9 +64,15 @@ export async function getSong(id: string, idb?: IDBFactory): Promise<(SongMeta &
 }
 
 /** Marca a música como aberta agora (para aparecer em primeiro e abrir ao voltar ao site). */
-export async function touchSong(id: string, idb?: IDBFactory): Promise<void> {
+export async function touchSong(id: string, idb?: IDBFactory, at = Date.now()): Promise<void> {
   const rec = await tx<SongRecord | undefined>('readonly', s => s.get(id) as IDBRequest<SongRecord | undefined>, idb);
-  if (rec) await tx('readwrite', s => s.put({ ...rec, openedAt: Date.now() }), idb);
+  if (rec) await tx('readwrite', s => s.put({ ...rec, openedAt: at }), idb);
+}
+
+/** Guarda uma música tal como veio da nuvem (mantém as datas de quando foi adicionada e aberta). */
+export async function putSong(meta: SongMeta, bytes: Uint8Array, idb?: IDBFactory): Promise<void> {
+  const copy = bytes.slice().buffer as ArrayBuffer;
+  await tx('readwrite', s => s.put({ ...meta, bytes: copy } satisfies SongRecord), idb);
 }
 
 export async function deleteSong(id: string, idb?: IDBFactory): Promise<void> {

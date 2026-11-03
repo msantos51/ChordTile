@@ -33,58 +33,149 @@ addEventListener('dragleave', () => { dragN = Math.max(0, dragN - 1); if (!dragN
 addEventListener('dragover', e => e.preventDefault());
 addEventListener('drop', e => { e.preventDefault(); dragN = 0; drop.hidden = true; void openInReader(e.dataTransfer?.files[0]); });
 
-// ---------- Animação do mapa da música ----------
-// O mapa "toca" sozinho: o compasso atual fica preto, os 4 tempos piscam e o refrão repete
-// 3 vezes com a velocidade a subir (80 % → 90 % → 100 %), como o treino de velocidade.
-// Para quando sai do ecrã, quando o separador fica escondido e não corre com "reduzir movimento".
-const BEAT_MS = 150;
-const SECTION_NAMES = ['Intro', 'Verse', 'Chorus', 'Bridge'];
+// ---------- Animação: como funciona, em 4 cenas ----------
+// 1. Importar: o ficheiro cai na zona e é lido.  2. Secções: os compassos aparecem por grupos.
+// 3. Loop: o leitor toca e o refrão repete com a velocidade a subir.  4. Compasso aberto: um
+// compasso cresce até à janela com as notas e a contagem. Os passos do "How it works" acendem
+// com cada cena e saltam para ela ao clicar. Pára fora do ecrã e não corre com "reduzir movimento".
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
+const stage = $('stage');
+const rows = [...stage.querySelectorAll<HTMLElement>('.row')];
+const tiles = [...stage.querySelectorAll<HTMLElement>('.t')];
+const steps = [...document.querySelectorAll<HTMLLIElement>('#steps li')];
+const beats = [...stage.querySelectorAll<HTMLElement>('#beats i')];
+const zoom = $('zoom');
+const LABELS = ['01 · Import', '02 · Sections', '03 · Practise on loop', '04 · Open a bar'];
+const DUR = [3400, 2600, 6400, 6000];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-function startBoard() {
-  const board = document.querySelector<HTMLElement>('.board');
-  if (!board) return;
-  const rows = [...board.querySelectorAll<HTMLElement>('.row')];
-  const tiles = [...board.querySelectorAll<HTMLElement>('.t')];
-  const beats = [...document.querySelectorAll<HTMLElement>('#beats i')];
-  const order: { t: HTMLElement; k: number; rep: number; bar: number }[] = [];
-  let bar = 0;
-  rows.forEach((r, k) => {
-    const ts = [...r.querySelectorAll<HTMLElement>('.t')];
-    const first = bar; bar += ts.length;
-    for (let rep = 0; rep < (r.classList.contains('loop') ? 3 : 1); rep++) ts.forEach((t, j) => order.push({ t, k, rep, bar: first + j + 1 }));
+// Atraso de entrada de cada quadrado (aparecem em cascata, secção a secção)
+rows.forEach(r => r.querySelectorAll<HTMLElement>('.t').forEach((t, j) => t.style.setProperty('--i', String(j))));
+
+let timers: number[] = [];
+let scene = 0, running = false, visible = true;
+const later = (ms: number, fn: () => void) => { timers.push(window.setTimeout(fn, ms)); };
+function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+
+function reset() {
+  stage.classList.remove('s-in', 's-drop', 's-read', 'sc-map', 'sc-play', 'sc-zoom');
+  rows.forEach(r => r.classList.remove('shown', 'looping'));
+  tiles.forEach(t => t.classList.remove('on', 'pick'));
+  beats.forEach(b => b.classList.remove('on'));
+  $('readText').textContent = 'Reading…';
+  closeZoom(true);
+}
+
+function setStep(k: number) {
+  steps.forEach((li, j) => {
+    li.classList.toggle('on', j === k); li.classList.toggle('done', j < k);
+    li.style.setProperty('--dur', DUR[j] + 'ms');
+    // Reinicia a barra de progresso do passo ativo
+    const p = li.querySelector<HTMLElement>('.prog'); if (p && j === k) { p.style.display = 'none'; void p.offsetWidth; p.style.display = ''; }
   });
+  $('sceneLabel').textContent = LABELS[k];
+}
 
-  // Legenda: destaca os compassos com essa nota
-  $('legend').addEventListener('click', e => {
-    const b = (e.target as HTMLElement).closest('button'); if (!b) return;
-    const on = b.getAttribute('aria-pressed') !== 'true';
-    $('legend').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false'));
-    b.setAttribute('aria-pressed', String(on));
-    tiles.forEach(t => t.classList.toggle('dim', on && t.dataset.n !== b.dataset.n));
+function showAllRows() { rows.forEach(r => r.classList.add('shown')); }
+
+function sceneImport() {
+  later(200, () => stage.classList.add('s-in'));
+  later(1100, () => stage.classList.add('s-drop'));
+  later(1700, () => stage.classList.add('s-read'));
+  later(2900, () => { $('readText').textContent = '52 bars · 4 sections'; });
+}
+function sceneMap() {
+  stage.classList.add('sc-map');
+  rows.forEach((r, k) => later(150 + k * 480, () => r.classList.add('shown')));
+}
+function scenePlay() {
+  stage.classList.add('sc-map', 'sc-play'); showAllRows();
+  // Intro inteira e depois o refrão em loop, 2 voltas, a 80 % e 100 %
+  const intro = [...rows[0].querySelectorAll<HTMLElement>('.t')].map(t => ({ t, sec: 'Intro', speed: 100 }));
+  const chorus = [...rows[2].querySelectorAll<HTMLElement>('.t')].slice(0, 4);
+  const seq = [...intro, ...chorus.map(t => ({ t, sec: 'Chorus', speed: 80 })), ...chorus.map(t => ({ t, sec: 'Chorus', speed: 100 }))];
+  const barNo = (t: HTMLElement) => tiles.indexOf(t) + 1;
+  let at = 100;
+  seq.forEach((s, i) => {
+    const beat = 300 * (100 / s.speed) / 2.6;
+    later(at, () => {
+      tiles.forEach(x => x.classList.remove('on')); s.t.classList.add('on');
+      rows[2].classList.toggle('looping', s.sec === 'Chorus');
+      $('where').textContent = s.sec + ' · bar ' + barNo(s.t) + (s.sec === 'Chorus' ? ' · loop ' + (i - intro.length < chorus.length ? 1 : 2) + '/2' : '');
+      $('spd').textContent = s.speed + '%';
+    });
+    for (let b = 0; b < 4; b++) later(at + b * beat, () => beats.forEach((x, j) => x.classList.toggle('on', j === b)));
+    at += beat * 4;
   });
-
-  if (!order.length || matchMedia('(prefers-reduced-motion: reduce)').matches) { tiles[0]?.classList.add('on'); return; }
-  let i = 0, beat = 0, speed = 1, timer = 0, visible = true;
-  function tick() {
-    const s = order[i];
-    beats.forEach((b, j) => b.classList.toggle('on', j === beat));
-    if (beat === 0) {
-      tiles.forEach(t => t.classList.remove('on')); s.t.classList.add('on');
-      const looping = rows[s.k].classList.contains('loop');
-      speed = looping ? [0.8, 0.9, 1][s.rep] : 1;
-      $('where').textContent = SECTION_NAMES[s.k] + ' · bar ' + s.bar + (looping ? ' · loop ' + (s.rep + 1) + '/3' : '');
-      $('spd').textContent = Math.round(speed * 100) + '%';
-      $('secNo').textContent = '0' + (s.k + 1) + ' / 0' + rows.length;
-      $('secName').textContent = SECTION_NAMES[s.k].toUpperCase();
-      $('secBar').style.width = ((s.k + 1) / rows.length) * 100 + '%';
+}
+function sceneZoom() {
+  stage.classList.add('sc-map', 'sc-play'); showAllRows(); rows[2].classList.add('looping');
+  tiles.forEach(x => x.classList.remove('on'));
+  const tile = $('zoomTile');
+  $('where').textContent = 'Chorus · bar 14 · opened'; $('spd').textContent = '100%';
+  beats.forEach(b => b.classList.remove('on'));
+  later(150, () => tile.classList.add('pick'));
+  later(800, () => { stage.classList.add('sc-zoom'); openZoom(tile); });
+  // A contagem percorre o compasso duas vezes e as notas acendem no tempo certo
+  const slots = [...$('zCount').querySelectorAll<HTMLElement>('span')];
+  const notes = [...$('zStaff').querySelectorAll<HTMLElement>('.nt')];
+  for (let rep = 0; rep < 2; rep++) {
+    for (let s = 0; s < 8; s++) {
+      later(1500 + (rep * 8 + s) * 210, () => {
+        $('zRep').textContent = String(rep + 1);
+        slots.forEach((x, j) => x.classList.toggle('on', j === s));
+        notes.forEach(n => n.classList.toggle('on', n.style.getPropertyValue('--s') === String(s)));
+      });
     }
-    beat = (beat + 1) % 4; if (beat === 0) i = (i + 1) % order.length;
-    timer = window.setTimeout(tick, BEAT_MS / speed);
   }
-  function play() { if (!timer && visible && !document.hidden) tick(); }
-  function pause() { clearTimeout(timer); timer = 0; }
-  new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) play(); else pause(); }, { threshold: 0.2 }).observe(board);
+  later(1500 + 16 * 210 + 300, () => { slots.forEach(x => x.classList.remove('on')); notes.forEach(n => n.classList.remove('on')); closeZoom(false, tile); });
+}
+
+/** A janela cresce a partir do quadrado (técnica FLIP: mede o fim, parte do quadrado e anima). */
+function openZoom(from: HTMLElement) {
+  zoom.style.transition = 'none'; zoom.style.transform = 'none';
+  const end = zoom.getBoundingClientRect(), r = from.getBoundingClientRect();
+  zoom.style.transform = `translate(${r.left - end.left}px, ${r.top - end.top}px) scale(${r.width / end.width}, ${r.height / end.height})`;
+  zoom.classList.add('open'); void zoom.offsetWidth;
+  zoom.style.transition = 'transform .55s cubic-bezier(.2, .8, .2, 1), opacity .2s';
+  zoom.style.transform = 'none';
+}
+function closeZoom(instant: boolean, to?: HTMLElement) {
+  if (instant || !to) { zoom.style.transition = 'none'; zoom.classList.remove('open'); zoom.style.transform = 'none'; return; }
+  const end = zoom.getBoundingClientRect(), r = to.getBoundingClientRect();
+  zoom.style.transition = 'transform .45s cubic-bezier(.6, 0, .4, 1), opacity .3s .2s';
+  zoom.style.transform = `translate(${r.left - end.left}px, ${r.top - end.top}px) scale(${r.width / end.width}, ${r.height / end.height})`;
+  zoom.classList.remove('open');
+  later(450, () => { stage.classList.remove('sc-zoom'); to.classList.remove('pick'); zoom.style.transition = 'none'; zoom.style.transform = 'none'; });
+}
+
+const SCENES = [sceneImport, sceneMap, scenePlay, sceneZoom];
+function go(k: number) {
+  clearTimers(); reset();
+  scene = k; setStep(k);
+  if (k >= 1) stage.classList.add('sc-map');
+  SCENES[k]();
+  later(DUR[k], () => go((k + 1) % SCENES.length));
+}
+function play() { if (!running && visible && !document.hidden) { running = true; go(scene); } }
+function pause() { running = false; clearTimers(); }
+
+steps.forEach((li, k) => li.querySelector('button')!.addEventListener('click', () => {
+  if (reduce) { staticScene(k); return; }
+  running = true; go(k);
+}));
+
+/** Sem animação: mostra o resultado de cada passo, parado. */
+function staticScene(k: number) {
+  reset(); scene = k; setStep(k);
+  if (k === 0) stage.classList.add('s-in', 's-drop', 's-read');
+  if (k >= 1) { stage.classList.add('sc-map'); showAllRows(); }
+  if (k >= 2) { stage.classList.add('sc-play'); rows[2].classList.add('looping'); $('zoomTile').classList.add('on'); }
+  if (k === 3) { stage.classList.add('sc-zoom'); zoom.classList.add('open'); }
+}
+
+if (reduce) staticScene(1);
+else {
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) play(); else pause(); }, { threshold: 0.2 }).observe(stage);
   document.addEventListener('visibilitychange', () => (document.hidden ? pause() : play()));
 }
-startBoard();

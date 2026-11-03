@@ -9,129 +9,98 @@
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#c8102e">
 <title>Mapa de Compassos · Learn songs bar by bar</title>
-<meta name="description" content="Load a Guitar Pro file and learn the song by sections and bars, with colours per note, synced tablature, looping and a speed trainer.">
+<meta name="description" content="Load a Guitar Pro file and learn the song by sections and bars, with colours per note, synced tablature, looping, a speed trainer and a close-up of every bar.">
 </head>
 <body>
-<section class="hero">
-  <div class="left">
-    <div class="top">
+<div class="page">
+  <section class="left">
+    <header class="top">
       <a class="brand" href="./"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Mapa de Compassos</a>
-      <nav class="nav" aria-label="Main"><a href="#how">How it works</a><a href="#premium">Premium</a></nav>
       <a class="mob-player" href="./player.html">Player</a>
-    </div>
+    </header>
+
     <div class="copy">
-      <p class="kicker caps">Learn it bar by bar</p>
-      <h1>See the whole song.<br><em>Then play it.</em></h1>
-      <p class="lead">Load a Guitar Pro file and get the song’s map: every section, every bar marked with its chord, and a player that loops the hard part and speeds you up as you get it.</p>
-      <div class="finish">Every note has its colour
-        <span><i style="background:var(--n0)"></i><i style="background:var(--n2)"></i><i style="background:var(--n5)"></i><i style="background:var(--n7)"></i><i style="background:var(--n9)"></i></span></div>
+      <p class="kicker caps">For Guitar Pro files · guitar &amp; bass</p>
+      <h1>Load the tab.<br>See the song.<br><em>Play it.</em></h1>
+      <p class="lead">Every section, every bar coloured by its chord, and a player that loops the hard part and opens any bar up close.</p>
       <div class="buy">
-        <div class="price-tag">€0<small>Free to start</small></div>
         <button class="btn" type="button" data-pick><span class="plus" aria-hidden="true">+</span>Load a Guitar Pro file</button>
         <a class="link" href="./player.html?sample">Try the sample</a>
       </div>
       <p class="err" id="landingErr" role="alert" hidden></p>
     </div>
-    <div class="slider"><span id="secNo">01 / 04</span><span class="bar"><i id="secBar"></i></span><span id="secName">INTRO</span></div>
-    <span class="vert l">Scroll down</span>
-  </div>
 
-  <div class="right">
-    <div class="right-top"><nav class="nav-r" aria-label="Player"><a href="./player.html#songs">My songs</a><a href="./help.html">Help</a></nav><a class="pill-white" href="./player.html">Open the player</a></div>
-    <figure class="board" aria-label="Animated example of a song map">
-      <div class="board-head"><span class="song-t">Sample song</span><span class="song-m">BASS · 4/4 · 112 BPM</span></div>
-      <div class="rows" id="rows">
-        <div class="row"><div class="row-l">Intro <span>4 bars</span></div><div class="tiles">
-          <div class="t" data-n="9">Am</div><div class="t" data-n="5">F</div><div class="t" data-n="0">C</div><div class="t" data-n="7">G</div></div></div>
-        <div class="row long"><div class="row-l">Verse <span>8 bars</span></div><div class="tiles">
-          <div class="t" data-n="9">Am</div><div class="t" data-n="9">Am</div><div class="t" data-n="5">F</div><div class="t" data-n="7">G</div>
-          <div class="t" data-n="0">C</div><div class="t" data-n="7">G</div><div class="t" data-n="9">Am</div><div class="t" data-n="9">Am</div></div></div>
-        <div class="row long loop"><div class="row-l">Chorus <span>8 bars</span></div><div class="tiles">
-          <div class="t" data-n="5">F</div><div class="t" data-n="7">G</div><div class="t" data-n="0">C</div><div class="t" data-n="9">Am</div>
-          <div class="t" data-n="5">F</div><div class="t" data-n="7">G</div><div class="t" data-n="0">C</div><div class="t" data-n="0">C</div></div></div>
-        <div class="row"><div class="row-l">Bridge <span>4 bars</span></div><div class="tiles">
-          <div class="t" data-n="2">Dm</div><div class="t" data-n="4">E</div><div class="t" data-n="9">Am</div><div class="t" data-n="9">Am</div></div></div>
+    <section class="how" id="how" aria-labelledby="howTitle">
+      <p class="eyebrow caps" id="howTitle">How it works</p>
+      <ol class="steps" id="steps">
+        <li><button type="button" data-scene="0"><b>01</b><span><strong>Import your tab</strong><em class="d">Guitar Pro 3–8 or MusicXML, read in your browser.</em></span><i class="prog" aria-hidden="true"></i></button></li>
+        <li><button type="button" data-scene="1"><b>02</b><span><strong>See the sections</strong><em class="d">Intro, verse, chorus: every bar in the colour of its chord.</em></span><i class="prog" aria-hidden="true"></i></button></li>
+        <li><button type="button" data-scene="2"><b>03</b><span><strong>Practise on loop</strong><em class="d">Loop a section and let the speed trainer push the tempo.</em></span><i class="prog" aria-hidden="true"></i></button></li>
+        <li><button type="button" data-scene="3"><b>04</b><span><strong>Open any bar</strong><em class="d">See its notes up close and how to count them.</em></span><i class="prog" aria-hidden="true"></i></button></li>
+      </ol>
+    </section>
+
+    <footer class="legal"><span>© 2026 Mapa de Compassos</span><a href="./help.html">Help</a><a href="./licenses.html">Terms &amp; privacy</a></footer>
+  </section>
+
+  <section class="right">
+    <div class="right-top">
+      <nav class="nav-r" aria-label="Player"><a href="./player.html#songs">My songs</a><a href="./help.html">Help</a></nav>
+      <a class="pill-white" href="./player.html">Open the player</a>
+    </div>
+
+    <figure class="stage" id="stage" data-scene="0" aria-label="Animation: a Guitar Pro file is imported, split into sections, played on loop and one bar is opened up close">
+      <p class="scene-label" id="sceneLabel" aria-hidden="true">01 · Import</p>
+
+      <!-- 1. Importar -->
+      <div class="import" aria-hidden="true">
+        <div class="dropzone">
+          <svg viewBox="0 0 24 24"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>
+          <span>Drop a Guitar Pro file</span>
+          <div class="reading"><i id="readFill"></i></div>
+          <small id="readText">Reading…</small>
+        </div>
+        <div class="file" id="file"><b>GP</b><span>my-song.gp5<small>48 KB</small></span></div>
       </div>
-      <div class="transport">
-        <a class="play" href="./player.html?sample" aria-label="Play the sample"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></a>
-        <span id="where">Intro · bar 1</span><span class="beats" id="beats"><i></i><i></i><i></i><i></i></span><span class="spd" id="spd">100%</span>
+
+      <!-- 2–3. Mapa por secções e leitor -->
+      <div class="board" aria-hidden="true">
+        <div class="board-head"><span class="song-t">My song</span><span class="song-m">BASS · 4/4 · 112 BPM</span></div>
+        <div class="rows" id="rows">
+          <div class="row" data-name="Intro"><div class="row-l">Intro <span>4 bars</span></div><div class="tiles">
+            <div class="t" data-n="9">Am</div><div class="t" data-n="5">F</div><div class="t" data-n="0">C</div><div class="t" data-n="7">G</div></div></div>
+          <div class="row long" data-name="Verse"><div class="row-l">Verse <span>8 bars</span></div><div class="tiles">
+            <div class="t" data-n="9">Am</div><div class="t" data-n="9">Am</div><div class="t" data-n="5">F</div><div class="t" data-n="7">G</div>
+            <div class="t" data-n="0">C</div><div class="t" data-n="7">G</div><div class="t" data-n="9">Am</div><div class="t" data-n="9">Am</div></div></div>
+          <div class="row long loop" data-name="Chorus"><div class="row-l">Chorus <span>8 bars</span><em>Loop</em></div><div class="tiles">
+            <div class="t" data-n="5">F</div><div class="t" data-n="7" id="zoomTile">G</div><div class="t" data-n="0">C</div><div class="t" data-n="9">Am</div>
+            <div class="t" data-n="5">F</div><div class="t" data-n="7">G</div><div class="t" data-n="0">C</div><div class="t" data-n="0">C</div></div></div>
+          <div class="row" data-name="Bridge"><div class="row-l">Bridge <span>4 bars</span></div><div class="tiles">
+            <div class="t" data-n="2">Dm</div><div class="t" data-n="4">E</div><div class="t" data-n="9">Am</div><div class="t" data-n="9">Am</div></div></div>
+        </div>
+        <div class="transport">
+          <span class="play"><svg viewBox="0 0 24 24" id="playIcon"><path d="M8 5v14l11-7z"/></svg></span>
+          <span id="where">Intro · bar 1</span><span class="beats" id="beats"><i></i><i></i><i></i><i></i></span><span class="spd" id="spd">100%</span>
+        </div>
       </div>
-      <div class="legend" id="legend"><b>Find a note</b>
-        <button style="--c:var(--n0)" data-n="0" aria-label="C"></button><button style="--c:var(--n2)" data-n="2" aria-label="D"></button>
-        <button style="--c:var(--n4)" data-n="4" aria-label="E"></button><button style="--c:var(--n5)" data-n="5" aria-label="F"></button>
-        <button style="--c:var(--n7)" data-n="7" aria-label="G"></button><button style="--c:var(--n9)" data-n="9" aria-label="A"></button>
+
+      <!-- 4. Compasso aberto -->
+      <div class="zoom" id="zoom" aria-hidden="true">
+        <div class="z-head"><span class="z-chord">G</span><span><b>Bar 14 · Chorus</b><small>4/4 · counting in eighth notes</small></span><span class="z-rep">Repeat <b id="zRep">1</b></span></div>
+        <div class="z-staff" id="zStaff">
+          <span class="z-str" style="--l:0">G</span><span class="z-str" style="--l:1">D</span><span class="z-str" style="--l:2">A</span><span class="z-str" style="--l:3">E</span>
+          <div class="z-grid">
+            <i class="ln" style="--l:0"></i><i class="ln" style="--l:1"></i><i class="ln" style="--l:2"></i><i class="ln" style="--l:3"></i>
+            <span class="nt" style="--s:0;--l:3">3</span><span class="nt" style="--s:2;--l:3">3</span><span class="nt" style="--s:3;--l:2">2</span>
+            <span class="nt" style="--s:4;--l:2">5</span><span class="nt" style="--s:6;--l:3">3</span><span class="nt" style="--s:7;--l:1">5</span>
+          </div>
+        </div>
+        <div class="z-count" id="zCount"><span>1</span><span>&amp;</span><span>2</span><span>&amp;</span><span>3</span><span>&amp;</span><span>4</span><span>&amp;</span></div>
       </div>
     </figure>
     <span class="vert r">Guitar · Bass</span>
-  </div>
-</section>
-
-<main>
-  <section class="wrap block" id="how">
-    <p class="eyebrow caps">Why it works</p>
-    <h2>A tab shows the notes. <em>This shows the song.</em></h2>
-    <div class="three">
-      <div class="feat"><div class="num">01</div><h3>The structure at a glance</h3><p>Intro, verse, chorus, bridge: straight from the file. You always know where you are and what comes next.</p></div>
-      <div class="feat"><div class="num">02</div><h3>Harmony in colour</h3><p>Every bar shows its chord with the colour of its note. Patterns jump out before you play a thing.</p></div>
-      <div class="feat"><div class="num">03</div><h3>Synced tab and player</h3><p>The tab follows the sound. Mute your part and play along, or hear only your instrument.</p></div>
-    </div>
   </section>
-
-  <section class="split">
-    <div class="dark">
-      <p class="eyebrow caps">Speed trainer</p>
-      <h2>Tame the hard part.</h2>
-      <p>Loop the section you can’t play yet. It starts at 60% and goes up a notch every time round, until you’re playing it at full speed. Your progress is kept per section.</p>
-      <a class="btn" href="./player.html?sample"><span class="plus" aria-hidden="true">+</span>Try it on the sample</a>
-    </div>
-    <div class="pic">
-      <div class="ramp">
-        <div class="ramp-bars"><i class="done" style="height:45%"></i><i class="done" style="height:52%"></i><i class="done" style="height:59%"></i><i class="done" style="height:66%"></i><i class="done" style="height:73%"></i><i class="done" style="height:80%"></i><i style="height:87%"></i><i style="height:94%"></i><i style="height:100%"></i></div>
-        <div class="ramp-l"><span>60%</span><span>LOOP BY LOOP</span><span>100%</span></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="wrap block" id="premium">
-    <p class="eyebrow caps">Pricing</p>
-    <h2>Practise free. <em>Go further with Premium.</em></h2>
-    <p class="sub">Every new account gets 14 days of Premium. No card needed.</p>
-    <div class="plans">
-      <div class="plan">
-        <h3 class="caps">Free</h3>
-        <div class="big">€0<small>forever</small></div>
-        <ul><li>Open any Guitar Pro file</li><li>Song map, colours and synced tab</li><li>Loop, speed, metronome, play along</li>
-          <li class="off">3 songs saved</li><li class="off">PDF with watermark</li></ul>
-        <a class="btn dark" href="./player.html">Start practising</a>
-      </div>
-      <div class="plan pro">
-        <h3 class="caps">Premium</h3>
-        <div class="opts"><div class="opt"><b>€3.99</b>per month</div><div class="opt"><b>€29</b>per year</div><div class="opt"><b>€49</b>lifetime</div></div>
-        <ul><li>Unlimited songs, synced on every device</li><li>Speed trainer</li><li>Progress per section: time, best speed, mastered</li><li>Clean PDF charts</li></ul>
-        <a class="btn white" href="./player.html"><span class="plus" aria-hidden="true">+</span>Try 14 days free</a>
-      </div>
-    </div>
-  </section>
-
-  <section class="wrap block" id="faq">
-    <p class="eyebrow caps">Questions</p>
-    <h2>Good to know.</h2>
-    <div class="faq">
-      <details open><summary>Which files can I open?</summary><p>Guitar Pro 3 to 8 (.gp3, .gp4, .gp5, .gpx, .gp) and MusicXML. If a file opens in Guitar Pro but not here, save it as .gp5.</p></details>
-      <details><summary>Do my files get uploaded?</summary><p>No. Files are read in your browser. They only go to your account if you sign in and sync your songs across devices.</p></details>
-      <details><summary>Does it work for bass?</summary><p>Yes, guitar and bass. The chord of each bar is detected from the instrument you pick.</p></details>
-      <details><summary>Can I cancel Premium?</summary><p>Any time. Premium stays on until the end of the period you paid for, and you keep all your songs.</p></details>
-    </div>
-  </section>
-</main>
-
-<section class="final">
-  <div class="wrap">
-    <h2>Pick the song.<br>We’ll map it.</h2>
-    <button class="btn white" type="button" data-pick><span class="plus" aria-hidden="true">+</span>Load a Guitar Pro file</button>
-  </div>
-</section>
-<footer><div class="wrap"><span>© 2026 Mapa de Compassos</span><span><a href="./help.html">How it works</a><a href="./licenses.html">Terms, privacy and licenses</a></span></div></footer>
+</div>
 
 <input type="file" id="landingFile" class="sr-only" tabindex="-1" aria-hidden="true">
 <div class="drop" id="landingDrop" hidden><div>Drop the file here</div></div>

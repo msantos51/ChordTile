@@ -8,14 +8,14 @@
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#c8102e">
-<title>Mapa de Compassos · Learn songs bar by bar</title>
+<title>ChordTile · Learn songs bar by bar</title>
 <meta name="description" content="Load a Guitar Pro file and learn the song by sections and bars, with colours per note, synced tablature, looping, a speed trainer and a close-up of every bar.">
 </head>
 <body>
 <div class="page">
   <section class="left">
     <header class="top">
-      <a class="brand" href="./"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Mapa de Compassos</a>
+      <a class="brand" href="./"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>ChordTile</a>
       <a class="mob-player" href="./player.html">Player</a>
     </header>
 
@@ -33,14 +33,14 @@
     <section class="how" id="how" aria-labelledby="howTitle">
       <p class="eyebrow caps" id="howTitle">How it works</p>
       <ol class="steps" id="steps">
-        <li><button type="button" data-scene="0"><b>01</b><span><strong>Import your tab</strong><em class="d">Guitar Pro 3–8 or MusicXML, read in your browser.</em></span><i class="prog" aria-hidden="true"></i></button></li>
-        <li><button type="button" data-scene="1"><b>02</b><span><strong>See the sections</strong><em class="d">Intro, verse, chorus: every bar in the colour of its chord.</em></span><i class="prog" aria-hidden="true"></i></button></li>
-        <li><button type="button" data-scene="2"><b>03</b><span><strong>Practise on loop</strong><em class="d">Loop a section and let the speed trainer push the tempo.</em></span><i class="prog" aria-hidden="true"></i></button></li>
-        <li><button type="button" data-scene="3"><b>04</b><span><strong>Open any bar</strong><em class="d">See its notes up close and how to count them.</em></span><i class="prog" aria-hidden="true"></i></button></li>
+        <li><button type="button" data-step="0"><b>01</b><span><strong>Import your tab</strong><em class="d">Guitar Pro 3–8 or MusicXML, read only in your browser.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="1"><b>02</b><span><strong>See the sections</strong><em class="d">Intro, verse, chorus: every bar in the colour of its chord.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="2"><b>03</b><span><strong>Practise with the tab</strong><em class="d">Loop a section: the tab follows and the tempo goes up.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="3"><b>04</b><span><strong>Open any bar</strong><em class="d">Expand a bar to see its notes and how to count them.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
       </ol>
     </section>
 
-    <footer class="legal"><span>© 2026 Mapa de Compassos</span><a href="./help.html">Help</a><a href="./licenses.html">Terms &amp; privacy</a></footer>
+    <footer class="legal"><span>© 2026 ChordTile</span><a href="./help.html">Help</a><a href="./licenses.html">Terms &amp; privacy</a></footer>
   </section>
 
   <section class="right">
@@ -49,53 +49,53 @@
       <a class="pill-white" href="./player.html">Open the player</a>
     </div>
 
-    <figure class="stage" id="stage" data-scene="0" aria-label="Animation: a Guitar Pro file is imported, split into sections, played on loop and one bar is opened up close">
-      <p class="scene-label" id="sceneLabel" aria-hidden="true">01 · Import</p>
+    <figure class="stage" id="stage" aria-label="Animation: a Guitar Pro file is imported, the song is split into sections, a section is practised on loop with the tab following, and one bar of the tab is expanded">
+      <div class="canvas" id="canvas" data-scene="import" aria-hidden="true">
+        <p class="scene-label"><span id="sceneNo">01</span><span id="sceneName">Import</span></p>
 
-      <!-- 1. Importar -->
-      <div class="import" aria-hidden="true">
-        <div class="dropzone">
-          <svg viewBox="0 0 24 24"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>
-          <span>Drop a Guitar Pro file</span>
-          <div class="reading"><i id="readFill"></i></div>
-          <small id="readText">Reading…</small>
+        <!-- 1. Importar -->
+        <div class="layer l-import">
+          <div class="dropzone" id="dropzone">
+            <svg viewBox="0 0 24 24"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>
+            <span>Drop a Guitar Pro file</span>
+            <div class="reading"><i id="readFill"></i></div>
+            <small id="readText">Reading the file…</small>
+          </div>
+          <div class="file" id="file"><b>GP</b><span>my-song.gp5<small>48 KB</small></span></div>
         </div>
-        <div class="file" id="file"><b>GP</b><span>my-song.gp5<small>48 KB</small></span></div>
-      </div>
 
-      <!-- 2–3. Mapa por secções e leitor -->
-      <div class="board" aria-hidden="true">
-        <div class="board-head"><span class="song-t">My song</span><span class="song-m">BASS · 4/4 · 112 BPM</span></div>
-        <div class="rows" id="rows">
-          <div class="row" data-name="Intro"><div class="row-l">Intro <span>4 bars</span></div><div class="tiles">
-            <div class="t" data-n="9">Am</div><div class="t" data-n="5">F</div><div class="t" data-n="0">C</div><div class="t" data-n="7">G</div></div></div>
-          <div class="row long" data-name="Verse"><div class="row-l">Verse <span>8 bars</span></div><div class="tiles">
-            <div class="t" data-n="9">Am</div><div class="t" data-n="9">Am</div><div class="t" data-n="5">F</div><div class="t" data-n="7">G</div>
-            <div class="t" data-n="0">C</div><div class="t" data-n="7">G</div><div class="t" data-n="9">Am</div><div class="t" data-n="9">Am</div></div></div>
-          <div class="row long loop" data-name="Chorus"><div class="row-l">Chorus <span>8 bars</span><em>Loop</em></div><div class="tiles">
-            <div class="t" data-n="5">F</div><div class="t" data-n="7" id="zoomTile">G</div><div class="t" data-n="0">C</div><div class="t" data-n="9">Am</div>
-            <div class="t" data-n="5">F</div><div class="t" data-n="7">G</div><div class="t" data-n="0">C</div><div class="t" data-n="0">C</div></div></div>
-          <div class="row" data-name="Bridge"><div class="row-l">Bridge <span>4 bars</span></div><div class="tiles">
-            <div class="t" data-n="2">Dm</div><div class="t" data-n="4">E</div><div class="t" data-n="9">Am</div><div class="t" data-n="9">Am</div></div></div>
-        </div>
-        <div class="transport">
-          <span class="play"><svg viewBox="0 0 24 24" id="playIcon"><path d="M8 5v14l11-7z"/></svg></span>
-          <span id="where">Intro · bar 1</span><span class="beats" id="beats"><i></i><i></i><i></i><i></i></span><span class="spd" id="spd">100%</span>
-        </div>
-      </div>
+        <!-- 2. Secções -->
+        <div class="layer l-board"><div class="rows" id="rows"></div></div>
 
-      <!-- 4. Compasso aberto -->
-      <div class="zoom" id="zoom" aria-hidden="true">
-        <div class="z-head"><span class="z-chord">G</span><span><b>Bar 14 · Chorus</b><small>4/4 · counting in eighth notes</small></span><span class="z-rep">Repeat <b id="zRep">1</b></span></div>
-        <div class="z-staff" id="zStaff">
-          <span class="z-str" style="--l:0">G</span><span class="z-str" style="--l:1">D</span><span class="z-str" style="--l:2">A</span><span class="z-str" style="--l:3">E</span>
-          <div class="z-grid">
-            <i class="ln" style="--l:0"></i><i class="ln" style="--l:1"></i><i class="ln" style="--l:2"></i><i class="ln" style="--l:3"></i>
-            <span class="nt" style="--s:0;--l:3">3</span><span class="nt" style="--s:2;--l:3">3</span><span class="nt" style="--s:3;--l:2">2</span>
-            <span class="nt" style="--s:4;--l:2">5</span><span class="nt" style="--s:6;--l:3">3</span><span class="nt" style="--s:7;--l:1">5</span>
+        <!-- 3–4. O leitor: esquema ao lado da tablatura -->
+        <div class="layer l-player">
+          <div class="mp">
+            <div class="mp-top"><span class="logo"><i></i><i></i><i></i><i></i></span><b>My song</b><span class="mp-chip">Bass</span><span class="mp-load">+ Load file</span></div>
+            <div class="mp-body">
+              <div class="mp-chart" id="mpChart"></div>
+              <div class="mp-tab" id="mpTab"><p class="mp-h">Tab · bass</p><div id="mpSystems"></div>
+                <div class="mp-sel" id="mpSel"><div class="mp-selbar" id="mpSelBar"><span>Bar 14 · G</span><b id="mpExpand">⤢ Expand</b><em>Loop</em></div></div>
+                <i class="mp-cursor" id="mpCursor"></i>
+              </div>
+            </div>
+            <div class="mp-dock"><span class="mp-play">▶</span><span id="mpWhere">Ready to play</span><span class="mp-pill" id="mpSpeed">100%</span><span class="mp-pill" id="mpLoop">⟲ Loop</span><span class="mp-pill" id="mpTrainer">↗ Trainer</span></div>
           </div>
         </div>
-        <div class="z-count" id="zCount"><span>1</span><span>&amp;</span><span>2</span><span>&amp;</span><span>3</span><span>&amp;</span><span>4</span><span>&amp;</span></div>
+
+        <!-- 4. Compasso aberto -->
+        <div class="zoom" id="zoom">
+          <div class="z-head"><span class="z-chord">G</span><span><b>Bar 14 · Chorus</b><small>4/4 · count: eighth notes</small></span><span class="z-rep">Repeat <b id="zRep">1</b></span></div>
+          <div class="z-staff" id="zStaff">
+            <span class="z-str" style="--l:0">G</span><span class="z-str" style="--l:1">D</span><span class="z-str" style="--l:2">A</span><span class="z-str" style="--l:3">E</span>
+            <i class="ln" style="--l:0"></i><i class="ln" style="--l:1"></i><i class="ln" style="--l:2"></i><i class="ln" style="--l:3"></i>
+            <span class="nt" style="--s:0;--l:3" data-s="0">3</span><span class="nt" style="--s:2;--l:3" data-s="2">3</span><span class="nt" style="--s:3;--l:2" data-s="3">2</span>
+            <span class="nt" style="--s:4;--l:2" data-s="4">5</span><span class="nt" style="--s:6;--l:3" data-s="6">3</span><span class="nt" style="--s:7;--l:1" data-s="7">5</span>
+          </div>
+          <div class="z-count" id="zCount"><span>1</span><span>&amp;</span><span>2</span><span>&amp;</span><span>3</span><span>&amp;</span><span>4</span><span>&amp;</span></div>
+        </div>
+
+        <!-- Cursor do rato (mostra onde se clica) -->
+        <div class="ptr" id="ptr"><svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10 19z"/></svg><i></i></div>
       </div>
     </figure>
     <span class="vert r">Guitar · Bass</span>

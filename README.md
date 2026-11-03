@@ -1,4 +1,4 @@
-# Mapa de Compassos
+# ChordTile
 
 Plataforma para aprender músicas a partir de ficheiros Guitar Pro. Carregas o ficheiro e o site:
 

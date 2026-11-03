@@ -155,7 +155,7 @@ function loadBytes(bytes: Uint8Array, name: string, isSample: boolean): boolean 
 function renderInfo(name: string) {
   const s = score();
   $('songTitle').textContent = s.title || name.replace(/\.[^.]+$/, '');
-  document.title = $('songTitle').textContent + ' · Mapa de Compassos';
+  document.title = $('songTitle').textContent + ' · ChordTile';
   const mb = s.masterBars[0];
   const parts = [s.artist, s.masterBars.length + ' bars', Math.round(s.tempo) + ' bpm', mb ? mb.timeSignatureNumerator + '/' + mb.timeSignatureDenominator : ''];
   const m = $('songMeta'); m.textContent = parts.filter(Boolean).join(' · ');
@@ -323,7 +323,7 @@ function selectBar(i: number) {
   $<HTMLButtonElement>('bbSplit').disabled = st.sections.some(s => s.start === i);
   $<HTMLButtonElement>('bbReset').disabled = ov()[i] == null;
   $('barbar').hidden = false;
-  showTabSel(i);
+  showTabSel(i, false);
 }
 $('bbEdit').addEventListener('click', () => {
   const ch = document.querySelector<HTMLElement>('.bar[data-bar="' + st.selBar + '"] .ch');
@@ -408,6 +408,7 @@ $('pdfBtn').addEventListener('click', async () => {
 // ---------- Tema claro / escuro ----------
 function setTheme(theme: Theme) {
   applyTheme(theme);
+  input('optLight').checked = theme === 'light';
   const next = theme === 'light' ? 'dark' : 'light';
   $('themeBtn').setAttribute('aria-label', 'Switch to ' + next + ' theme');
   if (st.api) {
@@ -419,6 +420,11 @@ function setTheme(theme: Theme) {
   }
 }
 $('themeBtn').addEventListener('click', () => setTheme(currentTheme() === 'light' ? 'dark' : 'light'));
+// Nas definições (no telemóvel o botão do tema, a ajuda e o Premium ficam só aqui)
+input('optLight').checked = currentTheme() === 'light';
+input('optLight').addEventListener('change', () => setTheme(input('optLight').checked ? 'light' : 'dark'));
+$('setTour').addEventListener('click', () => { openSettings(false, false); startTour(); });
+$('setPremium').addEventListener('click', () => { openSettings(false, false); $('premiumBtn').click(); });
 $('themeBtn').setAttribute('aria-label', 'Switch to ' + (currentTheme() === 'light' ? 'dark' : 'light') + ' theme');
 
 // ---------- Ajustes ----------
@@ -441,8 +447,11 @@ select('trackQuick').addEventListener('change', () => setTrack(+select('trackQui
 
 // ---------- Compasso escolhido na tablatura ----------
 /** Mostra o contorno e a barra (Expandir / Loop) por cima do compasso i na tablatura. */
-function showTabSel(i: number) {
-  st.tabSel = i;
+/** `withBar`: mostra também a barra com Expandir/Loop (escolha feita na tablatura). Escolhido no
+ *  esquema, só o contorno: as ações ficam na barra de baixo, para não haver duas barras iguais. */
+let tabSelWithBar = false;
+function showTabSel(i: number, withBar = tabSelWithBar) {
+  st.tabSel = i; tabSelWithBar = withBar;
   placeTabSel();
 }
 function placeTabSel() {
@@ -455,7 +464,10 @@ function placeTabSel() {
   el.style.width = b.w + 6 + 'px';
   el.style.height = b.h + 6 + 'px';
   $('tsLabel').textContent = 'Bar ' + (i + 1) + ' · ' + barText(i);
-  $('tabSelBar').classList.toggle('below', b.y < 60);
+  // Se a barra ficasse cortada no topo do painel, passa para baixo do compasso
+  const visibleTop = tab.offsetTop + b.y - $('tabScroll').scrollTop;
+  $('tabSelBar').classList.toggle('below', visibleTop < 60);
+  $('tabSelBar').hidden = !tabSelWithBar;
   const on = st.loopBar === i;
   $('tsLoop').setAttribute('aria-pressed', String(on));
   $('tsLoop').querySelector('span')!.textContent = on ? 'Stop loop' : 'Loop';
@@ -685,7 +697,8 @@ function initApi() {
   // Clicar numa nota da tablatura leva o esquema para esse compasso.
   a.beatMouseDown.on(beat => {
     const i = beat.voice.bar.masterBar.index;
-    showTabSel(i);
+    $('barbar').hidden = true;
+    showTabSel(i, true);
     if (i === st.playingBar) return;
     leaveLoopIfOutside(i);
     st.playingBar = i; markPlaying(i); updateNow(i, 0);
@@ -1024,6 +1037,7 @@ function setPlan(p: PlanState) {
   const was = plan.premium; plan = p;
   const btn = $('premiumBtn');
   btn.classList.toggle('on', p.premium);
+  $('setPremiumText').textContent = p.premium ? planLabel(p) : 'Go Premium · try 14 days free';
   $('premiumBtnText').textContent = p.kind === 'trial' ? planLabel(p).replace('Premium trial · ', 'Trial · ') : p.premium ? 'Premium' : 'Go Premium';
   const badge = $('planBadge'); badge.textContent = planLabel(p); badge.classList.toggle('premium', p.premium);
   const paid = p.kind === 'monthly' || p.kind === 'yearly' || p.kind === 'lifetime';

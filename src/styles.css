@@ -259,8 +259,10 @@ svg.f { fill: currentColor; stroke: none; }
   .top { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .vsep { display: none; }
   .top-left { flex-basis: 100%; }
-  .tbtn span, #settingsBtn span { display: none; }
-  .tbtn { width: 38px; padding: 0; justify-content: center; }
+  #settingsBtn span { display: none; }
+  /* Botões do leitor com o nome por baixo do ícone (sem adivinhar o que cada um faz) */
+  .tbtn { flex-direction: column; gap: 2px; height: auto; min-height: 48px; padding: 5px 10px; justify-content: center; border-radius: 14px; }
+  .tbtn span { display: block; font-size: 10.5px; line-height: 1.1; }
   .dock { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 }
 .more { display: none; }
@@ -276,7 +278,8 @@ svg.f { fill: currentColor; stroke: none; }
   .track-pick { flex: 1; min-width: 0; }
   .track-pick select { max-width: none; width: 100%; text-overflow: ellipsis; }
   .btn.primary span { display: none; }
-  .premium-btn { flex: none; } .premium-btn span { display: none; }
+  /* Topo do telemóvel só com o essencial: tema, ajuda e Premium estão nas Definições */
+  .premium-btn, .help-wrap, #themeBtn { display: none; }
   .sec-prog { font-size: 11.5px; }
   .content { padding-top: 12px; }
   .viewswitch { display: flex; width: 100%; margin-bottom: 12px; }
@@ -305,10 +308,12 @@ svg.f { fill: currentColor; stroke: none; }
     padding: 12px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); background: var(--dock); border-top: 1px solid var(--line); box-shadow: 0 -12px 24px rgba(0, 0, 0, .18); }
   .dock.tools-open .tools { display: flex; }
   .dock.tools-open .more { background: var(--panel-2); }
-  .speed { flex: 1 1 100%; }
+  .speed { flex: 1 1 100%; grid-column: 1 / -1; }
   .speed input { flex: 1; width: auto; }
   .speed svg { display: block; }
-  .tbtn { flex: 1; width: auto; }
+  .tools { display: none; }
+  .dock.tools-open .tools { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .tbtn { width: auto; }
   .barbar { left: 12px; right: 12px; transform: none; max-width: none; flex-wrap: wrap; justify-content: space-between; border-radius: 16px; padding: 8px; gap: 2px; overflow: visible; }
   .barbar b { flex-basis: 100%; padding: 2px 8px 4px; }
   .barbar button { flex: 1 1 auto; }
@@ -473,8 +478,8 @@ a.btn { color: inherit; text-decoration: none; }
 
 /* ---------- Tutorial ---------- */
 .tour { position: fixed; inset: 0; z-index: 40; }
-.tour-spot { position: fixed; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(1, 12, 26, .72), 0 0 0 2px var(--accent-text); transition: all .25s ease; pointer-events: none; }
-.tour-spot.none { left: 50%; top: 50%; width: 0; height: 0; box-shadow: 0 0 0 9999px rgba(1, 12, 26, .72); }
+.tour-spot { position: fixed; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, .7), 0 0 0 2px var(--accent-text); transition: all .25s ease; pointer-events: none; }
+.tour-spot.none { left: 50%; top: 50%; width: 0; height: 0; box-shadow: 0 0 0 9999px rgba(0, 0, 0, .7); }
 .tour-card { position: fixed; width: min(380px, calc(100% - 32px)); padding: 18px 18px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line-2); box-shadow: var(--shadow); transition: left .25s ease, top .25s ease; }
 .tour-step { font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-text); }
 .tour-card h2 { margin: 6px 0 6px; font-size: 18px; font-weight: 600; text-wrap: balance; }
@@ -505,7 +510,10 @@ h1, h2, h3, #songTitle, .sheet-head h2, .tour-card h2, .bm-head h2 { font-family
 .logo i { width: 9px; height: 9px; border-radius: 2px; background: var(--ink-strong); }
 .logo i:nth-child(2) { background: var(--accent); }
 #songTitle { font-weight: 700; }
-.top { background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(6px); }
+.top { position: relative; z-index: 15; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(6px); }
+.set-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.set-row .btn { flex: 1; justify-content: center; }
+.set-premium { justify-content: center; border-color: color-mix(in srgb, var(--accent) 55%, var(--line-2)); color: var(--accent-text); }
 
 /* Botões em forma de pílula; o principal em vermelho */
 .btn, .tbtn { border-radius: 999px; }

@@ -82,7 +82,7 @@ export function buildPdf(JsPdf: typeof JsPDF, chart: PdfChart): JsPDF {
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...SOFT);
-    doc.text(chart.watermark ? 'Made with Mapa de Compassos (Free)' : 'Mapa de Compassos', M, H - M + 2);
+    doc.text(chart.watermark ? 'Made with ChordTile (Free)' : 'ChordTile', M, H - M + 2);
     if (chart.watermark) {
       // Semitransparente, para não tapar os acordes
       doc.saveGraphicsState();

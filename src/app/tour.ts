@@ -11,7 +11,7 @@ export const TOUR_KEY = 'mapa:tour-visto';
 
 export const TOUR_STEPS: TourStep[] = [
   {
-    title: 'Welcome to Mapa de Compassos',
+    title: 'Welcome to ChordTile',
     text: 'Load a Guitar Pro file and see the song split into sections and bars, with the chord of each bar in a colour. Then practise it part by part, with the tab following along. Here’s the tour in 1 minute.',
   },
   {
@@ -46,8 +46,8 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     title: 'All set!',
-    text: 'You can replay this tour or read the full guide in “How it works”, under the “?” icon at the top.',
-    targets: ['#helpBtn'],
+    text: 'You can replay this tour or read the full guide in “How it works”: under the “?” at the top, or in Settings on your phone.',
+    targets: ['#helpBtn', '#settingsBtn'],
   },
 ];
 

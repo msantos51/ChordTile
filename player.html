@@ -16,7 +16,7 @@
   // Apply the saved theme before the page paints (avoids a flash)
   try { if (localStorage.getItem('mapa:theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
 </script>
-<title>Player · Mapa de Compassos</title>
+<title>Player · ChordTile</title>
 <meta name="description" content="Load a Guitar Pro file and learn the song by sections and bars, with colours per note and synced tablature.">
 </head>
 <body>
@@ -24,7 +24,7 @@
   <div class="top-left">
     <a class="brand" href="./">
       <span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-      <span class="brand-name">Mapa de Compassos</span>
+      <span class="brand-name">ChordTile</span>
     </a>
     <span class="vsep" aria-hidden="true"></span>
     <div class="song">
@@ -115,7 +115,7 @@
     </div>
     <footer class="site-foot">
       <p>The files you load are only read in your browser and are never sent to a server. Only load files you have the right to use.</p>
-      <p>© 2026 Mapa de Compassos · <a href="./help.html">How it works</a> · <a href="./licenses.html">Terms, privacy and licenses</a> · Guitar Pro is a trademark of Arobas Music; this site is not affiliated.</p>
+      <p>© 2026 ChordTile · <a href="./help.html">How it works</a> · <a href="./licenses.html">Terms, privacy and licenses</a> · Guitar Pro is a trademark of Arobas Music; this site is not affiliated.</p>
     </footer>
   </main>
 </div>
@@ -234,6 +234,15 @@
 </aside>
 <aside class="sheet" id="settings" hidden aria-label="Settings">
   <div class="sheet-head"><h2>Settings</h2><button class="ibtn" id="closeSettings" type="button" aria-label="Close">✕</button></div>
+  <fieldset>
+    <legend>App</legend>
+    <label for="optLight">Light theme <input type="checkbox" id="optLight"></label>
+    <div class="set-row">
+      <button class="btn" type="button" id="setTour">Show the tour</button>
+      <a class="btn" href="./help.html">How it works</a>
+    </div>
+    <button class="btn set-premium" type="button" id="setPremium"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg><span id="setPremiumText">Go Premium</span></button>
+  </fieldset>
   <fieldset>
     <legend>My instrument</legend>
     <select id="viewTrack" aria-label="My instrument"></select>

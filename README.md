@@ -118,7 +118,7 @@ Quem inicia sessão (link mágico por email, sem palavra-passe) tem "My songs" e
 
 1. Cria um projeto em [supabase.com](https://supabase.com) (o plano grátis chega para começar).
 2. No **SQL Editor**, corre `supabase/migrations/001_songs.sql` (tabela `songs`, bucket privado `songs` e regras de acesso por utilizador).
-3. Em **Authentication → URL Configuration**, põe o endereço do site em *Site URL* e acrescenta `https://<utilizador>.github.io/learnfast/player.html` e `http://localhost:5173/player.html` em *Redirect URLs*.
+3. Em **Authentication → URL Configuration**, põe o endereço do site em *Site URL* e acrescenta `https://<utilizador>.github.io/ChordTile/player.html` e `http://localhost:5173/player.html` em *Redirect URLs*.
 4. Põe a *Project URL* e a chave pública (*publishable* ou *anon*) em `.env.production`. Esse ficheiro já tem o projeto do site e é usado no build (`npm run build` e o deploy). Para testar com outro projeto em `npm run dev`, cria um `.env.local` a partir de `.env.example`.
 
 A chave *anon* é pública por natureza; quem protege os dados são as regras RLS do ficheiro SQL (cada pessoa só lê e escreve as suas músicas).
@@ -154,7 +154,7 @@ Já criado em **modo de teste**: produto *ChordTile Premium* (`prod_VYmkdXicLzFW
 A tabela, as regras e a função `stripe-webhook` já estão no projeto Supabase. Falta a parte da Stripe:
 
 1. Na Stripe, cria um produto **Premium** com 3 preços: 3,99 € mensal, 29 € anual (recorrentes) e 49 € único.
-2. Cria um **Payment Link** para cada preço. Em *After payment*, escolhe "Don't show confirmation page" e redireciona para `https://msantos51.github.io/learnfast/player.html?checkout=success`. Ativa a recolha de morada/IVA se usares o Stripe Tax.
+2. Cria um **Payment Link** para cada preço. Em *After payment*, escolhe "Don't show confirmation page" e redireciona para `https://msantos51.github.io/ChordTile/player.html?checkout=success`. Ativa a recolha de morada/IVA se usares o Stripe Tax.
 3. Em **Settings → Billing → Customer portal**, ativa o portal e copia o *link de login*.
 4. Põe os 3 links e o do portal em `.env.production` (`VITE_STRIPE_LINK_*` e `VITE_STRIPE_PORTAL_URL`).
 5. Em **Developers → Webhooks**, adiciona o endpoint `https://dgxmxzhkbbosiadexayy.supabase.co/functions/v1/stripe-webhook` com os eventos `checkout.session.completed`, `customer.subscription.updated` e `customer.subscription.deleted`.

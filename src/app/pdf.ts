@@ -3,7 +3,8 @@ import type { jsPDF as JsPDF } from 'jspdf';
 /** Cores das notas (iguais às do site), por classe de nota: 0 = Dó … 11 = Si. */
 export const NOTE_HEX = ['#ff4d4d', '#ff6d3a', '#ff9a2e', '#ffbe1f', '#f2d40a', '#9bd13b', '#3ccf6e', '#1cc2b0', '#3b9cff', '#7c5cff', '#c056f0', '#ff5fa8'];
 
-export interface PdfBar { n: number; text: string; pcs: number[] }
+/** `note`: texto pessoal do compasso, escrito em pequeno por baixo do acorde. */
+export interface PdfBar { n: number; text: string; pcs: number[]; note?: string }
 export interface PdfSection { name: string; range: string; bars: PdfBar[] }
 export interface PdfChart {
   title: string;
@@ -71,7 +72,11 @@ export function buildPdf(JsPdf: typeof JsPDF, chart: PdfChart): JsPDF {
         doc.setFont('helvetica', 'normal'); doc.setFontSize(6); doc.setTextColor(...SOFT);
         doc.text(String(bar.n), x + 1.2, y + 2.6);
         doc.setFont('helvetica', 'bold'); doc.setFontSize(per > 6 ? 10 : 12.5); doc.setTextColor(...INK);
-        doc.text(bar.text, x + tileW / 2, y + tileH / 2 + 1.6, { align: 'center', maxWidth: tileW - 2 });
+        doc.text(bar.text, x + tileW / 2, y + tileH / 2 + (bar.note ? 0.2 : 1.6), { align: 'center', maxWidth: tileW - 2 });
+        if (bar.note) {
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(5.5); doc.setTextColor(...SOFT);
+          doc.text(bar.note, x + tileW / 2, y + tileH - 2.2, { align: 'center', maxWidth: tileW - 2 });
+        }
       });
       y += tileH + gap;
     }

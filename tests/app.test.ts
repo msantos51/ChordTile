@@ -53,6 +53,11 @@ describe('PDF do esquema', () => {
     expect(buildPdf(jsPDF, chart).output()).not.toContain('FREE PLAN');
   });
 
+  it('escreve o texto pessoal de cada compasso por baixo do acorde', () => {
+    const withNote: PdfChart = { ...chart, sections: [{ name: 'INTRO', range: '', bars: [{ n: 1, text: 'A', pcs: [9], note: 'palm mute' }] }] };
+    expect(buildPdf(jsPDF, withNote).output()).toContain('palm mute');
+  });
+
   it('passa para a página seguinte quando a música é longa', () => {
     const long: PdfChart = { ...chart, sections: Array.from({ length: 12 }, (_, k) => ({ name: 'S' + k, range: '', bars: bars(1, Array(16).fill('C')) })) };
     expect(buildPdf(jsPDF, long).getNumberOfPages()).toBeGreaterThan(1);

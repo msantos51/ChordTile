@@ -32,8 +32,6 @@ const select = (id: string) => $<HTMLSelectElement>(id);
 const base = new URL('.', location.href).href;
 const vendor = base + 'vendor/alphatab/';
 const PLAYING = 1; // alphaTab.synth.PlayerState.Playing
-/** Ecrã tátil: tocar num quadrado escolhe o compasso (sem abrir o teclado); editar é no botão "Editar". */
-const coarse = matchMedia('(pointer: coarse)').matches;
 /** Tablatura mais compacta em ecrãs estreitos (dois compassos por linha em vez de um). */
 const tabLayout = () => (innerWidth < 600 ? { scale: 0.78, barsPerRow: 2 } : { scale: 0.95, barsPerRow: -1 });
 
@@ -44,6 +42,8 @@ interface State {
   sections: Section[];
   /** Correções do utilizador, por instrumento (índice da pista) e por compasso. */
   overridesByTrack: Record<number, Record<number, string>>;
+  /** Texto pessoal de cada compasso (por baixo do acorde), igual para todos os instrumentos. */
+  texts: Record<number, string>;
   detected: string[];
   fileFlag: boolean[];
   perRow: number;
@@ -62,7 +62,7 @@ interface State {
 
 const st: State = {
   score: null, fileKey: '', isSample: true,
-  sections: [], overridesByTrack: {}, detected: [], fileFlag: [],
+  sections: [], overridesByTrack: {}, texts: {}, detected: [], fileFlag: [],
   perRow: 4, viewTrack: 0,
   loopSection: -1, loopBar: -1, tabSel: -1, selBar: -1, playingBar: -1, api: null, ready: false, syncMs: 0,
 };
@@ -90,13 +90,14 @@ const storage = {
 interface SavedSong {
   sections: Section[];
   overridesByTrack?: Record<number, Record<number, string>>;
+  texts?: Record<number, string>;
   /** Formato antigo: correções sem instrumento. */
   overrides?: Record<number, string>;
   perRow: number;
   track?: number;
 }
 const save = () => storage.set('mapa:' + st.fileKey, {
-  sections: st.sections, overridesByTrack: st.overridesByTrack, perRow: st.perRow, track: st.viewTrack,
+  sections: st.sections, overridesByTrack: st.overridesByTrack, texts: st.texts, perRow: st.perRow, track: st.viewTrack,
 } satisfies SavedSong);
 
 function opts(): LabelOptions & { splitBars: boolean; useFileChords: boolean } {
@@ -145,6 +146,7 @@ function loadBytes(bytes: Uint8Array, name: string, isSample: boolean): boolean 
   st.viewTrack = savedOk ? saved!.track! : bassIdx ?? pitched[0] ?? 0;
   st.sections = saved?.sections?.length ? saved.sections : sectionsFromScore(s);
   st.overridesByTrack = saved?.overridesByTrack ?? (saved?.overrides ? { [st.viewTrack]: saved.overrides } : {});
+  st.texts = saved?.texts ?? {};
   if (saved?.perRow) { st.perRow = saved.perRow; select('perRow').value = String(saved.perRow); }
 
   practice.progress = storage.get<SongProgress>('mapa:progress:' + st.fileKey) ?? {}; practice.lastTick = -1; practice.lastAt = 0;
@@ -281,61 +283,75 @@ function renderChart() {
 function barCell(i: number) {
   const mb = score().masterBars[i];
   const cell = document.createElement('div'); cell.className = 'bar'; cell.dataset.bar = String(i);
-  if (ov()[i] != null) cell.classList.add('edited');
+  cell.tabIndex = 0; cell.setAttribute('role', 'button');
   if (st.fileFlag[i] && ov()[i] == null) cell.classList.add('file');
   const num = document.createElement('span'); num.className = 'num'; num.textContent = (mb.isRepeatStart ? '‖: ' : '') + (i + 1);
-  const ch = document.createElement('div'); ch.className = 'ch'; ch.contentEditable = coarse ? 'false' : 'true'; ch.spellcheck = false;
-  ch.textContent = barText(i); ch.setAttribute('aria-label', 'Chord of bar ' + (i + 1));
-  ch.addEventListener('focus', () => { selectBar(i); if (st.ready && st.playingBar !== i) goBar(i, true); });
-  ch.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); focusBar(i + 1); }
-    if (e.key === 'Tab') { e.preventDefault(); focusBar(e.shiftKey ? i - 1 : i + 1); }
-    if (e.key === 'Escape') { ch.blur(); $('barbar').hidden = true; }
+  const ch = document.createElement('div'); ch.className = 'ch'; ch.textContent = barText(i);
+  // Texto pessoal por baixo do acorde ("palm mute", "x2", "slide"…)
+  const txt = document.createElement('div'); txt.className = 'txt'; txt.spellcheck = false;
+  txt.textContent = st.texts[i] ?? ''; txt.hidden = !st.texts[i];
+  cell.classList.toggle('has-txt', !!st.texts[i]);
+  cell.setAttribute('aria-label', 'Bar ' + (i + 1) + ', ' + barText(i) + (st.texts[i] ? ', note: ' + st.texts[i] : ''));
+  const pick = () => { selectBar(i); if (st.ready && st.playingBar !== i) goBar(i, true); };
+  cell.addEventListener('click', e => { if ((e.target as HTMLElement).isContentEditable) return; pick(); });
+  cell.addEventListener('dblclick', e => { e.preventDefault(); selectBar(i); editText(i); });
+  cell.addEventListener('keydown', e => {
+    if ((e.target as HTMLElement).isContentEditable) return;
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); pick(); }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); focusBar(i + (e.key === 'ArrowRight' ? 1 : -1)); }
   });
-  ch.addEventListener('input', () => {
-    const v = ch.textContent?.trim() ?? '';
-    if (v === st.detected[i] || v === '') delete ov()[i]; else ov()[i] = v;
-    cell.classList.toggle('edited', ov()[i] != null); cell.classList.remove('file'); colorCell(cell, v); save();
-    $<HTMLButtonElement>('bbReset').disabled = ov()[i] == null;
-  });
-  cell.addEventListener('click', e => {
-    if (coarse) {
-      if (ch.isContentEditable) return; // a editar
-      selectBar(i);
-      if (st.ready && st.playingBar !== i) goBar(i, true);
-      return;
-    }
-    if (e.target === cell) ch.focus();
-  });
-  if (coarse) ch.addEventListener('blur', () => { ch.contentEditable = 'false'; });
   colorCell(cell, barText(i));
-  cell.append(num, ch);
+  cell.append(num, ch, txt);
   if (mb.repeatCount > 0) { const rep = document.createElement('span'); rep.className = 'rep'; rep.textContent = ':‖ ×' + mb.repeatCount; cell.append(rep); }
   return cell;
 }
 function focusBar(i: number) {
-  const el = document.querySelector<HTMLElement>('.bar[data-bar="' + i + '"] .ch');
-  if (el) { el.focus(); selectText(el); }
+  document.querySelector<HTMLElement>('.bar[data-bar="' + i + '"]')?.focus();
+}
+/** Escreve (ou muda) o texto por baixo do acorde do compasso i. Vazio = apaga. */
+function editText(i: number) {
+  const cell = document.querySelector<HTMLElement>('.bar[data-bar="' + i + '"]');
+  const txt = cell?.querySelector<HTMLElement>('.txt');
+  if (!cell || !txt) return;
+  const before = st.texts[i] ?? '';
+  txt.hidden = false; cell.classList.add('has-txt', 'writing');
+  txt.contentEditable = 'true'; txt.dataset.ph = 'Your note…';
+  txt.focus(); selectText(txt);
+  const done = (keep: boolean) => {
+    txt.removeEventListener('keydown', onKey); txt.removeEventListener('blur', onBlur);
+    txt.contentEditable = 'false'; cell.classList.remove('writing');
+    const v = keep ? (txt.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 40) : before;
+    if (v) st.texts[i] = v; else delete st.texts[i];
+    txt.textContent = v; txt.hidden = !v; cell.classList.toggle('has-txt', !!v);
+    save(); updateTextBtn();
+    if (keep && v !== before) toast(v ? 'Note saved on bar ' + (i + 1) + '.' : 'Note removed.');
+  };
+  const onKey = (e: KeyboardEvent) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); done(true); cell.focus(); }
+    if (e.key === 'Escape') { e.preventDefault(); done(false); cell.focus(); }
+  };
+  const onBlur = () => done(true);
+  txt.addEventListener('keydown', onKey); txt.addEventListener('blur', onBlur);
+}
+function updateTextBtn() {
+  $('bbText').textContent = st.selBar >= 0 && st.texts[st.selBar] ? 'Edit note' : 'Add note';
 }
 function selectBar(i: number) {
+  document.querySelectorAll('.bar.sel').forEach(e => e.classList.remove('sel'));
+  document.querySelector('.bar[data-bar="' + i + '"]')?.classList.add('sel');
   st.selBar = i;
   $('bbLabel').textContent = 'Bar ' + (i + 1);
   $<HTMLButtonElement>('bbSplit').disabled = st.sections.some(s => s.start === i);
-  $<HTMLButtonElement>('bbReset').disabled = ov()[i] == null;
+  updateTextBtn();
   $('barbar').hidden = false;
   showTabSel(i, false);
 }
-$('bbEdit').addEventListener('click', () => {
-  const ch = document.querySelector<HTMLElement>('.bar[data-bar="' + st.selBar + '"] .ch');
-  if (!ch) return;
-  ch.contentEditable = 'true'; ch.focus(); selectText(ch);
-});
-$('bbEdit').hidden = !coarse;
+$('bbText').addEventListener('click', () => { if (st.selBar >= 0) editText(st.selBar); });
 $('bbExpand').addEventListener('click', () => { if (st.selBar >= 0) { $('barbar').hidden = true; openBarModal(st.selBar); } });
 
-$('bbClose').addEventListener('click', () => { $('barbar').hidden = true; (document.activeElement as HTMLElement | null)?.blur(); });
+$('bbClose').addEventListener('click', () => { $('barbar').hidden = true; document.querySelectorAll('.bar.sel').forEach(e => e.classList.remove('sel')); (document.activeElement as HTMLElement | null)?.blur(); });
 $('bbPlay').addEventListener('click', () => { if (st.selBar >= 0) playFrom(st.selBar); });
-$('bbReset').addEventListener('click', () => { const i = st.selBar; delete ov()[i]; save(); renderChart(); focusBar(i); });
 $('bbSplit').addEventListener('click', () => {
   const i = st.selBar; if (st.sections.some(s => s.start === i)) return;
   st.sections.push({ name: 'NOVA', start: i }); st.sections.sort((a, b) => a.start - b.start);
@@ -396,7 +412,7 @@ $('pdfBtn').addEventListener('click', async () => {
       watermark: plan.premium ? undefined : 'FREE PLAN',
       sections: st.sections.map((sec, k) => {
         const end = secEnd(k), bars = [];
-        for (let i = sec.start; i < end; i++) bars.push({ n: i + 1, text: barText(i), pcs: pitchClassesOf(barText(i)) });
+        for (let i = sec.start; i < end; i++) bars.push({ n: i + 1, text: barText(i), pcs: pitchClassesOf(barText(i)), note: st.texts[i] });
         return { name: sec.name, range: 'b. ' + (sec.start + 1) + '–' + end, bars };
       }),
     });
@@ -676,7 +692,11 @@ function initApi() {
     applyMute();
   });
   a.renderStarted.on(() => ($('tabLoading').hidden = false));
-  a.renderFinished.on(() => { $('tabLoading').hidden = true; if (st.tabSel >= 0 && !modal.open) placeTabSel(); });
+  a.renderFinished.on(() => {
+    $('tabLoading').hidden = true; if (st.tabSel >= 0 && !modal.open) placeTabSel();
+    // Ao mudar para a vista da tablatura (telemóvel), mostra logo o compasso onde está
+    if (pendingScroll && st.playingBar >= 0) { pendingScroll = false; requestAnimationFrame(() => scrollTabToBar(st.playingBar, false)); }
+  });
   a.playerStateChanged.on(e => {
     const playing = e.state === PLAYING;
     if (!playing) { delay.clear(); releaseAudio(); practice.lastAt = 0; flushProgress(); }
@@ -768,8 +788,25 @@ function goBar(i: number, fromChart = false) {
   delay.clear();
   api().tickPosition = barTick(i);
   st.playingBar = i; markPlaying(i, !fromChart); updateNow(i, 0);
-  // A tablatura acompanha: mostra o compasso escolhido.
-  try { api().scrollToCursor(); } catch { /* ainda sem cursor */ }
+  // A tablatura acompanha: rola até ao compasso escolhido.
+  scrollTabToBar(i);
+}
+/** Rola a tablatura (o painel, ou a página no telemóvel) até o compasso i ficar à vista. */
+function scrollTabToBar(i: number, smooth = true) {
+  const b = st.api?.boundsLookup?.findMasterBarByIndex(i)?.visualBounds;
+  const tab = $('tab'), sc = $('tabScroll');
+  if (!b || !tab.offsetParent) return; // tablatura ainda por desenhar ou escondida (vista do esquema)
+  const behavior: ScrollBehavior = smooth && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto';
+  const tabTop = tab.getBoundingClientRect().top;
+  if (sc.scrollHeight > sc.clientHeight + 4) {
+    // Painel com scroll próprio (computador): o compasso fica a um terço do topo do painel
+    const scTop = sc.getBoundingClientRect().top;
+    const y = tabTop - scTop + sc.scrollTop + b.y;
+    if (y < sc.scrollTop + 8 || y + b.h > sc.scrollTop + sc.clientHeight - 8) sc.scrollTo({ top: Math.max(0, y - sc.clientHeight / 3), behavior });
+  } else {
+    const y = tabTop + scrollY + b.y, dockH = $('dock').offsetHeight;
+    if (y < scrollY + 80 || y + b.h > scrollY + innerHeight - dockH - 16) window.scrollTo({ top: Math.max(0, y - innerHeight / 3), behavior });
+  }
 }
 function playFrom(i: number) {
   if (!st.ready) { toast('The sounds are still loading.'); return; }
@@ -871,11 +908,12 @@ addEventListener('keydown', e => {
 });
 
 // Vista no telemóvel
+let pendingScroll = false;
 function setView(v: 'chart' | 'tab') {
   document.body.dataset.view = v;
   $('vChart').setAttribute('aria-selected', String(v === 'chart'));
   $('vTab').setAttribute('aria-selected', String(v === 'tab'));
-  if (v === 'tab') st.api?.render();
+  if (v === 'tab') { st.api?.render(); pendingScroll = true; }
 }
 $('vChart').addEventListener('click', () => setView('chart'));
 $('vTab').addEventListener('click', () => setView('tab'));

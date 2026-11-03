@@ -34,7 +34,7 @@
       <p class="eyebrow caps" id="howTitle">How it works</p>
       <ol class="steps" id="steps">
         <li><button type="button" data-step="0"><b>01</b><span><strong>Import your tab</strong><em class="d">Guitar Pro 3–8 or MusicXML, read only in your browser.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
-        <li><button type="button" data-step="1"><b>02</b><span><strong>See the sections</strong><em class="d">Intro, verse, chorus: every bar in the colour of its chord.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="1"><b>02</b><span><strong>See the sections</strong><em class="d">Every bar in the colour of its chord, with your own notes.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
         <li><button type="button" data-step="2"><b>03</b><span><strong>Practise with the tab</strong><em class="d">Loop a section: the tab follows and the tempo goes up.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
         <li><button type="button" data-step="3"><b>04</b><span><strong>Open any bar</strong><em class="d">Expand a bar to see its notes and how to count them.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
       </ol>
@@ -61,7 +61,7 @@
             <div class="reading"><i id="readFill"></i></div>
             <small id="readText">Reading the file…</small>
           </div>
-          <div class="file" id="file"><b>GP</b><span>my-song.gp5<small>48 KB</small></span></div>
+          <div class="file" id="file"><b>GP</b><span>my-song.gp5<small>48 KB</small></span><i class="grab"><svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10 19z"/></svg></i></div>
         </div>
 
         <!-- 2. Secções -->
@@ -70,10 +70,10 @@
         <!-- 3–4. O leitor: esquema ao lado da tablatura -->
         <div class="layer l-player">
           <div class="mp">
-            <div class="mp-top"><span class="logo"><i></i><i></i><i></i><i></i></span><b>My song</b><span class="mp-chip">Bass</span><span class="mp-load">+ Load file</span></div>
+            <div class="mp-top"><span class="logo"><i></i><i></i><i></i><i></i></span><b>My song</b><span class="mp-chip">Guitar</span><span class="mp-load">+ Load file</span></div>
             <div class="mp-body">
               <div class="mp-chart" id="mpChart"></div>
-              <div class="mp-tab" id="mpTab"><p class="mp-h">Tab · bass</p><div id="mpSystems"></div>
+              <div class="mp-tab" id="mpTab"><p class="mp-h">Tab · guitar</p><div id="mpSystems"></div>
                 <div class="mp-sel" id="mpSel"><div class="mp-selbar" id="mpSelBar"><span>Bar 14 · G</span><b id="mpExpand">⤢ Expand</b><em>Loop</em></div></div>
                 <i class="mp-cursor" id="mpCursor"></i>
               </div>
@@ -84,12 +84,9 @@
 
         <!-- 4. Compasso aberto -->
         <div class="zoom" id="zoom">
-          <div class="z-head"><span class="z-chord">G</span><span><b>Bar 14 · Chorus</b><small>4/4 · count: eighth notes</small></span><span class="z-rep">Repeat <b id="zRep">1</b></span></div>
+          <div class="z-head"><span class="z-chord">G</span><span><b>Bar 14 · Chorus</b><small>4/4 · guitar · count: eighth notes</small></span><span class="z-rep">Repeat <b id="zRep">1</b></span></div>
           <div class="z-staff" id="zStaff">
-            <span class="z-str" style="--l:0">G</span><span class="z-str" style="--l:1">D</span><span class="z-str" style="--l:2">A</span><span class="z-str" style="--l:3">E</span>
-            <i class="ln" style="--l:0"></i><i class="ln" style="--l:1"></i><i class="ln" style="--l:2"></i><i class="ln" style="--l:3"></i>
-            <span class="nt" style="--s:0;--l:3" data-s="0">3</span><span class="nt" style="--s:2;--l:3" data-s="2">3</span><span class="nt" style="--s:3;--l:2" data-s="3">2</span>
-            <span class="nt" style="--s:4;--l:2" data-s="4">5</span><span class="nt" style="--s:6;--l:3" data-s="6">3</span><span class="nt" style="--s:7;--l:1" data-s="7">5</span>
+            <!-- Cordas e notas desenhadas pelo script (guitarra, 6 cordas) -->
           </div>
           <div class="z-count" id="zCount"><span>1</span><span>&amp;</span><span>2</span><span>&amp;</span><span>3</span><span>&amp;</span><span>4</span><span>&amp;</span></div>
         </div>

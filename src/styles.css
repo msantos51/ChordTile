@@ -20,6 +20,9 @@
   --accent-text: #ff6b7d;   /* texto e contornos na cor de destaque (legível no escuro) */
   --on-note: #121212;       /* texto sobre um quadrado com a cor cheia da nota */
   --tint: 34%;              /* quanto da cor da nota entra no fundo dos quadrados */
+  /* As cores das notas são iguais nos dois temas: misturadas sempre com este fundo escuro */
+  --note-base: #1b1b1d;
+  --note-ink: #ffffff;
   --rep-bg: rgba(255, 255, 255, .12);
   --overlay: rgba(18, 18, 18, .82);
   --scrim: rgba(0, 0, 0, .6);
@@ -60,7 +63,6 @@
   --overlay: rgba(255, 255, 255, .85);
   --scrim: rgba(18, 18, 18, .45);
   --err-bg: #fde8eb; --err-ink: #8a0b20;
-  --tint: 30%;
   --shadow: 0 16px 44px rgba(18, 18, 18, .16), 0 2px 6px rgba(18, 18, 18, .08);
 }
 
@@ -115,7 +117,7 @@ svg.f { fill: currentColor; stroke: none; }
 
 .notekey { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 14px; }
 .notekey span { font: 600 10px var(--f-mono); height: 20px; min-width: 26px; padding: 0 4px; display: grid; place-items: center; border-radius: 5px;
-  background: color-mix(in srgb, var(--nc) 22%, var(--panel)); box-shadow: inset 0 -2px 0 var(--nc); }
+  background: color-mix(in srgb, var(--nc) 34%, var(--note-base)); box-shadow: inset 0 -2px 0 var(--nc); }
 
 .content { min-width: 0; max-width: 1440px; margin: 0 auto; padding: 20px max(24px, env(safe-area-inset-right, 0px)) calc(var(--dock-h, 120px) + 32px) max(24px, env(safe-area-inset-left, 0px)); }
 .error { background: var(--err-bg); color: var(--err-ink); padding: 12px 16px; border-radius: var(--r-md); margin-bottom: 16px; font-weight: 500; }
@@ -150,8 +152,8 @@ svg.f { fill: currentColor; stroke: none; }
 .bar.edited .num::after { content: " ✎"; color: var(--focus); }
 .bar.file .num::after { content: " ●"; color: var(--accent-text); }
 .bar:focus-within { box-shadow: 0 0 0 2px var(--focus); }
-.chart.colored .bar[data-pc] { background: color-mix(in srgb, var(--nc) var(--tint), var(--panel)); box-shadow: inset 0 -3px 0 var(--nc); }
-.chart.colored .bar[data-pc].two { background: linear-gradient(90deg, color-mix(in srgb, var(--nc) var(--tint), var(--panel)) 50%, color-mix(in srgb, var(--nc2) var(--tint), var(--panel)) 50%);
+.chart.colored .bar[data-pc] { background: color-mix(in srgb, var(--nc) var(--tint), var(--note-base)); box-shadow: inset 0 -3px 0 var(--nc); }
+.chart.colored .bar[data-pc].two { background: linear-gradient(90deg, color-mix(in srgb, var(--nc) var(--tint), var(--note-base)) 50%, color-mix(in srgb, var(--nc2) var(--tint), var(--note-base)) 50%);
   box-shadow: inset 0 -3px 0 0 var(--nc); }
 .chart.colored .bar[data-pc]:focus-within { box-shadow: inset 0 -3px 0 var(--nc), 0 0 0 2px var(--focus); }
 .bar.playing { transform: scale(1.05); z-index: 1; box-shadow: 0 0 0 2px var(--ink-strong); background: var(--ink-strong); }
@@ -386,7 +388,7 @@ a.btn { color: inherit; text-decoration: none; }
 .bm-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
 .bm-id { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .bm-chord { width: 44px; height: 44px; flex: none; border-radius: 9px; display: grid; place-items: center; font-weight: 700; font-size: 18px;
-  background: color-mix(in srgb, var(--nc, var(--line-2)) var(--tint), var(--panel)); box-shadow: inset 0 -3px 0 var(--nc, var(--line-2)); }
+  background: color-mix(in srgb, var(--nc, var(--line-2)) var(--tint), var(--note-base)); box-shadow: inset 0 -3px 0 var(--nc, var(--line-2)); }
 #bmTitle { margin: 0; font-size: 18px; font-weight: 600; }
 #bmTitle span { color: var(--ink-soft); font-weight: 500; }
 #bmMeta { margin: 0; font: 400 12px var(--f-mono); color: var(--ink-soft); }
@@ -488,7 +490,7 @@ a.btn { color: inherit; text-decoration: none; }
 .doc-body .steps { padding-left: 22px; display: grid; gap: 10px; }
 .note-legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; margin: 14px 0 18px; max-width: 70ch; }
 .note-legend span { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; font-size: 13px;
-  background: color-mix(in srgb, var(--nc) var(--tint), var(--panel)); box-shadow: inset 0 -3px 0 var(--nc); }
+  background: color-mix(in srgb, var(--nc) var(--tint), var(--note-base)); box-shadow: inset 0 -3px 0 var(--nc); }
 .note-legend b { font-weight: 700; min-width: 2.2em; }
 .doc-body details { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); padding: 0 14px; margin-bottom: 8px; max-width: 70ch; }
 .doc-body summary { cursor: pointer; padding: 12px 0; font-weight: 600; }
@@ -521,20 +523,22 @@ h1, h2, h3, #songTitle, .sheet-head h2, .tour-card h2, .bm-head h2 { font-family
 .tabpanel, .sheet, .bar-modal, .tour-card, .barbar, .help-menu { border-color: var(--line-2); }
 .dock { border-top-color: var(--line-2); box-shadow: 0 -10px 40px rgba(0, 0, 0, .3); }
 
-/* Quadrados dos compassos: cor cheia com brilho e contorno da nota */
+/* Quadrados dos compassos: cor cheia com brilho e contorno da nota (iguais no tema claro e escuro) */
+.chart.colored .bar[data-pc] .ch, .bm-chord, .note-legend span, .notekey span { color: var(--note-ink); }
+.chart.colored .bar[data-pc].playing .ch { color: var(--on-note); }
 .bar { border-radius: 10px; }
-:root:not([data-theme="light"]) .chart.colored .bar[data-pc] {
+.chart.colored .bar[data-pc] {
   background: linear-gradient(180deg, color-mix(in srgb, var(--nc) 58%, #121212), color-mix(in srgb, var(--nc) 36%, #121212));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nc) 80%, #ffffff), inset 0 1px 0 rgba(255, 255, 255, .22), 0 4px 12px color-mix(in srgb, var(--nc) 22%, transparent);
 }
-:root:not([data-theme="light"]) .chart.colored .bar[data-pc].two {
+.chart.colored .bar[data-pc].two {
   background: linear-gradient(90deg, color-mix(in srgb, var(--nc) 48%, #121212) 50%, color-mix(in srgb, var(--nc2) 48%, #121212) 50%);
 }
-:root:not([data-theme="light"]) .chart.colored .bar[data-pc] .ch { text-shadow: 0 1px 2px rgba(0, 0, 0, .45); }
-:root:not([data-theme="light"]) .chart.colored .bar[data-pc] .num { color: rgba(255, 255, 255, .7); }
-:root:not([data-theme="light"]) .chart.colored .bar[data-pc].playing { background: var(--nc); box-shadow: 0 0 0 2px #ffffff, 0 0 26px color-mix(in srgb, var(--nc) 60%, transparent); }
-:root:not([data-theme="light"]) .chart.colored .bar[data-pc].playing .ch { text-shadow: none; }
-:root:not([data-theme="light"]) .chart.colored .bar[data-pc].playing .num { color: rgba(18, 18, 18, .65); }
+.chart.colored .bar[data-pc] .ch { text-shadow: 0 1px 2px rgba(0, 0, 0, .45); }
+.chart.colored .bar[data-pc] .num { color: rgba(255, 255, 255, .7); }
+.chart.colored .bar[data-pc].playing { background: var(--nc); box-shadow: 0 0 0 2px #ffffff, 0 0 26px color-mix(in srgb, var(--nc) 60%, transparent); }
+.chart.colored .bar[data-pc].playing .ch { text-shadow: none; }
+.chart.colored .bar[data-pc].playing .num { color: rgba(18, 18, 18, .65); }
 
 /* Páginas de texto (Como funciona, Termos) */
 body.doc .top { position: sticky; top: 0; z-index: 5; border-bottom: 1px solid var(--line); }

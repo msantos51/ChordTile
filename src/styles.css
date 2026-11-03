@@ -1,74 +1,68 @@
-/* Mapa de Compassos — estilos (design "Azul profundo", igual à página inicial: azul escuro por defeito, com tema claro opcional)
+/* Mapa de Compassos — estilos (design "Vermelho, branco e preto", igual à página inicial: escuro por defeito, com tema claro)
    Layout: barra de topo com a música; o esquema (quadrados com a cor da nota) ao lado da tablatura;
    em baixo o leitor, com uma barra de progresso neutra. */
 :root {
   color-scheme: dark;
-  /* Paleta "Azul profundo": #0A0C12 · #023661 · #3F3A42 · #76828E · #DB5227 */
-  --bg: #022c55;
-  --bg-grad: radial-gradient(1000px 600px at 90% -10%, rgba(47, 120, 206, .32), transparent 70%), linear-gradient(180deg, #03315d 0%, #022a52 100%);
-  --panel: #0A0C12;
-  --panel-2: #161a24;
-  --dock: #0A0C12;
-  --line: rgba(110, 165, 230, .2);
-  --line-2: rgba(110, 165, 230, .34);
-  --ink: #eef2f7;
+  /* Paleta: preto #121212 · branco · vermelho #c8102e */
+  --bg: #121212;
+  --bg-grad: none;
+  --panel: #1b1b1d;
+  --panel-2: #262629;
+  --dock: #1b1b1d;
+  --line: rgba(255, 255, 255, .1);
+  --line-2: rgba(255, 255, 255, .18);
+  --ink: #f2f2f2;
   --ink-strong: #ffffff;
-  --ink-soft: #a9b6c4;
-  --accent: #DB5227;        /* loop, estado ativo (fundos) */
-  --accent-2: #ff7a3d;      /* início do gradiente laranja */
-  --accent-ink: #0A0C12;    /* texto sobre --accent */
-  --accent-text: #f6a487;   /* texto e contornos na cor de destaque */
-  --on-note: #0A0C12;       /* texto sobre um quadrado com a cor cheia da nota */
+  --ink-soft: #a3a3a3;
+  --accent: #d0122f;        /* loop, estado ativo (fundos) */
+  --accent-2: #e8213f;      /* variação mais clara do vermelho */
+  --accent-ink: #ffffff;    /* texto sobre --accent */
+  --accent-text: #ff6b7d;   /* texto e contornos na cor de destaque (legível no escuro) */
+  --on-note: #121212;       /* texto sobre um quadrado com a cor cheia da nota */
   --tint: 34%;              /* quanto da cor da nota entra no fundo dos quadrados */
   --rep-bg: rgba(255, 255, 255, .12);
-  --overlay: rgba(2, 30, 60, .78);
-  --scrim: rgba(0, 8, 20, .6);
-  --underline: rgba(238, 242, 247, .35);
-  --hover-on-strong: rgba(10, 12, 18, .12);
-  --hover-line: rgba(110, 165, 230, .55);
-  --focus: #ffd2c2;
-  --err-bg: #3a1714; --err-ink: #ffc2b8;
-  --shadow: 0 20px 56px rgba(2, 10, 24, .6), 0 0 40px rgba(47, 120, 206, .18);
+  --overlay: rgba(18, 18, 18, .82);
+  --scrim: rgba(0, 0, 0, .6);
+  --underline: rgba(242, 242, 242, .35);
+  --hover-on-strong: rgba(18, 18, 18, .12);
+  --hover-line: rgba(255, 255, 255, .4);
+  --focus: #ff8a98;
+  --err-bg: #3a1418; --err-ink: #ffc2c9;
+  --shadow: 0 20px 56px rgba(0, 0, 0, .55);
   /* Cores das notas (convenção Boomwhackers): Dó vermelho → Si rosa */
   --n0: #ff4d4d; --n1: #ff6d3a; --n2: #ff9a2e; --n3: #ffbe1f; --n4: #f2d40a; --n5: #9bd13b;
   --n6: #3ccf6e; --n7: #1cc2b0; --n8: #3b9cff; --n9: #7c5cff; --n10: #c056f0; --n11: #ff5fa8;
-  --f-body: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-head: "Plus Jakarta Sans", "Geist", system-ui, sans-serif;
+  --f-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-head: "DM Sans", system-ui, sans-serif;
+  --f-display: "Anton", "Oswald", Impact, sans-serif;
   --f-mono: "Geist Mono", ui-monospace, Menlo, Consolas, monospace;
   --r-lg: 16px; --r-md: 12px; --r-sm: 10px;
 }
 
-/* Tema claro (escolhido no botão sol/lua; guardado no browser) */
+/* Tema claro (escolhido no botão sol/lua; guardado no browser): branco, preto e vermelho */
 :root[data-theme="light"] {
-  /* Tema claro: o fundo do site continua azul; só o que é escuro (painéis, leitor, botões,
-     janelas) passa a claro. Os tokens de texto escuro aplicam-se dentro desses painéis (abaixo). */
-  --panel: #ffffff;
-  --panel-2: #e9eef5;
-  --dock: #ffffff;
-  --tint: 30%;
-  --shadow: 0 16px 44px rgba(2, 10, 24, .35), 0 2px 6px rgba(2, 10, 24, .15);
-}
-/* Dentro dos painéis claros: texto escuro, linhas cinzentas, fundo de campos claro */
-:root[data-theme="light"] :is(.btn, .tbtn, .speed, .viewswitch, .bar, .chart-empty, .tabpanel, .dock, .sheet, .bar-modal, .paywall,
-  .tour-card, .barbar, .help-menu, .drop > div, .toc a, .table-wrap, .doc-body details, .doc-body code, .track-pick select option, .mark:focus, .notekey span, .note-legend span) {
   color-scheme: light;
-  --bg: #eef2f7;
-  --ink: #0A0C12;
-  --ink-strong: #0A0C12;
-  --ink-soft: #4a5563;
-  --line: #d6dee8;
-  --line-2: #c3cdd9;
-  --hover-line: #8fa3bb;
-  --accent-text: #a8391a;
-  --focus: #023661;
-  --rep-bg: rgba(10, 12, 18, .08);
-  --underline: rgba(10, 12, 18, .3);
+  --bg: #f4f2f0;
+  --panel: #ffffff;
+  --panel-2: #efedea;
+  --dock: #ffffff;
+  --line: #e4e1dc;
+  --line-2: #d2cec8;
+  --ink: #121212;
+  --ink-strong: #121212;
+  --ink-soft: #66625c;
+  --hover-line: #9c968e;
+  --accent-text: #b00e28;
+  --focus: #b00e28;
+  --rep-bg: rgba(18, 18, 18, .08);
+  --underline: rgba(18, 18, 18, .3);
   --hover-on-strong: rgba(255, 255, 255, .14);
-  --overlay: rgba(255, 255, 255, .8);
+  --overlay: rgba(255, 255, 255, .85);
+  --scrim: rgba(18, 18, 18, .45);
+  --err-bg: #fde8eb; --err-ink: #8a0b20;
+  --tint: 30%;
+  --shadow: 0 16px 44px rgba(18, 18, 18, .16), 0 2px 6px rgba(18, 18, 18, .08);
 }
-:root[data-theme="light"] :is(.chart-empty, .tabpanel, .dock, .sheet, .bar-modal, .paywall, .tour-card, .barbar, .help-menu, .drop > div,
-  .table-wrap, .doc-body details, .doc-body code, .notekey span, .note-legend span) { color: var(--ink); }
-:root[data-theme="light"] .doc-body details summary { color: var(--ink); }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -500,53 +494,52 @@ a.btn { color: inherit; text-decoration: none; }
 .doc-body summary { cursor: pointer; padding: 12px 0; font-weight: 600; }
 .doc-body details p { margin: 0 0 12px; color: var(--ink); }
 
-/* ---------- Design "Azul profundo" (igual à página inicial) ---------- */
-h1, h2, h3, #songTitle, .brand, .sheet-head h2, .tour-card h2, .bm-head h2 { font-family: var(--f-head); }
-.brand { font-weight: 700; font-size: 15px; }
+/* ---------- Design "Vermelho, branco e preto" (igual à página inicial) ---------- */
+h1, h2, h3, #songTitle, .sheet-head h2, .tour-card h2, .bm-head h2 { font-family: var(--f-head); }
+/* Marca e títulos grandes em letra condensada, em maiúsculas */
+.brand, .doc-body h1, .doc-body h2 { font-family: var(--f-display); font-weight: 400; text-transform: uppercase; letter-spacing: .02em; }
+.brand { font-size: 18px; }
 .logo { grid-template-columns: repeat(2, 9px); gap: 3px; }
-.logo i { width: 9px; height: 9px; background: var(--accent); }
-.logo i:nth-child(2) { background: var(--accent-2); }
-.logo i:nth-child(3) { background: #8fb6e0; }
-.logo i:nth-child(4) { background: #76828E; }
+.logo i { width: 9px; height: 9px; border-radius: 2px; background: var(--ink-strong); }
+.logo i:nth-child(2) { background: var(--accent); }
 #songTitle { font-weight: 700; }
-.top { background: color-mix(in srgb, var(--bg) 70%, transparent); backdrop-filter: blur(6px); }
+.top { background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(6px); }
 
-/* Botões em forma de pílula; o principal em laranja */
+/* Botões em forma de pílula; o principal em vermelho */
 .btn, .tbtn { border-radius: 999px; }
 .btn.icon { border-radius: 50%; }
 .btn.primary, a.btn.primary {
-  background: linear-gradient(180deg, var(--accent-2), var(--accent)); color: var(--accent-ink); border-color: transparent;
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 40%, transparent), inset 0 1px 0 rgba(255, 255, 255, .25);
+  background: var(--accent); color: var(--accent-ink); border-color: transparent; letter-spacing: .02em;
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--accent) 80%, transparent);
 }
-.btn.primary:hover { filter: brightness(1.06); color: var(--accent-ink); }
-.play { background: linear-gradient(180deg, var(--accent-2), var(--accent)); color: var(--accent-ink); box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent); }
+.btn.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 85%, #000); color: var(--accent-ink); filter: none; }
+.play { background: var(--accent); color: var(--accent-ink); box-shadow: 0 8px 22px -6px color-mix(in srgb, var(--accent) 75%, transparent); }
 .tbtn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .sbtn { border-radius: 999px; }
 .panel-head h2 { color: var(--ink); }
 
-/* Painéis escuros com contorno azul, como a pré-visualização da página inicial */
 .tabpanel, .sheet, .bar-modal, .tour-card, .barbar, .help-menu { border-color: var(--line-2); }
-.dock { border-top-color: var(--line-2); box-shadow: 0 -10px 40px rgba(2, 10, 24, .35); }
+.dock { border-top-color: var(--line-2); box-shadow: 0 -10px 40px rgba(0, 0, 0, .3); }
 
 /* Quadrados dos compassos: cor cheia com brilho e contorno da nota */
 .bar { border-radius: 10px; }
 :root:not([data-theme="light"]) .chart.colored .bar[data-pc] {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--nc) 58%, #0A0C12), color-mix(in srgb, var(--nc) 36%, #0A0C12));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--nc) 58%, #121212), color-mix(in srgb, var(--nc) 36%, #121212));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nc) 80%, #ffffff), inset 0 1px 0 rgba(255, 255, 255, .22), 0 4px 12px color-mix(in srgb, var(--nc) 22%, transparent);
 }
 :root:not([data-theme="light"]) .chart.colored .bar[data-pc].two {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--nc) 48%, #0A0C12) 50%, color-mix(in srgb, var(--nc2) 48%, #0A0C12) 50%);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--nc) 48%, #121212) 50%, color-mix(in srgb, var(--nc2) 48%, #121212) 50%);
 }
 :root:not([data-theme="light"]) .chart.colored .bar[data-pc] .ch { text-shadow: 0 1px 2px rgba(0, 0, 0, .45); }
 :root:not([data-theme="light"]) .chart.colored .bar[data-pc] .num { color: rgba(255, 255, 255, .7); }
 :root:not([data-theme="light"]) .chart.colored .bar[data-pc].playing { background: var(--nc); box-shadow: 0 0 0 2px #ffffff, 0 0 26px color-mix(in srgb, var(--nc) 60%, transparent); }
 :root:not([data-theme="light"]) .chart.colored .bar[data-pc].playing .ch { text-shadow: none; }
-:root:not([data-theme="light"]) .chart.colored .bar[data-pc].playing .num { color: rgba(10, 12, 18, .65); }
+:root:not([data-theme="light"]) .chart.colored .bar[data-pc].playing .num { color: rgba(18, 18, 18, .65); }
 
 /* Páginas de texto (Como funciona, Termos) */
 body.doc .top { position: sticky; top: 0; z-index: 5; border-bottom: 1px solid var(--line); }
-.doc-body h1 { font-weight: 800; font-size: clamp(30px, 4.4vw, 48px); letter-spacing: -.03em; }
-.doc-body h2 { font-weight: 800; font-size: 22px; letter-spacing: -.01em; }
+.doc-body h1 { font-size: clamp(42px, 6vw, 76px); line-height: .95; margin-bottom: 18px; }
+.doc-body h2 { font-size: 30px; line-height: 1; }
 .doc-body h2::before { content: ""; display: block; width: 28px; height: 3px; border-radius: 2px; background: var(--accent); margin-bottom: 12px; }
 .toc a { border-radius: 999px; }
 .toc a:hover { border-color: var(--hover-line); }

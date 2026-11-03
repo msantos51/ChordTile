@@ -38,7 +38,7 @@ async function render(a: Account | null, recovery = false) {
             : 'Free plan.';
     $('accFeats').innerHTML = (p.premium
       ? ['Unlimited songs', 'Expand any bar and rhythm-only mode', 'PDF charts', 'Speed trainer and progress', 'Sync across devices']
-      : ['Up to ' + FREE_SONG_LIMIT + ' songs', 'Loop, speed, metronome, play along', 'Notes on the bars', '🔒 Expand, PDF, speed trainer and sync are Premium'])
+      : ['Up to ' + FREE_SONG_LIMIT + ' songs', 'Loop, speed, metronome, play along', 'Notes on the bars', '🔒 Expand, PDF, speed trainer, progress and sync are Premium'])
       .map(t => '<li>' + t + '</li>').join('');
     show('accUpgrade', !paid);
     $('accUpgrade').textContent = p.kind === 'trial' ? 'Keep Premium' : 'Go Premium';

@@ -110,7 +110,7 @@ h1 em { font-style: normal; color: var(--red); }
 .file b { display: grid; place-items: center; width: 40px; height: 44px; border-radius: 6px; background: var(--black); color: #fff; font: 400 16px var(--f-display); }
 .file span { font: 700 14px var(--f-body); display: grid; }
 .file small { font: 500 11px var(--f-mono); color: var(--ink-3); }
-.file .grab { position: absolute; left: 58%; top: 42%; width: 26px; height: 26px; opacity: 0; transition: opacity .15s; }
+.file .grab { position: absolute; left: calc(58% - 5px); top: calc(42% - 3px); width: 26px; height: 26px; opacity: 0; transition: opacity .15s; }
 .file .grab svg { width: 26px; height: 26px; fill: #fff; stroke: #121212; stroke-width: 1.5; stroke-linejoin: round; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .4)); }
 .file.held .grab { opacity: 1; }
 .file.held { box-shadow: 0 26px 50px -14px rgba(0, 0, 0, .7); }
@@ -200,7 +200,7 @@ h1 em { font-style: normal; color: var(--red); }
 /* Cursor do rato */
 .ptr { position: absolute; left: 0; top: 0; width: 26px; height: 26px; opacity: 0; transition: opacity .3s; pointer-events: none; will-change: transform; z-index: 5; }
 .ptr svg { width: 26px; height: 26px; fill: #fff; stroke: #121212; stroke-width: 1.5; stroke-linejoin: round; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .4)); }
-.ptr i { position: absolute; left: 2px; top: 2px; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 2px solid #fff; opacity: 0; transform: scale(.3); }
+.ptr i { position: absolute; left: 5px; top: 3px; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 2px solid #fff; opacity: 0; transform: scale(.3); }
 .ptr.on { opacity: 1; }
 .ptr.click i { animation: ripple .45s ease-out; }
 @keyframes ripple { 0% { opacity: .9; transform: scale(.3); } 100% { opacity: 0; transform: scale(1.4); } }

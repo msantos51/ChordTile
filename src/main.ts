@@ -5,7 +5,8 @@ import { analyzeBar, isBassTrack, label, sectionsFromScore, type LabelOptions, t
 import { parseScore } from './analysis/parse';
 import { pitchClassesOf } from './app/notes';
 import { exportPdf } from './app/pdf';
-import { barView, type BarView } from './analysis/bar';
+import { barView, rhythmOnsets, type BarView } from './analysis/bar';
+import { Clicker, METRO_SOUNDS, isMetroSound, nextTickTime, type MetroSound } from './app/metronome';
 import { autoSub, beatInfo, countLabels, slotOf, type Sub } from './app/count';
 import { VisualDelay } from './app/sync';
 import { releaseAudio, unlockAudio } from './app/audio-unlock';
@@ -518,6 +519,7 @@ function closeBarModal() {
   if (!modal.open) return;
   modal.open = false;
   $('barModal').hidden = true; $('bmScrim').hidden = true;
+  if (rhythm.on) applyMute(); // volta a ouvir-se a música
   // Ao fechar, o loop do compasso termina.
   if (st.loopBar >= 0) {
     st.api?.pause(); clearLoop();
@@ -531,6 +533,7 @@ function setModalBar(i: number) {
   const wasLooping = st.loopBar >= 0, wasPlaying = st.api?.playerState === PLAYING;
   modal.bar = i; modal.reps = 0; modal.lastSlot = -1;
   modal.view = barView(s, i, st.viewTrack);
+  rhythm.onsets = rhythmOnsets(s, i, st.viewTrack);
   const k = secOf(i);
   $('bmTitle').innerHTML = '';
   $('bmTitle').append('Bar ' + (i + 1) + ' ');
@@ -638,15 +641,18 @@ $('bmPlay').addEventListener('click', () => {
   if (!st.ready) { toast('The sounds are still loading.'); return; }
   if (api().playerState === PLAYING && st.loopBar === modal.bar) { api().pause(); return; }
   // Contagem e metrónomo conforme as opções da janela (e os botões do leitor acompanham)
-  api().countInVolume = input('bmCountIn').checked ? 1 : 0; setPressed('countBtn', input('bmCountIn').checked);
-  api().metronomeVolume = input('bmMetro').checked ? 1 : 0; setPressed('metroBtn', input('bmMetro').checked);
+  setPressed('countBtn', input('bmCountIn').checked); setPressed('metroBtn', input('bmMetro').checked); applyMetronome();
   modal.reps = 0; $('bmReps').textContent = '0';
   setLoopBar(modal.bar);
   api().tickPosition = barTick(modal.bar);
   api().play();
 });
-input('bmMetro').addEventListener('change', () => { if (st.api) { st.api.metronomeVolume = input('bmMetro').checked ? 1 : 0; setPressed('metroBtn', input('bmMetro').checked); } });
-input('bmCountIn').addEventListener('change', () => { if (st.api) { st.api.countInVolume = input('bmCountIn').checked ? 1 : 0; setPressed('countBtn', input('bmCountIn').checked); } });
+input('bmMetro').addEventListener('change', () => { setPressed('metroBtn', input('bmMetro').checked); applyMetronome(); });
+input('bmCountIn').addEventListener('change', () => { setPressed('countBtn', input('bmCountIn').checked); applyMetronome(); });
+input('bmRhythm').addEventListener('change', () => {
+  rhythm.on = input('bmRhythm').checked; clicker.ensure(); applyMute();
+  if (rhythm.on) toast('Rhythm only: you hear a click on every note to play, without the notes.');
+});
 input('bmSpeed').addEventListener('input', () => {
   input('speed').value = input('bmSpeed').value;
   input('speed').dispatchEvent(new Event('input'));
@@ -663,7 +669,7 @@ for (const ev of ['pointerdown', 'keydown'] as const) {
     const t = e.target as HTMLElement | null;
     const startsAudio = ev === 'keydown' ? (e as KeyboardEvent).key === ' '
       : !!t?.closest('#playBtn, #bmPlay, #tsLoop, #bbPlay, .sbtn, #nextBtn, #prevBtn, #progress');
-    if (startsAudio) unlockAudio();
+    if (startsAudio) { unlockAudio(); if (metro.sound !== 'click' || rhythm.on) clicker.ensure(); }
   }, { capture: true });
 }
 
@@ -689,6 +695,7 @@ function initApi() {
     ['playBtn', 'stopBtn', 'prevBtn', 'nextBtn', 'loopBtn', 'metroBtn', 'countBtn', 'muteBtn', 'soloBtn', 'trainerBtn'].forEach(id => ($<HTMLButtonElement>(id).disabled = false));
     $('status').textContent = 'Ready to play';
     a.playbackSpeed = +input('speed').value / 100;
+    applyMetronome(); if (metro.sound !== 'click') void clicker.load(metro.sound);
     applyMute();
   });
   a.renderStarted.on(() => ($('tabLoading').hidden = false));
@@ -700,12 +707,17 @@ function initApi() {
   a.playerStateChanged.on(e => {
     const playing = e.state === PLAYING;
     if (!playing) { delay.clear(); releaseAudio(); practice.lastAt = 0; flushProgress(); }
+    // Contagem inicial: os primeiros avisos do metrónomo (um compasso) são a contagem
+    metro.last = null;
+    metro.countInLeft = playing && $('countBtn').getAttribute('aria-pressed') === 'true' ? curNumerator() : 0;
     $('playIcon').innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
     $('playBtn').setAttribute('aria-label', playing ? 'Pause' : 'Play');
     setStatus(playing ? 'Playing' : 'Paused');
     syncModalPlay();
     if (!playing && modal.open) clearModalHighlight();
   });
+  a.midiEventsPlayedFilter = [at.midi.MidiEventType.AlphaTabMetronome];
+  a.midiEventsPlayed.on(e => { for (const m of e.events) if ((m as AlphaTab.midi.AlphaTabMetronomeEvent).isMetronome) onMetronome(m as AlphaTab.midi.AlphaTabMetronomeEvent); });
   a.playedBeatChanged.on(beat => delay.run(() => {
     const mb = beat.voice.bar.masterBar, i = mb.index;
     if (i !== st.playingBar) { st.playingBar = i; markPlaying(i); }
@@ -760,9 +772,67 @@ function applyMute() {
   const solo = $('soloBtn').getAttribute('aria-pressed') === 'true';
   st.api.changeTrackMute(all, false);
   st.api.changeTrackSolo(all, false);
+  if (rhythm.on && modal.open) { st.api.changeTrackMute(all, true); return; }
   if (mute) st.api.changeTrackMute(mine, true);
   if (solo) st.api.changeTrackSolo(mine, true);
 }
+
+// ---------- Sons do metrónomo e modo "só o ritmo" ----------
+const clicker = new Clicker(base);
+const metro = { sound: 'click' as MetroSound, last: null as number | null, countInLeft: 0 };
+const rhythm = { on: false, onsets: [] as number[] };
+for (const id of ['metroSound', 'bmSound']) {
+  for (const o of METRO_SOUNDS) { const el = document.createElement('option'); el.value = o.id; el.textContent = o.label; select(id).append(el); }
+  select(id).addEventListener('change', () => { clicker.ensure(); setMetroSound(select(id).value as MetroSound); });
+}
+function setMetroSound(v: MetroSound) {
+  metro.sound = v; select('metroSound').value = v; select('bmSound').value = v;
+  storage.set('mapa:metroSound', v);
+  if (v !== 'click') void clicker.load(v);
+  applyMetronome();
+}
+{ const saved = storage.get<string>('mapa:metroSound'); metro.sound = isMetroSound(saved) ? saved : 'click'; select('metroSound').value = metro.sound; select('bmSound').value = metro.sound; }
+/** O clique próprio do alphaTab só se ouve com o som "Click"; os outros sons tocamos nós. */
+function applyMetronome() {
+  if (!st.api) return;
+  const metroOn = $('metroBtn').getAttribute('aria-pressed') === 'true';
+  const countOn = $('countBtn').getAttribute('aria-pressed') === 'true';
+  st.api.metronomeVolume = metroOn && metro.sound === 'click' ? 1 : 0;
+  // A contagem inicial só acontece com volume > 0: com outro som fica quase muda e tocamos nós
+  st.api.countInVolume = countOn ? (metro.sound === 'click' ? 1 : 0.0001) : 0;
+}
+const curNumerator = () => {
+  const i = Math.max(0, st.playingBar);
+  return st.score?.masterBars[i]?.timeSignatureNumerator ?? 4;
+};
+function onMetronome(m: AlphaTab.midi.AlphaTabMetronomeEvent) {
+  const speed = st.api?.playbackSpeed || 1;
+  const sec = m.metronomeDurationInMilliseconds / 1000 / speed;
+  metro.last = nextTickTime(metro.last, clicker.now(), sec);
+  const inCountIn = metro.countInLeft > 0;
+  if (inCountIn) metro.countInLeft--;
+  const on = $(inCountIn ? 'countBtn' : 'metroBtn').getAttribute('aria-pressed') === 'true';
+  if (on && metro.sound !== 'click') clicker.tick(metro.sound, m.metronomeNumerator, metro.last, sec);
+  if (!inCountIn) scheduleRhythm(m.tick, m.metronomeDurationInTicks, metro.last, sec);
+}
+/** Só o ritmo: em cada tempo, agenda um golpe para cada nota que começa dentro desse tempo. */
+function scheduleRhythm(tick: number, durTicks: number, when: number, sec: number) {
+  if (!rhythm.on || !modal.open || st.loopBar !== modal.bar || !st.score) return;
+  const start = barTick(modal.bar);
+  for (const o of rhythm.onsets) {
+    const abs = start + o;
+    if (abs >= tick && abs < tick + durTicks) clicker.hit(when + ((abs - tick) / durTicks) * sec);
+  }
+}
+$('metroTest').addEventListener('click', () => {
+  clicker.ensure();
+  void clicker.load(metro.sound).then(() => {
+    const t0 = clicker.now() + 0.1;
+    for (let b = 0; b < 4; b++) {
+      if (metro.sound === 'click') clicker.tick('wood', b, t0 + b * 0.6, 0.6); else clicker.tick(metro.sound, b, t0 + b * 0.6, 0.6);
+    }
+  });
+});
 
 function barTick(i: number) {
   const mb = score().masterBars[i];
@@ -875,8 +945,8 @@ $('loopBtn').addEventListener('click', () => {
   const v = toggle('loopBtn'); api().isLooping = v;
   if (!v && (st.loopSection >= 0 || st.loopBar >= 0)) { clearLoop(); renderChart(); if (st.tabSel >= 0) placeTabSel(); }
 });
-$('metroBtn').addEventListener('click', () => { api().metronomeVolume = toggle('metroBtn') ? 1 : 0; });
-$('countBtn').addEventListener('click', () => { api().countInVolume = toggle('countBtn') ? 1 : 0; });
+$('metroBtn').addEventListener('click', () => { toggle('metroBtn'); clicker.ensure(); applyMetronome(); });
+$('countBtn').addEventListener('click', () => { toggle('countBtn'); clicker.ensure(); applyMetronome(); });
 $('muteBtn').addEventListener('click', () => { if (toggle('muteBtn')) setPressed('soloBtn', false); applyMute(); });
 $('soloBtn').addEventListener('click', () => { if (toggle('soloBtn')) setPressed('muteBtn', false); applyMute(); });
 

@@ -610,3 +610,8 @@ body.doc .top { position: sticky; top: 0; z-index: 5; border-bottom: 1px solid v
 .pw-offer .t { font-size: 11.5px; color: var(--accent-text); }
 .pw-foot { text-align: center; }
 @media (max-width: 520px) { .pw-offers { grid-template-columns: 1fr; } .paywall { padding: 24px 16px 18px; } }
+
+/* Compasso aberto: som do metrónomo e "só o ritmo" */
+.bm-sound { height: 32px; max-width: 210px; padding: 0 28px 0 10px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--panel); color: var(--ink); font-size: 12.5px; }
+.bm-rhythm { border-color: color-mix(in srgb, var(--accent) 55%, var(--line-2)) !important; }
+.bm-rhythm:has(input:checked) { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) !important; }

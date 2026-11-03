@@ -114,7 +114,11 @@ function rectIn(el: HTMLElement) {
   while (e && e !== canvas) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent as HTMLElement | null; }
   return { x, y, w: el.offsetWidth, h: el.offsetHeight };
 }
-const center = (el: HTMLElement) => { const r = rectIn(el); return { x: r.x + r.w / 2, y: r.y + r.h / 2 }; };
+/** Centro de um elemento tal como aparece no ecrã (conta com transform/translate), em píxeis da tela. */
+function center(el: HTMLElement) {
+  const r = el.getBoundingClientRect(), c = canvas.getBoundingClientRect(), k = c.width / 560;
+  return { x: (r.left + r.width / 2 - c.left) / k, y: (r.top + r.height / 2 - c.top) / k };
+}
 
 // ---- Escala da tela para caber no painel ----
 new ResizeObserver(() => {
@@ -129,9 +133,12 @@ const wait = (ms: number) => { const id = run; return new Promise<void>((ok, ko)
 const anim = (el: Element, k: Keyframe[], o: KeyframeAnimationOptions) => el.animate(k, { fill: 'forwards', easing: 'cubic-bezier(.2,.8,.2,1)', ...o });
 const ptr = $('ptr');
 let ptrAt = { x: 470, y: 380 };
+/** A ponta da seta está a (5, 3) px do canto da caixa do cursor: move a caixa para a ponta ficar em (x, y). */
+const TIP = { x: 5, y: 3 };
+const at = (p: { x: number; y: number }) => `translate(${p.x - TIP.x}px, ${p.y - TIP.y}px)`;
 async function moveTo(x: number, y: number, ms = 650) {
   ptr.classList.add('on');
-  anim(ptr, [{ transform: `translate(${ptrAt.x}px, ${ptrAt.y}px)` }, { transform: `translate(${x}px, ${y}px)` }], { duration: ms, easing: 'cubic-bezier(.5,0,.2,1)' });
+  anim(ptr, [{ transform: at(ptrAt) }, { transform: at({ x, y }) }], { duration: ms, easing: 'cubic-bezier(.5,0,.2,1)' });
   ptrAt = { x, y }; await wait(ms);
 }
 async function click() { ptr.classList.remove('click'); void ptr.offsetWidth; ptr.classList.add('click'); await wait(180); }
@@ -154,7 +161,7 @@ function resetAll() {
   ptr.getAnimations().forEach(a => a.cancel());
   canvas.classList.remove('fade');
   ptr.classList.remove('on', 'click'); ptrAt = { x: 470, y: 380 };
-  ptr.style.transform = `translate(${ptrAt.x}px, ${ptrAt.y}px)`;
+  ptr.style.transform = at(ptrAt);
   $('dropzone').classList.remove('hot', 'reading-on'); $('readText').textContent = 'Reading the file…';
   $('file').style.opacity = '0';
   mpTiles.forEach(t => t.classList.remove('on'));
@@ -175,9 +182,11 @@ async function sceneImport() {
   canvas.dataset.scene = 'import';
   const file = $('file'), dz = $('dropzone');
   const dzc = center(dz);
-  const start = { x: 360, y: 8 }, end = { x: dzc.x - file.offsetWidth / 2, y: dzc.y - 155 };
-  // Ponto onde o cursor agarra o ficheiro (igual à posição do cursor desenhado dentro dele)
-  const grab = { x: file.offsetWidth * 0.58, y: file.offsetHeight * 0.42 };
+  // O ficheiro está na camada da cena (52 px abaixo do topo da tela); o cursor está na tela
+  const layer = file.offsetParent as HTMLElement, base = { x: layer.offsetLeft, y: layer.offsetTop };
+  const start = { x: 360, y: 8 }, end = { x: dzc.x - base.x - file.offsetWidth / 2, y: dzc.y - base.y - 110 };
+  // Ponto onde o cursor agarra o ficheiro (igual à posição do cursor desenhado dentro dele), em coordenadas da tela
+  const grab = { x: base.x + file.offsetWidth * 0.58, y: base.y + file.offsetHeight * 0.42 };
   anim(file, [{ opacity: 0, transform: `translate(${start.x + 30}px, ${start.y - 20}px) rotate(8deg)` }, { opacity: 1, transform: `translate(${start.x}px, ${start.y}px)` }], { duration: 450 });
   await moveTo(start.x + grab.x, start.y + grab.y, 550);
   await click();
@@ -187,10 +196,13 @@ async function sceneImport() {
   await wait(550); dz.classList.add('hot'); await wait(450);
   // Largar: o cursor volta a ser o principal e o ficheiro entra na zona
   ptrAt = { x: end.x + grab.x, y: end.y + grab.y };
-  ptr.getAnimations().forEach(a => a.cancel()); ptr.style.transform = `translate(${ptrAt.x}px, ${ptrAt.y}px)`;
+  ptr.getAnimations().forEach(a => a.cancel()); ptr.style.transform = at(ptrAt);
   ptr.classList.add('on'); file.classList.remove('held');
-  anim(file, [{ opacity: 1, transform: `translate(${end.x}px, ${end.y}px) scale(1)` }, { opacity: 0, transform: `translate(${end.x}px, ${end.y + 50}px) scale(.6)` }], { duration: 380 });
   await click();
+  // O ficheiro encolhe para dentro da zona a partir do ponto onde o cursor o larga (não foge do cursor)
+  file.style.transformOrigin = '58% 42%';
+  anim(file, [{ opacity: 1, transform: `translate(${end.x}px, ${end.y}px) scale(1)` }, { opacity: 0, transform: `translate(${end.x}px, ${end.y}px) scale(.4)` }], { duration: 380, easing: 'cubic-bezier(.4,0,.2,1)' });
+  await wait(120);
   dz.classList.remove('hot'); dz.classList.add('reading-on');
   anim(ptr, [{ opacity: 1 }, { opacity: 0 }], { duration: 300 });
   anim($('readFill'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 1150, easing: 'cubic-bezier(.4,0,.2,1)' });
@@ -212,7 +224,7 @@ async function sceneBoard() {
   await wait(2500);
   // Duplo clique num compasso do refrão e escrever uma nota por baixo do acorde
   const tile = boardTiles[NOTE_BAR - 1], small = tile.querySelector('small')!;
-  ptrAt = { x: 470, y: 420 }; ptr.style.transform = `translate(${ptrAt.x}px, ${ptrAt.y}px)`;
+  ptrAt = { x: 470, y: 420 }; ptr.style.transform = at(ptrAt);
   const c = center(tile);
   await moveTo(c.x + 6, c.y + 4, 650);
   await click(); await wait(90); await click();
@@ -246,7 +258,7 @@ async function scenePlayer() {
   canvas.dataset.scene = 'player'; noteInPlayer();
   await wait(500);
   ptr.style.opacity = ''; ptr.getAnimations().forEach(a => a.cancel());
-  ptrAt = { x: 420, y: 400 }; ptr.style.transform = `translate(${ptrAt.x}px, ${ptrAt.y}px)`;
+  ptrAt = { x: 420, y: 400 }; ptr.style.transform = at(ptrAt);
   const pr = center($('mpPractise'));
   await moveTo(pr.x - 4, pr.y - 2, 750);
   await click();
@@ -276,7 +288,7 @@ async function sceneExpand() {
   canvas.dataset.scene = 'player'; noteInPlayer();
   const g = barGeom(14), sel = $('mpSel');
   ptr.getAnimations().forEach(a => a.cancel()); ptr.style.opacity = '';
-  ptrAt = { x: 460, y: 400 }; ptr.style.transform = `translate(${ptrAt.x}px, ${ptrAt.y}px)`;
+  ptrAt = { x: 460, y: 400 }; ptr.style.transform = at(ptrAt);
   await moveTo(g.abs.x + g.abs.w / 2, g.abs.y + g.abs.h / 2, 700);
   await click();
   Object.assign(sel.style, { left: g.x - 2 + 'px', top: g.y - 4 + 'px', width: g.w + 4 + 'px', height: g.h + 8 + 'px' });

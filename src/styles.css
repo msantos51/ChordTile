@@ -86,8 +86,7 @@ svg.f { fill: currentColor; stroke: none; }
   padding: 12px max(24px, env(safe-area-inset-right, 0px)) 12px max(24px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--line); }
 .top-left { display: flex; align-items: center; gap: 14px; min-width: 0; flex-wrap: wrap; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; color: inherit; text-decoration: none; }
-.logo { display: grid; grid-template-columns: repeat(2, 8px); gap: 2px; }
-.logo i { width: 8px; height: 8px; border-radius: 2px; }
+.logo { display: block; flex: none; width: 22px; height: 22px; fill: #c8102e; }
 .vsep { width: 1px; height: 24px; background: var(--line-2); }
 .song { min-width: 0; }
 #songTitle { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
@@ -501,12 +500,10 @@ a.btn { color: inherit; text-decoration: none; }
 
 /* ---------- Design "Vermelho, branco e preto" (igual à página inicial) ---------- */
 h1, h2, h3, #songTitle, .sheet-head h2, .tour-card h2, .bm-head h2 { font-family: var(--f-head); }
-/* Marca e títulos grandes em letra condensada, em maiúsculas */
-.brand, .doc-body h1, .doc-body h2 { font-family: var(--f-display); font-weight: 900; text-transform: uppercase; letter-spacing: -.01em; }
-.brand { font-size: 18px; }
-.logo { grid-template-columns: repeat(2, 9px); gap: 3px; }
-.logo i { width: 9px; height: 9px; border-radius: 2px; background: var(--ink-strong); }
-.logo i:nth-child(2) { background: var(--accent); }
+/* Títulos grandes em letra condensada, em maiúsculas */
+.doc-body h1, .doc-body h2 { font-family: var(--f-display); font-weight: 900; text-transform: uppercase; letter-spacing: -.01em; }
+/* Marca: tile vermelho com C + "ChordTile" em Roboto Medium (ver kit do logo no Figma) */
+.brand { font-family: var(--f-display); font-size: 19px; font-weight: 500; letter-spacing: -.01em; }
 #songTitle { font-weight: 700; }
 .top { position: relative; z-index: 15; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(6px); }
 .set-row { display: flex; gap: 8px; flex-wrap: wrap; }

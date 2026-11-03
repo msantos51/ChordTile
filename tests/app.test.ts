@@ -49,7 +49,7 @@ describe('PDF do esquema', () => {
   it('no plano Free leva marca de água; no Premium não', () => {
     const free = buildPdf(jsPDF, { ...chart, watermark: 'FREE PLAN' }).output();
     expect(free).toContain('FREE PLAN');
-    expect(free).toContain('Made with Mapa de Compassos');
+    expect(free).toContain('Made with ChordTile');
     expect(buildPdf(jsPDF, chart).output()).not.toContain('FREE PLAN');
   });
 

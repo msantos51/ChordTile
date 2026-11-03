@@ -145,6 +145,10 @@ Praticar é sempre grátis. O Premium é para quem quer guardar e acompanhar o q
 - **Preços** (em `src/app/billing.ts`): 3,99 €/mês, 29 €/ano, 49 € vitalício (preço de fundador).
 - **Código**: regras do plano em `src/app/plan.ts`; treino e progresso em `src/app/practice.ts` (ambos testados); pagamentos em `src/app/billing.ts`; função do servidor em `supabase/functions/stripe-webhook`.
 
+### Estado atual (Stripe, conta ChordTile)
+
+Já criado em **modo de teste**: produto *ChordTile Premium* (`prod_VYmkdXicLzFWxf`), os 3 preços (`lookup_key`: `premium_monthly`, `premium_yearly`, `premium_lifetime`, IVA incluído), os 3 Payment Links (em `.env.production`), o portal do cliente e o webhook para a função `stripe-webhook`. Falta criar no Supabase os segredos `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`. Para passar a live, repetir estes objetos com a conta ativada e trocar os links.
+
 ### Ativar os pagamentos (Stripe)
 
 A tabela, as regras e a função `stripe-webhook` já estão no projeto Supabase. Falta a parte da Stripe:

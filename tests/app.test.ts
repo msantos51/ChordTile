@@ -46,6 +46,13 @@ describe('PDF do esquema', () => {
     expect(out).toContain('INTRO');
   });
 
+  it('no plano Free leva marca de água; no Premium não', () => {
+    const free = buildPdf(jsPDF, { ...chart, watermark: 'FREE PLAN' }).output();
+    expect(free).toContain('FREE PLAN');
+    expect(free).toContain('Made with Mapa de Compassos');
+    expect(buildPdf(jsPDF, chart).output()).not.toContain('FREE PLAN');
+  });
+
   it('passa para a página seguinte quando a música é longa', () => {
     const long: PdfChart = { ...chart, sections: Array.from({ length: 12 }, (_, k) => ({ name: 'S' + k, range: '', bars: bars(1, Array(16).fill('C')) })) };
     expect(buildPdf(jsPDF, long).getNumberOfPages()).toBeGreaterThan(1);

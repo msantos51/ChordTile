@@ -14,90 +14,100 @@
 </head>
 <body>
 <div class="page">
-  <section class="left">
+  <div class="hero-wrap">
+    <svg class="blob" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="blobFill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e23b4e"/><stop offset=".55" stop-color="#c8102e"/><stop offset="1" stop-color="#a50d26"/></linearGradient>
+      </defs>
+      <path fill="url(#blobFill)" d="M300 0H1000V1000H0C40 900 60 760 70 600C80 420 70 260 110 160C150 80 230 30 300 0Z"/>
+      <path fill="#a50d26" opacity=".35" d="M1000 560C900 600 820 700 790 820C770 900 760 960 740 1000H1000Z"/>
+      <path fill="#fff" opacity=".07" d="M560 0C520 120 600 210 720 220C850 230 930 140 1000 60V0Z"/>
+    </svg>
+
     <header class="top">
       <a class="brand" href="./"><svg class="logo" viewBox="16 16 224 224" aria-hidden="true"><path fill-rule="evenodd" d="M76 16H180A60 60 0 0 1 240 76V180A60 60 0 0 1 180 240H76A60 60 0 0 1 16 180V76A60 60 0 0 1 76 16ZM199 104A43 43 0 0 0 156 61H108A43 43 0 0 0 65 104V152A43 43 0 0 0 108 195H156A43 43 0 0 0 199 152H169A13 13 0 0 1 156 165H108A13 13 0 0 1 95 152V104A13 13 0 0 1 108 91H156A13 13 0 0 1 169 104Z"/></svg>ChordTile</a>
+      <nav class="nav" aria-label="Main"><a href="./player.html#songs">My songs</a><a href="./help.html">Help</a><a href="./account.html">Sign in</a></nav>
+      <a class="cta-top" href="./player.html">Open the player<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <a class="mob-player" href="./player.html">Player</a>
     </header>
 
-    <div class="copy">
-      <p class="kicker caps">For Guitar Pro files · guitar &amp; bass</p>
-      <h1>Load the tab.<br>See the song.<br><em>Play it.</em></h1>
-      <p class="lead">Every section, every bar coloured by its chord, and a player that loops the hard part and opens any bar up close.</p>
-      <div class="buy">
-        <button class="btn" type="button" data-pick><span class="plus" aria-hidden="true">+</span>Load a Guitar Pro file</button>
-        <a class="link" href="./player.html?sample">Try the sample</a>
-      </div>
-      <p class="err" id="landingErr" role="alert" hidden></p>
-    </div>
-
-    <section class="how" id="how" aria-labelledby="howTitle">
-      <p class="eyebrow caps" id="howTitle">How it works</p>
-      <ol class="steps" id="steps">
-        <li><button type="button" data-step="0"><b>01</b><span><strong>Import your tab</strong><em class="d">Guitar Pro 3–8 or MusicXML, read only in your browser.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
-        <li><button type="button" data-step="1"><b>02</b><span><strong>See the sections</strong><em class="d">Every bar in the colour of its chord, with your own notes.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
-        <li><button type="button" data-step="2"><b>03</b><span><strong>Practise with the tab</strong><em class="d">Loop a section: the tab follows and the tempo goes up.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
-        <li><button type="button" data-step="3"><b>04</b><span><strong>Open any bar</strong><em class="d">Expand a bar to see its notes and how to count them.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
-      </ol>
-    </section>
-
-    <footer class="legal"><span>© 2026 ChordTile</span><a href="./help.html">Help</a><a href="./licenses.html">Terms &amp; privacy</a></footer>
-  </section>
-
-  <section class="right">
-    <div class="right-top">
-      <nav class="nav-r" aria-label="Player"><a href="./player.html#songs">My songs</a><a href="./help.html">Help</a><a href="./account.html">Sign in</a></nav>
-      <a class="pill-white" href="./player.html">Open the player</a>
-    </div>
-
-    <figure class="stage" id="stage" aria-label="Animation: a Guitar Pro file is imported, the song is split into sections, a section is practised on loop with the tab following, and one bar of the tab is expanded">
-      <div class="canvas" id="canvas" data-scene="import" aria-hidden="true">
-        <p class="scene-label"><span id="sceneNo">01</span><span id="sceneName">Import</span></p>
-
-        <!-- 1. Importar -->
-        <div class="layer l-import">
-          <div class="dropzone" id="dropzone">
-            <svg viewBox="0 0 24 24"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>
-            <span>Drop a Guitar Pro file</span>
-            <div class="reading"><i id="readFill"></i></div>
-            <small id="readText">Reading the file…</small>
-          </div>
-          <div class="file" id="file"><b>GP</b><span>my-song.gp5<small>48 KB</small></span><i class="grab"><svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10 19z"/></svg></i></div>
+    <main class="hero">
+      <div class="copy">
+        <p class="kicker"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4M7 7v10M11 4v16M15 8v8M19 10v4"/></svg>For Guitar Pro files · guitar &amp; bass</p>
+        <h1>Load the tab.<br>See the song.<br><em>Play it.</em></h1>
+        <p class="lead">Every section, every bar coloured by its chord, and a player that loops the hard part and opens any bar up close.</p>
+        <div class="buy">
+          <button class="btn" type="button" data-pick><span class="plus" aria-hidden="true">+</span>Load a Guitar Pro file</button>
+          <a class="link" href="./player.html?sample"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5l12 7-12 7z"/></svg>Try the sample</a>
         </div>
+        <p class="err" id="landingErr" role="alert" hidden></p>
+      </div>
 
-        <!-- 2. Secções -->
-        <div class="layer l-board"><div class="rows" id="rows"></div></div>
+      <section class="right">
+      <figure class="stage" id="stage" aria-label="Animation: a Guitar Pro file is imported, the song is split into sections, a section is practised on loop with the tab following, and one bar of the tab is expanded">
+        <div class="canvas" id="canvas" data-scene="import" aria-hidden="true">
+          <p class="scene-label"><span id="sceneNo">01</span><span id="sceneName">Import</span></p>
 
-        <!-- 3–4. O leitor: esquema ao lado da tablatura -->
-        <div class="layer l-player">
-          <div class="mp">
-            <div class="mp-top"><svg class="logo" viewBox="16 16 224 224" aria-hidden="true"><path fill-rule="evenodd" d="M76 16H180A60 60 0 0 1 240 76V180A60 60 0 0 1 180 240H76A60 60 0 0 1 16 180V76A60 60 0 0 1 76 16ZM199 104A43 43 0 0 0 156 61H108A43 43 0 0 0 65 104V152A43 43 0 0 0 108 195H156A43 43 0 0 0 199 152H169A13 13 0 0 1 156 165H108A13 13 0 0 1 95 152V104A13 13 0 0 1 108 91H156A13 13 0 0 1 169 104Z"/></svg><b>My song</b><span class="mp-chip">Guitar</span><span class="mp-load">+ Load file</span></div>
-            <div class="mp-body">
-              <div class="mp-chart" id="mpChart"></div>
-              <div class="mp-tab" id="mpTab"><p class="mp-h">Tab · guitar</p><div id="mpSystems"></div>
-                <div class="mp-sel" id="mpSel"><div class="mp-selbar" id="mpSelBar"><span>Bar 14 · G</span><b id="mpExpand">⤢ Expand</b><em>Loop</em></div></div>
-                <i class="mp-cursor" id="mpCursor"></i>
-              </div>
+          <!-- 1. Importar -->
+          <div class="layer l-import">
+            <div class="dropzone" id="dropzone">
+              <svg viewBox="0 0 24 24"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>
+              <span>Drop a Guitar Pro file</span>
+              <div class="reading"><i id="readFill"></i></div>
+              <small id="readText">Reading the file…</small>
             </div>
-            <div class="mp-dock"><span class="mp-play">▶</span><span id="mpWhere">Ready to play</span><span class="mp-pill" id="mpSpeed">100%</span><span class="mp-pill" id="mpLoop">⟲ Loop</span><span class="mp-pill" id="mpTrainer">↗ Trainer</span></div>
+            <div class="file" id="file"><b>GP</b><span>my-song.gp5<small>48 KB</small></span><i class="grab"><svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10 19z"/></svg></i></div>
           </div>
-        </div>
 
-        <!-- 4. Compasso aberto -->
-        <div class="zoom" id="zoom">
-          <div class="z-head"><span class="z-chord">G</span><span><b>Bar 14 · Chorus</b><small>4/4 · guitar · count: eighth notes</small></span><span class="z-rep">Repeat <b id="zRep">1</b></span></div>
-          <div class="z-staff" id="zStaff">
-            <!-- Cordas e notas desenhadas pelo script (guitarra, 6 cordas) -->
+          <!-- 2. Secções -->
+          <div class="layer l-board"><div class="rows" id="rows"></div></div>
+
+          <!-- 3–4. O leitor: esquema ao lado da tablatura -->
+          <div class="layer l-player">
+            <div class="mp">
+              <div class="mp-top"><svg class="logo" viewBox="16 16 224 224" aria-hidden="true"><path fill-rule="evenodd" d="M76 16H180A60 60 0 0 1 240 76V180A60 60 0 0 1 180 240H76A60 60 0 0 1 16 180V76A60 60 0 0 1 76 16ZM199 104A43 43 0 0 0 156 61H108A43 43 0 0 0 65 104V152A43 43 0 0 0 108 195H156A43 43 0 0 0 199 152H169A13 13 0 0 1 156 165H108A13 13 0 0 1 95 152V104A13 13 0 0 1 108 91H156A13 13 0 0 1 169 104Z"/></svg><b>My song</b><span class="mp-chip">Guitar</span><span class="mp-load">+ Load file</span></div>
+              <div class="mp-body">
+                <div class="mp-chart" id="mpChart"></div>
+                <div class="mp-tab" id="mpTab"><p class="mp-h">Tab · guitar</p><div id="mpSystems"></div>
+                  <div class="mp-sel" id="mpSel"><div class="mp-selbar" id="mpSelBar"><span>Bar 14 · G</span><b id="mpExpand">⤢ Expand</b><em>Loop</em></div></div>
+                  <i class="mp-cursor" id="mpCursor"></i>
+                </div>
+              </div>
+              <div class="mp-dock"><span class="mp-play">▶</span><span id="mpWhere">Ready to play</span><span class="mp-pill" id="mpSpeed">100%</span><span class="mp-pill" id="mpLoop">⟲ Loop</span><span class="mp-pill" id="mpTrainer">↗ Trainer</span></div>
+            </div>
           </div>
-          <div class="z-count" id="zCount"><span>1</span><span>&amp;</span><span>2</span><span>&amp;</span><span>3</span><span>&amp;</span><span>4</span><span>&amp;</span></div>
-        </div>
 
-        <!-- Cursor do rato (mostra onde se clica) -->
-        <div class="ptr" id="ptr"><svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10 19z"/></svg><i></i></div>
-      </div>
-    </figure>
-    <span class="vert r">Guitar · Bass</span>
+          <!-- 4. Compasso aberto -->
+          <div class="zoom" id="zoom">
+            <div class="z-head"><span class="z-chord">G</span><span><b>Bar 14 · Chorus</b><small>4/4 · guitar · count: eighth notes</small></span><span class="z-rep">Repeat <b id="zRep">1</b></span></div>
+            <div class="z-staff" id="zStaff">
+              <!-- Cordas e notas desenhadas pelo script (guitarra, 6 cordas) -->
+            </div>
+            <div class="z-count" id="zCount"><span>1</span><span>&amp;</span><span>2</span><span>&amp;</span><span>3</span><span>&amp;</span><span>4</span><span>&amp;</span></div>
+          </div>
+
+          <!-- Cursor do rato (mostra onde se clica) -->
+          <div class="ptr" id="ptr"><svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10 19z"/></svg><i></i></div>
+        </div>
+      </figure>
+      </section>
+    </main>
+  </div>
+
+  <section class="how" id="how" aria-labelledby="howTitle">
+    <div class="how-head">
+      <p class="eyebrow" id="howTitle">How it works</p>
+      <h2>Get started<br>in 4 simple steps</h2>
+    </div>
+    <ol class="steps" id="steps">
+        <li><button type="button" data-step="0"><i class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 17.8 8.5 4.75 4.75 0 0 1 17 18"/><path d="M12 12v8M9 15l3-3 3 3"/></svg></i><span class="txt"><strong><b>01</b> Import your tab</strong><em class="d">Guitar Pro 3–8 or MusicXML, read only in your browser.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="1"><i class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16a5 5 0 0 0 5-5c0-4-4-7.2-9-7.2Z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10.5" cy="7.2" r="1.2"/><circle cx="15" cy="7.8" r="1.2"/></svg></i><span class="txt"><strong><b>02</b> See the sections</strong><em class="d">Each part of the song is coloured by its chord.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="2"><i class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9.2 3h5.6L19 21H5L9.2 3Z"/><path d="M6.5 15h11M12 15l4.5-8"/></svg></i><span class="txt"><strong><b>03</b> Practise with the tab</strong><em class="d">Loop a section, then follow it and the tempo speeds up.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="3"><i class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></i><span class="txt"><strong><b>04</b> Open any bar</strong><em class="d">Expand a bar to see its notes and how to count them.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+    </ol>
   </section>
+
+  <footer class="legal"><span>© 2026 ChordTile</span><a href="./help.html">Help</a><a href="./licenses.html">Terms &amp; privacy</a></footer>
 </div>
 
 <input type="file" id="landingFile" class="sr-only" tabindex="-1" aria-hidden="true">

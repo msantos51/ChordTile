@@ -1,6 +1,7 @@
 // Página inicial: apresentação do site. O ficheiro escolhido aqui fica guardado neste browser
 // (IndexedDB) e o leitor abre-o logo (player.html?open). Nada é enviado para um servidor.
 import './fonts';
+import '@fontsource/roboto/latin-900-italic.css';
 import './landing.css';
 import { setPendingFile } from './app/library';
 

@@ -23,28 +23,74 @@ function sb(): Promise<SupabaseClient> {
   return client;
 }
 
-export interface Account { id: string; email: string }
-const toAccount = (s: Session | null): Account | null => s ? { id: s.user.id, email: s.user.email ?? '' } : null;
+export interface Account { id: string; email: string; name: string }
+const toAccount = (s: Session | null): Account | null =>
+  s ? { id: s.user.id, email: s.user.email ?? '', name: String(s.user.user_metadata?.name ?? '') } : null;
 
-/** Chama `cb` agora com a conta atual (ou null) e sempre que a sessão mudar. */
-export async function watchAccount(cb: (a: Account | null) => void): Promise<void> {
+/**
+ * Chama `cb` agora com a conta atual (ou null) e sempre que a sessão mudar.
+ * `recovery` é true quando a pessoa chegou por um link de "nova palavra-passe".
+ */
+export async function watchAccount(cb: (a: Account | null, recovery?: boolean) => void): Promise<void> {
   const c = await sb();
   const { data } = await c.auth.getSession();
   cb(toAccount(data.session));
-  c.auth.onAuthStateChange((_e, s) => cb(toAccount(s)));
+  c.auth.onAuthStateChange((e, s) => cb(toAccount(s), e === 'PASSWORD_RECOVERY'));
 }
 
-/** Envia um link de entrada para o email (sem palavra-passe). A conta é criada na primeira vez. */
-export async function sendSignInLink(email: string): Promise<void> {
+const pageUrl = (page: string) => new URL(page, location.href).href.split('?')[0].split('#')[0];
+
+/** Cria a conta. `needsConfirm`: o Supabase pede para confirmar o email antes de entrar. */
+export async function signUp(email: string, password: string, name: string): Promise<{ needsConfirm: boolean }> {
   const c = await sb();
-  const back = location.origin + location.pathname;
-  const { error } = await c.auth.signInWithOtp({ email, options: { emailRedirectTo: back, shouldCreateUser: true } });
+  const { data, error } = await c.auth.signUp({ email, password, options: { data: { name }, emailRedirectTo: pageUrl('player.html') } });
+  if (error) throw error;
+  // Email já registado (o Supabase não o diz, por privacidade): devolve um utilizador sem identidades
+  if (data.user && data.user.identities && data.user.identities.length === 0) throw Object.assign(new Error('User already registered'), { code: 'user_already_exists' });
+  return { needsConfirm: !data.session };
+}
+
+export async function signIn(email: string, password: string): Promise<void> {
+  const c = await sb();
+  const { error } = await c.auth.signInWithPassword({ email, password });
   if (error) throw error;
 }
 
-export async function signOut(): Promise<void> {
+/** Envia o email para escolher uma nova palavra-passe (o link abre a página da conta). */
+export async function sendPasswordReset(email: string): Promise<void> {
   const c = await sb();
-  await c.auth.signOut();
+  const { error } = await c.auth.resetPasswordForEmail(email, { redirectTo: pageUrl('account.html') + '?reset=1' });
+  if (error) throw error;
+}
+
+export async function updatePassword(password: string): Promise<void> {
+  const c = await sb();
+  const { error } = await c.auth.updateUser({ password });
+  if (error) throw error;
+}
+/** Muda o email: o Supabase envia um link de confirmação para o novo endereço. */
+export async function updateEmail(email: string): Promise<void> {
+  const c = await sb();
+  const { error } = await c.auth.updateUser({ email }, { emailRedirectTo: pageUrl('account.html') });
+  if (error) throw error;
+}
+export async function updateName(name: string): Promise<void> {
+  const c = await sb();
+  const { error } = await c.auth.updateUser({ data: { name } });
+  if (error) throw error;
+}
+
+export async function signOut(everywhere = false): Promise<void> {
+  const c = await sb();
+  await c.auth.signOut({ scope: everywhere ? 'global' : 'local' });
+}
+
+/** Apaga a conta e tudo o que está nela (função delete-account no servidor). */
+export async function deleteAccount(): Promise<void> {
+  const c = await sb();
+  const { error } = await c.functions.invoke('delete-account', { method: 'POST' });
+  if (error) throw error;
+  await c.auth.signOut({ scope: 'local' });
 }
 
 interface Row {

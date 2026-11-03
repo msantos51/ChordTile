@@ -12,6 +12,7 @@ export default defineConfig({
         player: resolve(__dirname, 'player.html'),
         licenses: resolve(__dirname, 'licenses.html'),
         help: resolve(__dirname, 'help.html'),
+        account: resolve(__dirname, 'account.html'),
       },
     },
   },

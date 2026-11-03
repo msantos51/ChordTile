@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FREE_SONG_LIMIT, GUEST, canSaveSong, planLabel, planState } from '../src/app/plan';
+import { FREE_SONG_LIMIT, GUEST, access, canSaveSong, planLabel, planState, songLimit } from '../src/app/plan';
 import { addLoop, addTime, cleanTrainer, isMastered, nextSpeed, progressText, songSummary } from '../src/app/practice';
 
 const DAY = 86_400_000, now = 1_000 * DAY;
@@ -19,12 +19,29 @@ describe('planos', () => {
     expect(planState({ plan: 'lifetime', trialEndsAt: 0, premiumUntil: null }, now + 9999 * DAY).premium).toBe(true);
   });
 
-  it('Free guarda até 3 músicas, mas reabrir uma guardada é sempre possível', () => {
+  it('sem conta 1 música, conta grátis 3, Premium sem limite; reabrir uma guardada é sempre possível', () => {
+    const FREE = { kind: 'free' as const, premium: false, until: null };
     const ids = Array.from({ length: FREE_SONG_LIMIT }, (_, i) => 's' + i);
-    expect(canSaveSong(GUEST, ids.slice(0, 2), 'novo')).toBe(true);
-    expect(canSaveSong(GUEST, ids, 'novo')).toBe(false);
-    expect(canSaveSong(GUEST, ids, 's1')).toBe(true);
+    expect([songLimit(GUEST), songLimit(FREE)]).toEqual([1, 3]);
+    expect(canSaveSong(GUEST, [], 'novo')).toBe(true);
+    expect(canSaveSong(GUEST, ['s0'], 'novo')).toBe(false);
+    expect(canSaveSong(FREE, ids.slice(0, 2), 'novo')).toBe(true);
+    expect(canSaveSong(FREE, ids, 'novo')).toBe(false);
+    expect(canSaveSong(FREE, ids, 's1')).toBe(true);
     expect(canSaveSong({ kind: 'trial', premium: true, until: now }, ids, 'novo')).toBe(true);
+  });
+});
+
+describe('cadeados', () => {
+  it('sem conta: tudo pede conta; conta grátis: só Expand, PDF e extras pedem Premium', () => {
+    const FREE = { kind: 'free' as const, premium: false, until: null }, PRO = { kind: 'yearly' as const, premium: true, until: 1 };
+    expect(access(GUEST, 'tools')).toBe('account');
+    expect(access(GUEST, 'expand')).toBe('account');
+    expect(access(FREE, 'tools')).toBe('ok');
+    expect(access(FREE, 'notes')).toBe('ok');
+    expect(access(FREE, 'expand')).toBe('premium');
+    expect(access(FREE, 'pdf')).toBe('premium');
+    expect(access(PRO, 'pdf')).toBe('ok');
   });
 });
 

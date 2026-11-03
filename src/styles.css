@@ -615,3 +615,63 @@ body.doc .top { position: sticky; top: 0; z-index: 5; border-bottom: 1px solid v
 .bm-sound { height: 32px; max-width: 210px; padding: 0 28px 0 10px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--panel); color: var(--ink); font-size: 12.5px; }
 .bm-rhythm { border-color: color-mix(in srgb, var(--accent) 55%, var(--line-2)) !important; }
 .bm-rhythm:has(input:checked) { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) !important; }
+
+/* ---------- Cadeados ---------- */
+[data-gate].locked { position: relative; }
+[data-gate].locked::after { content: ""; position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; z-index: 2; pointer-events: none;
+  background: var(--ink-strong) no-repeat center / 10px 10px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='3' stroke-linecap='round'%3E%3Crect x='4' y='11' width='16' height='10' rx='2' fill='%23999'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E");
+  box-shadow: 0 0 0 2px var(--bg); }
+:root:not([data-theme="light"]) [data-gate].locked::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f2024' stroke-width='3' stroke-linecap='round'%3E%3Crect x='4' y='11' width='16' height='10' rx='2' fill='%231f2024'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E"); }
+:root[data-theme="light"] [data-gate].locked::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'%3E%3Crect x='4' y='11' width='16' height='10' rx='2' fill='%23ffffff'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E"); }
+.speed.locked input { pointer-events: none; }
+.sbtn.locked::after { top: -4px; right: -4px; width: 15px; height: 15px; background-size: 8px 8px; }
+.barbar [data-gate].locked::after, .tab-sel-bar [data-gate].locked::after { top: -5px; right: -3px; }
+
+/* ---------- Botão de conta ---------- */
+.account-btn.signed { border-color: color-mix(in srgb, var(--accent) 45%, var(--line-2)); }
+@media (max-width: 600px) { .account-btn span { display: none; } .account-btn { width: 44px; padding: 0; justify-content: center; flex: none; } }
+
+/* ---------- Janela de conta (entrar / criar conta / nova palavra-passe) ---------- */
+.auth-dialog { width: min(420px, calc(100% - 24px)); max-height: calc(100% - 24px); overflow-y: auto; padding: 26px 24px 22px; border: 1px solid var(--line-2); border-radius: 18px;
+  background: var(--panel); color: var(--ink); box-shadow: var(--shadow); }
+.auth-dialog::backdrop { background: var(--scrim); }
+.auth-close { position: absolute; top: 10px; right: 10px; }
+.auth { display: grid; gap: 12px; }
+.auth-title { margin: 0; font: 900 24px/1.15 var(--f-display); letter-spacing: -.01em; padding-right: 30px; }
+.auth-why { margin: 0; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--ink); font-size: 13.5px; font-weight: 500; }
+.auth-sub { margin: 0; color: var(--ink-soft); font-size: 14px; }
+.auth-field { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
+.auth-field input { height: 44px; padding: 0 14px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--bg); color: var(--ink); font: 400 15px var(--f-body); width: 100%; }
+.auth-field input:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 1px; }
+.auth-pw { position: relative; display: block; }
+.auth-pw input { padding-right: 46px; }
+.auth-eye { position: absolute; right: 4px; top: 4px; width: 36px; height: 36px; border: 0; border-radius: 8px; background: none; color: var(--ink-soft); display: grid; place-items: center; cursor: pointer; }
+.auth-eye svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+.auth-link { border: 0; background: none; padding: 0; color: var(--accent-text); font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.auth-forgot { justify-self: start; font-size: 13px; }
+.auth-err, .auth-ok { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: 13.5px; }
+.auth-err { background: var(--err-bg); color: var(--err-ink); }
+.auth-ok { background: color-mix(in srgb, #3ccf6e 18%, transparent); color: var(--ink); }
+.auth-submit { height: 46px; justify-content: center; font-size: 15px; }
+.auth-switch, .auth-fine { margin: 0; text-align: center; font-size: 13.5px; color: var(--ink-soft); }
+.auth-fine { font-size: 12px; } .auth-fine a { color: inherit; }
+
+/* ---------- Página da conta ---------- */
+.acc-body { max-width: 720px; }
+.acc-card { border: 1px solid var(--line-2); border-radius: 16px; background: var(--panel); padding: 20px 22px; margin: 18px 0; display: grid; gap: 14px; }
+.acc-card h2 { margin: 0; }
+.acc-card h2::before { display: none; }
+.acc-card p { margin: 0; }
+.acc-form { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+.acc-form .auth-field { flex: 1 1 240px; }
+.acc-form .btn { height: 44px; }
+.acc-row { display: flex; gap: 12px; font-size: 14px; } .acc-k { color: var(--ink-soft); min-width: 60px; }
+.acc-plan { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.acc-feats { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
+.acc-auth { max-width: 440px; margin: 24px auto; border: 1px solid var(--line-2); border-radius: 18px; background: var(--panel); padding: 26px 24px 22px; }
+.acc-danger { border-color: color-mix(in srgb, var(--accent) 45%, var(--line-2)); }
+.acc-del:not(:disabled) { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.acc-loading { color: var(--ink-soft); margin: 40px 0; }
+/* Em botões de texto (barras de ações) o cadeado fica ao lado da palavra */
+.barbar [data-gate].locked::after, .tab-sel-bar [data-gate].locked::after { position: static; display: inline-block; margin-left: 6px; vertical-align: -3px; box-shadow: none; width: 15px; height: 15px; background-size: 8px 8px; }

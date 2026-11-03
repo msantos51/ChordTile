@@ -7,8 +7,8 @@ export const THEME_KEY = 'mapa:theme';
 /** Cores da tablatura (alphaTab) para cada tema. */
 export const TAB_COLORS: Record<Theme, Record<string, string>> = {
   dark: {
-    staffLineColor: '#3a3a3e', barSeparatorColor: '#56565c', barNumberColor: '#a3a3a3',
-    mainGlyphColor: '#f2f2f2', secondaryGlyphColor: '#a3a3a3', scoreInfoColor: '#f2f2f2',
+    staffLineColor: '#5c5d66', barSeparatorColor: '#7d7e88', barNumberColor: '#bfc0c6',
+    mainGlyphColor: '#f5f5f6', secondaryGlyphColor: '#bfc0c6', scoreInfoColor: '#f5f5f6',
   },
   light: {
     staffLineColor: '#d2cec8', barSeparatorColor: '#9c968e', barNumberColor: '#66625c',
@@ -22,7 +22,7 @@ export function currentTheme(): Theme {
 
 export function applyTheme(theme: Theme): void {
   document.documentElement.dataset.theme = theme;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#f4f2f0' : '#121212');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#f4f2f0' : '#1f2024');
   document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', theme);
   try { localStorage.setItem(THEME_KEY, theme); } catch { /* sem armazenamento */ }
 }

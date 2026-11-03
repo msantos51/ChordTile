@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Compassos">
 <meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#121212">
+<meta name="theme-color" content="#1f2024">
 <script>
   // Apply the saved theme before the page paints (avoids a flash)
   try { if (localStorage.getItem('mapa:theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
@@ -85,8 +85,7 @@
         <div class="notekey" id="noteKey" aria-label="Colour of each note"></div>
         <div class="chart" id="chart"></div>
         <div class="legend">
-          <span>Click a bar to jump there (the tab follows) or to edit it.</span>
-          <span><i>✎</i> edited by you</span>
+          <span>Click a bar to jump there (the tab scrolls to it). Double-click to add your own note.</span>
           <span><em>●</em> chord written in the file</span>
           <span>Space = play/pause · ← → = bar</span>
         </div>
@@ -155,9 +154,8 @@
   <b id="bbLabel">Bar 1</b>
   <button id="bbPlay" type="button">Play from here</button>
   <button id="bbExpand" type="button">Expand</button>
-  <button id="bbEdit" type="button">Edit</button>
+  <button id="bbText" type="button">Add note</button>
   <button id="bbSplit" type="button">New section here</button>
-  <button id="bbReset" type="button">Reset</button>
   <button id="bbClose" type="button" aria-label="Close">✕</button>
 </div>
 

@@ -51,15 +51,22 @@ const SECTIONS: { name: string; chords: [string, number][] }[] = [
   { name: 'Chorus', chords: [['F', 5], ['G', 7], ['C', 0], ['Am', 9], ['F', 5], ['G', 7], ['C', 0], ['C', 0]] },
   { name: 'Bridge', chords: [['Dm', 2], ['E', 4], ['Am', 9], ['Am', 9]] },
 ];
-const ROOT: Record<string, [number, number]> = { Am: [2, 0], F: [3, 1], C: [2, 3], G: [3, 3], Dm: [1, 0], E: [3, 0] };
-const BAR14: Note[] = [{ s: 0, l: 3, f: 3 }, { s: 2, l: 2, f: 5 }, { s: 3, l: 2, f: 2 }, { s: 4, l: 3, f: 3 }, { s: 6, l: 2, f: 5 }, { s: 7, l: 1, f: 5 }];
-/** Na tablatura em miniatura o compasso 14 mostra só os tempos (cabe sem sobrepor). */
-const BAR14_TAB = BAR14.filter(n => n.s % 2 === 0);
-const notesOf = (chord: string, bar: number): Note[] => {
-  if (bar === 14) return BAR14_TAB;
-  const [l, f] = ROOT[chord];
-  return [{ s: 0, l, f }, { s: 2, l: l - 1, f: f + 2 }, { s: 4, l, f }, { s: 6, l: l - 1, f: f + 2 }];
+// Guitarra: cordas de 0 (mi agudo) a 5 (mi grave); casa de cada corda em cada acorde (null = não toca)
+const STRINGS = ['e', 'B', 'G', 'D', 'A', 'E'];
+const SHAPES: Record<string, (number | null)[]> = {
+  Am: [0, 1, 2, 2, 0, null], F: [1, 1, 2, 3, 3, 1], C: [0, 1, 0, 2, 3, null],
+  G: [3, 0, 0, 0, 2, 3], Dm: [1, 3, 2, 0, null, null], E: [0, 0, 1, 2, 2, 0],
 };
+/** Arpejo em colcheias: baixo do acorde e depois as cordas de cima (como se toca à guitarra). */
+function arpeggio(chord: string): Note[] {
+  const sh = SHAPES[chord], root = sh.reduce<number>((a, f, l) => (f != null ? l : a), 0);
+  return [root, 2, 1, 0, 1, 2, 1, root > 3 ? 3 : 2].map((l, s) => ({ s, l, f: sh[l] ?? 0 }));
+}
+const BAR14 = arpeggio('G');
+/** Na tablatura em miniatura cada compasso mostra só os tempos (cabe sem sobrepor). */
+const notesOf = (chord: string): Note[] => arpeggio(chord).slice(0, 4).map((n, i) => ({ ...n, s: i * 2 }));
+/** Nota pessoal escrita na animação, no 1.º compasso do refrão (compasso 13). */
+const NOTE_BAR = 13, NOTE_TEXT = 'let ring';
 const firstBar = (k: number) => SECTIONS.slice(0, k).reduce((a, x) => a + x.chords.length, 0) + 1;
 
 // ---- Construção (uma vez) ----
@@ -69,7 +76,7 @@ SECTIONS.forEach(sec => {
   const row = document.createElement('div'); row.className = 'row';
   const l = document.createElement('div'); l.className = 'row-l'; l.innerHTML = sec.name + ' <span>' + sec.chords.length + ' bars</span>';
   const tl = document.createElement('div'); tl.className = 'tiles';
-  sec.chords.forEach(([c, n]) => { const t = document.createElement('div'); t.className = 't'; t.dataset.n = String(n); t.textContent = c; tl.append(t); boardTiles.push(t); });
+  sec.chords.forEach(([c, n]) => { const t = document.createElement('div'); t.className = 't'; t.dataset.n = String(n); t.innerHTML = c + '<small></small>'; tl.append(t); boardTiles.push(t); });
   row.append(l, tl); $('rows').append(row); boardLabels.push(l);
 });
 const mpTiles = new Map<number, HTMLElement>();
@@ -77,7 +84,7 @@ SECTIONS.slice(0, 3).forEach((sec, k) => {
   const box = document.createElement('div'); box.className = 'mp-sec'; if (k === 2) box.id = 'mpChorus';
   box.innerHTML = '<p>' + sec.name + '<span class="mp-prac"' + (k === 2 ? ' id="mpPractise"' : '') + '>⟲ Practise</span></p>';
   const g = document.createElement('div'); g.className = 'mp-grid';
-  sec.chords.forEach(([c, n], j) => { const t = document.createElement('div'); t.className = 'mt'; t.dataset.n = String(n); t.textContent = c; g.append(t); mpTiles.set(firstBar(k) + j, t); });
+  sec.chords.forEach(([c, n], j) => { const t = document.createElement('div'); t.className = 'mt'; t.dataset.n = String(n); t.innerHTML = c + '<small></small>'; g.append(t); mpTiles.set(firstBar(k) + j, t); });
   box.append(g); $('mpChart').append(box);
 });
 // Tablatura: 3 sistemas de 4 compassos (Verse 5–8, Chorus 13–16 e 17–20)
@@ -85,16 +92,19 @@ const SYSTEMS = [{ label: 'Verse', sec: 1, from: 0 }, { label: 'Chorus', sec: 2,
 const tabBars = new Map<number, { sys: HTMLElement; i: number }>();
 SYSTEMS.forEach(sy => {
   const el = document.createElement('div'); el.className = 'sys';
-  el.innerHTML = '<span class="sys-l">' + sy.label + '</span><div class="sys-lines">' + [0, 1, 2, 3].map(l => '<i style="top:' + l * 15 + 'px"></i>').join('') + '</div>';
+  el.innerHTML = '<span class="sys-l">' + sy.label + '</span><div class="sys-lines">' + [0, 1, 2, 3, 4, 5].map(l => '<i style="top:' + l * 9 + 'px"></i>').join('') + '</div>';
   for (let i = 0; i < 4; i++) {
     const bar = firstBar(sy.sec) + sy.from + i, chord = SECTIONS[sy.sec].chords[sy.from + i][0];
     const b = document.createElement('div'); b.className = 'sys-bar'; b.style.left = i * 25 + '%'; b.style.width = '25%';
     b.innerHTML = '<span class="sys-no" style="right:4px;top:-10px">' + bar + '</span>' +
-      notesOf(chord, bar).map(n => '<span class="fret" style="left:' + ((n.s + 0.5) / 8) * 100 + '%;top:' + n.l * 15 + 'px">' + n.f + '</span>').join('');
+      notesOf(chord).map(n => '<span class="fret" style="left:' + ((n.s + 0.5) / 8) * 100 + '%;top:' + n.l * 9 + 'px">' + n.f + '</span>').join('');
     el.append(b); tabBars.set(bar, { sys: el, i });
   }
   $('mpSystems').append(el);
 });
+// Janela do compasso aberto: 6 cordas e as 8 colcheias do compasso 14
+$('zStaff').innerHTML = STRINGS.map((n, l) => '<span class="z-str" style="--l:' + l + '">' + n + '</span><i class="ln" style="--l:' + l + '"></i>').join('') +
+  BAR14.map(n => '<span class="nt" style="--s:' + n.s + ';--l:' + n.l + '" data-s="' + n.s + '">' + n.f + '</span>').join('');
 // Os compassos da tablatura posicionam as notas dentro das linhas
 document.querySelectorAll<HTMLElement>('.sys-bar').forEach(b => { b.style.top = '16px'; b.style.height = '45px'; });
 
@@ -126,8 +136,8 @@ async function moveTo(x: number, y: number, ms = 650) {
 }
 async function click() { ptr.classList.remove('click'); void ptr.offsetWidth; ptr.classList.add('click'); await wait(180); }
 
-const DUR = [3700, 2800, 6600, 6600];
-const NAMES = ['Import', 'Sections', 'Practise with the tab', 'Open a bar'];
+const DUR = [3900, 5200, 6600, 6600];
+const NAMES = ['Import', 'Sections & notes', 'Practise with the tab', 'Open a bar'];
 function setStep(k: number) {
   $('sceneNo').textContent = '0' + (k + 1); $('sceneName').textContent = NAMES[k];
   steps.forEach((li, j) => {
@@ -148,6 +158,9 @@ function resetAll() {
   $('dropzone').classList.remove('hot', 'reading-on'); $('readText').textContent = 'Reading the file…';
   $('file').style.opacity = '0';
   mpTiles.forEach(t => t.classList.remove('on'));
+  boardTiles.forEach(t => { t.classList.remove('sel', 'writing'); t.querySelector('small')!.textContent = ''; });
+  mpTiles.get(NOTE_BAR)!.querySelector('small')!.textContent = '';
+  $('file').classList.remove('held');
   $('mpChorus').classList.remove('loop');
   ['mpLoop', 'mpTrainer'].forEach(id => $(id).classList.remove('on'));
   $('mpSpeed').textContent = '100%'; $('mpWhere').textContent = 'Ready to play';
@@ -162,15 +175,20 @@ async function sceneImport() {
   canvas.dataset.scene = 'import';
   const file = $('file'), dz = $('dropzone');
   const dzc = center(dz);
-  const start = { x: 360, y: 8 }, end = { x: dzc.x - 85, y: dzc.y - 120 };
-  anim(file, [{ opacity: 0, transform: `translate(${start.x + 30}px, ${start.y - 20}px) rotate(8deg)` }, { opacity: 1, transform: `translate(${start.x}px, ${start.y}px) rotate(-4deg)` }], { duration: 450 });
-  await moveTo(start.x + 130, start.y + 40, 500);
+  const start = { x: 360, y: 8 }, end = { x: dzc.x - file.offsetWidth / 2, y: dzc.y - 155 };
+  // Ponto onde o cursor agarra o ficheiro (igual à posição do cursor desenhado dentro dele)
+  const grab = { x: file.offsetWidth * 0.58, y: file.offsetHeight * 0.42 };
+  anim(file, [{ opacity: 0, transform: `translate(${start.x + 30}px, ${start.y - 20}px) rotate(8deg)` }, { opacity: 1, transform: `translate(${start.x}px, ${start.y}px)` }], { duration: 450 });
+  await moveTo(start.x + grab.x, start.y + grab.y, 550);
   await click();
-  // Arrastar o ficheiro (o cursor e o ficheiro andam juntos)
-  anim(file, [{ opacity: 1, transform: `translate(${start.x}px, ${start.y}px) rotate(-4deg)` }, { opacity: 1, transform: `translate(${end.x}px, ${end.y}px) rotate(0deg)` }], { duration: 900, easing: 'cubic-bezier(.5,0,.2,1)' });
-  const hot = wait(550).then(() => dz.classList.add('hot'));
-  await moveTo(end.x + 130, end.y + 40, 900); await hot;
-  // Largar: o ficheiro entra na zona e é lido
+  // Arrastar: o cursor passa a ser desenhado dentro do ficheiro, por isso andam exatamente juntos
+  ptr.classList.remove('on'); file.classList.add('held');
+  anim(file, [{ opacity: 1, transform: `translate(${start.x}px, ${start.y}px)` }, { opacity: 1, transform: `translate(${end.x}px, ${end.y}px) rotate(-2deg)`, offset: 0.85 }, { opacity: 1, transform: `translate(${end.x}px, ${end.y}px)` }], { duration: 1000, easing: 'cubic-bezier(.5,0,.2,1)' });
+  await wait(550); dz.classList.add('hot'); await wait(450);
+  // Largar: o cursor volta a ser o principal e o ficheiro entra na zona
+  ptrAt = { x: end.x + grab.x, y: end.y + grab.y };
+  ptr.getAnimations().forEach(a => a.cancel()); ptr.style.transform = `translate(${ptrAt.x}px, ${ptrAt.y}px)`;
+  ptr.classList.add('on'); file.classList.remove('held');
   anim(file, [{ opacity: 1, transform: `translate(${end.x}px, ${end.y}px) scale(1)` }, { opacity: 0, transform: `translate(${end.x}px, ${end.y + 50}px) scale(.6)` }], { duration: 380 });
   await click();
   dz.classList.remove('hot'); dz.classList.add('reading-on');
@@ -191,11 +209,31 @@ async function sceneBoard() {
       anim(boardTiles[i++], [{ opacity: 0, transform: 'translateY(12px) scale(.6)' }, { opacity: 1, transform: 'none' }], { duration: 480, delay: 300 + k * 420 + j * 40 });
     });
   });
-  await wait(DUR[1]);
+  await wait(2500);
+  // Duplo clique num compasso do refrão e escrever uma nota por baixo do acorde
+  const tile = boardTiles[NOTE_BAR - 1], small = tile.querySelector('small')!;
+  ptrAt = { x: 470, y: 420 }; ptr.style.transform = `translate(${ptrAt.x}px, ${ptrAt.y}px)`;
+  const c = center(tile);
+  await moveTo(c.x + 6, c.y + 4, 650);
+  await click(); await wait(90); await click();
+  tile.classList.add('sel', 'writing');
+  await moveTo(c.x + 46, c.y + 48, 260); // o cursor sai de cima para se ver o texto
+  for (let n = 1; n <= NOTE_TEXT.length; n++) { small.textContent = NOTE_TEXT.slice(0, n); await wait(75); }
+  await wait(350);
+  tile.classList.remove('writing');
+  await wait(450);
+  tile.classList.remove('sel');
+  await moveTo(c.x + 60, c.y + 80, 400); ptr.classList.remove('on');
+  await wait(250);
 }
 
 /** Estado final das secções (para saltar diretamente para as cenas seguintes). */
-function boardDone() { boardLabels.forEach(l => { l.style.opacity = '1'; }); boardTiles.forEach(t => { t.style.opacity = '1'; t.style.transform = 'none'; }); }
+function boardDone() {
+  boardLabels.forEach(l => { l.style.opacity = '1'; }); boardTiles.forEach(t => { t.style.opacity = '1'; t.style.transform = 'none'; });
+  boardTiles[NOTE_BAR - 1].querySelector('small')!.textContent = NOTE_TEXT;
+}
+/** A nota escrita nas secções aparece no leitor (cenas 3 e 4). */
+function noteInPlayer() { mpTiles.get(NOTE_BAR)!.querySelector('small')!.textContent = NOTE_TEXT; }
 
 function barGeom(bar: number) {
   const { sys, i } = tabBars.get(bar)!;
@@ -205,7 +243,7 @@ function barGeom(bar: number) {
 }
 
 async function scenePlayer() {
-  canvas.dataset.scene = 'player';
+  canvas.dataset.scene = 'player'; noteInPlayer();
   await wait(500);
   ptr.style.opacity = ''; ptr.getAnimations().forEach(a => a.cancel());
   ptrAt = { x: 420, y: 400 }; ptr.style.transform = `translate(${ptrAt.x}px, ${ptrAt.y}px)`;
@@ -235,7 +273,7 @@ async function scenePlayer() {
 function playerReady() { $('mpChorus').classList.add('loop'); $('mpLoop').classList.add('on'); $('mpTrainer').classList.add('on'); $('mpWhere').textContent = 'Paused'; }
 
 async function sceneExpand() {
-  canvas.dataset.scene = 'player';
+  canvas.dataset.scene = 'player'; noteInPlayer();
   const g = barGeom(14), sel = $('mpSel');
   ptr.getAnimations().forEach(a => a.cancel()); ptr.style.opacity = '';
   ptrAt = { x: 460, y: 400 }; ptr.style.transform = `translate(${ptrAt.x}px, ${ptrAt.y}px)`;
@@ -293,7 +331,7 @@ function staticScene(k: number) {
   run++; resetAll(); scene = k; setStep(k);
   if (k === 0) { canvas.dataset.scene = 'import'; $('dropzone').classList.add('reading-on'); $('readFill').style.transform = 'scaleX(1)'; $('readText').textContent = '✓ 52 bars · 4 sections found'; }
   if (k === 1) { canvas.dataset.scene = 'board'; boardDone(); }
-  if (k >= 2) { canvas.dataset.scene = 'player'; playerReady(); mpTiles.get(14)?.classList.add('on'); }
+  if (k >= 2) { canvas.dataset.scene = 'player'; playerReady(); noteInPlayer(); mpTiles.get(14)?.classList.add('on'); }
   if (k === 3) { const z = $('zoom'); z.style.opacity = '1'; z.style.transform = 'none'; }
 }
 

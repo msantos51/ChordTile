@@ -3,35 +3,35 @@
    em baixo o leitor, com uma barra de progresso neutra. */
 :root {
   color-scheme: dark;
-  /* Paleta: preto #121212 · branco · vermelho #c8102e */
-  --bg: #121212;
+  /* Paleta: grafite #1f2024 · branco · vermelho #c8102e (escuro, mas não preto: mais fácil de ler) */
+  --bg: #1f2024;
   --bg-grad: none;
-  --panel: #1b1b1d;
-  --panel-2: #262629;
-  --dock: #1b1b1d;
-  --line: rgba(255, 255, 255, .1);
-  --line-2: rgba(255, 255, 255, .18);
-  --ink: #f2f2f2;
+  --panel: #2a2b31;
+  --panel-2: #35363d;
+  --dock: #2a2b31;
+  --line: rgba(255, 255, 255, .14);
+  --line-2: rgba(255, 255, 255, .24);
+  --ink: #f5f5f6;
   --ink-strong: #ffffff;
-  --ink-soft: #a3a3a3;
+  --ink-soft: #bfc0c6;
   --accent: #d0122f;        /* loop, estado ativo (fundos) */
   --accent-2: #e8213f;      /* variação mais clara do vermelho */
   --accent-ink: #ffffff;    /* texto sobre --accent */
   --accent-text: #ff6b7d;   /* texto e contornos na cor de destaque (legível no escuro) */
   --on-note: #121212;       /* texto sobre um quadrado com a cor cheia da nota */
-  --tint: 34%;              /* quanto da cor da nota entra no fundo dos quadrados */
-  /* As cores das notas são iguais nos dois temas: misturadas sempre com este fundo escuro */
-  --note-base: #1b1b1d;
-  --note-ink: #ffffff;
+  --tint: 100%;             /* cor da nota cheia (viva) nos quadrados, na legenda e no compasso aberto */
+  /* As cores das notas são iguais nos dois temas */
+  --note-base: #2a2b31;
+  --note-ink: #121212;
   --rep-bg: rgba(255, 255, 255, .12);
-  --overlay: rgba(18, 18, 18, .82);
+  --overlay: rgba(31, 32, 36, .85);
   --scrim: rgba(0, 0, 0, .6);
   --underline: rgba(242, 242, 242, .35);
   --hover-on-strong: rgba(18, 18, 18, .12);
   --hover-line: rgba(255, 255, 255, .4);
   --focus: #ff8a98;
   --err-bg: #3a1418; --err-ink: #ffc2c9;
-  --shadow: 0 20px 56px rgba(0, 0, 0, .55);
+  --shadow: 0 20px 56px rgba(0, 0, 0, .45);
   /* Cores das notas (convenção Boomwhackers): Dó vermelho → Si rosa */
   --n0: #ff4d4d; --n1: #ff6d3a; --n2: #ff9a2e; --n3: #ffbe1f; --n4: #f2d40a; --n5: #9bd13b;
   --n6: #3ccf6e; --n7: #1cc2b0; --n8: #3b9cff; --n9: #7c5cff; --n10: #c056f0; --n11: #ff5fa8;
@@ -117,7 +117,7 @@ svg.f { fill: currentColor; stroke: none; }
 
 .notekey { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 14px; }
 .notekey span { font: 600 10px var(--f-mono); height: 20px; min-width: 26px; padding: 0 4px; display: grid; place-items: center; border-radius: 5px;
-  background: color-mix(in srgb, var(--nc) 34%, var(--note-base)); box-shadow: inset 0 -2px 0 var(--nc); }
+  background: var(--nc); box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--nc) 72%, #000); }
 
 .content { min-width: 0; max-width: 1440px; margin: 0 auto; padding: 20px max(24px, env(safe-area-inset-right, 0px)) calc(var(--dock-h, 120px) + 32px) max(24px, env(safe-area-inset-left, 0px)); }
 .error { background: var(--err-bg); color: var(--err-ink); padding: 12px 16px; border-radius: var(--r-md); margin-bottom: 16px; font-weight: 500; }
@@ -143,7 +143,7 @@ svg.f { fill: currentColor; stroke: none; }
 .sbtn.on { background: var(--accent); color: var(--accent-ink); }
 .row { display: grid; grid-template-columns: repeat(var(--per), minmax(0, 1fr)); gap: 4px; }
 .row + .row { margin-top: 4px; }
-.bar { position: relative; min-height: 44px; display: grid; place-items: center; cursor: text; border-radius: var(--r-sm);
+.bar { position: relative; min-height: 44px; display: grid; place-items: center; cursor: pointer; border-radius: var(--r-sm);
   background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); transition: transform .12s ease, box-shadow .12s ease, background .12s ease; }
 .bar:hover { transform: translateY(-1px); }
 .bar .num { position: absolute; top: 4px; left: 6px; font: 400 9px var(--f-mono); color: var(--ink-soft); font-variant-numeric: tabular-nums; pointer-events: none; }
@@ -151,11 +151,9 @@ svg.f { fill: currentColor; stroke: none; }
 .bar .ch { font-weight: 700; font-size: 17px; line-height: 1; padding: 10px 4px 8px; min-width: 1.4em; text-align: center; outline: none; overflow-wrap: anywhere; color: var(--ink-strong); }
 .bar.edited .num::after { content: " ✎"; color: var(--focus); }
 .bar.file .num::after { content: " ●"; color: var(--accent-text); }
-.bar:focus-within { box-shadow: 0 0 0 2px var(--focus); }
 .chart.colored .bar[data-pc] { background: color-mix(in srgb, var(--nc) var(--tint), var(--note-base)); box-shadow: inset 0 -3px 0 var(--nc); }
 .chart.colored .bar[data-pc].two { background: linear-gradient(90deg, color-mix(in srgb, var(--nc) var(--tint), var(--note-base)) 50%, color-mix(in srgb, var(--nc2) var(--tint), var(--note-base)) 50%);
   box-shadow: inset 0 -3px 0 0 var(--nc); }
-.chart.colored .bar[data-pc]:focus-within { box-shadow: inset 0 -3px 0 var(--nc), 0 0 0 2px var(--focus); }
 .bar.playing { transform: scale(1.05); z-index: 1; box-shadow: 0 0 0 2px var(--ink-strong); background: var(--ink-strong); }
 .bar.playing .ch { color: var(--bg); }
 .bar.playing .num { color: color-mix(in srgb, var(--bg) 65%, transparent); }
@@ -236,7 +234,7 @@ svg.f { fill: currentColor; stroke: none; }
 
 .drop { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: var(--overlay); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .drop div { border: 2px dashed var(--accent-text); border-radius: 20px; padding: 44px 56px; font-size: 20px; font-weight: 600; background: var(--panel); }
-.toast { position: fixed; left: 50%; bottom: calc(var(--dock-h, 120px) + 14px); transform: translateX(-50%); background: var(--ink-strong); color: var(--bg); padding: 9px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 500; z-index: 31; max-width: calc(100% - 32px); box-shadow: var(--shadow); }
+.toast { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 74px); transform: translateX(-50%); background: var(--ink-strong); color: var(--bg); padding: 9px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 500; z-index: 31; max-width: calc(100% - 32px); box-shadow: var(--shadow); }
 
 /* ---------- Rodapé ---------- */
 .site-foot { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); display: grid; gap: 6px; font-size: 12px; color: var(--ink-soft); max-width: 80ch; }
@@ -531,22 +529,29 @@ h1, h2, h3, #songTitle, .sheet-head h2, .tour-card h2, .bm-head h2 { font-family
 .tabpanel, .sheet, .bar-modal, .tour-card, .barbar, .help-menu { border-color: var(--line-2); }
 .dock { border-top-color: var(--line-2); box-shadow: 0 -10px 40px rgba(0, 0, 0, .3); }
 
-/* Quadrados dos compassos: cor cheia com brilho e contorno da nota (iguais no tema claro e escuro) */
+/* Quadrados dos compassos: cor da nota cheia e viva, com texto escuro (iguais no tema claro e escuro) */
 .chart.colored .bar[data-pc] .ch, .bm-chord, .note-legend span, .notekey span { color: var(--note-ink); }
-.chart.colored .bar[data-pc].playing .ch { color: var(--on-note); }
-.bar { border-radius: 10px; }
+.bar { border-radius: 10px; cursor: pointer; }
 .chart.colored .bar[data-pc] {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--nc) 58%, #121212), color-mix(in srgb, var(--nc) 36%, #121212));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nc) 80%, #ffffff), inset 0 1px 0 rgba(255, 255, 255, .22), 0 4px 12px color-mix(in srgb, var(--nc) 22%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--nc) 82%, #ffffff), var(--nc));
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--nc) 72%, #000000), 0 4px 12px color-mix(in srgb, var(--nc) 28%, transparent);
 }
-.chart.colored .bar[data-pc].two {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--nc) 48%, #121212) 50%, color-mix(in srgb, var(--nc2) 48%, #121212) 50%);
-}
-.chart.colored .bar[data-pc] .ch { text-shadow: 0 1px 2px rgba(0, 0, 0, .45); }
-.chart.colored .bar[data-pc] .num { color: rgba(255, 255, 255, .7); }
-.chart.colored .bar[data-pc].playing { background: var(--nc); box-shadow: 0 0 0 2px #ffffff, 0 0 26px color-mix(in srgb, var(--nc) 60%, transparent); }
-.chart.colored .bar[data-pc].playing .ch { text-shadow: none; }
+.chart.colored .bar[data-pc].two { background: linear-gradient(90deg, var(--nc) 50%, var(--nc2) 50%); }
+.chart.colored .bar[data-pc] .num { color: rgba(18, 18, 18, .6); }
+/* A tocar: anel branco e escuro por fora (a cor do quadrado mantém-se) */
+.chart.colored .bar[data-pc].playing { background: var(--nc); box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--ink-strong), 0 0 24px color-mix(in srgb, var(--nc) 60%, transparent); }
+.chart.colored .bar[data-pc].playing .ch { color: var(--on-note); }
 .chart.colored .bar[data-pc].playing .num { color: rgba(18, 18, 18, .65); }
+/* Escolhido (barra de ações aberta) */
+.bar.sel:not(.playing) { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent-text) !important; }
+.bar:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus) !important; }
+/* Texto pessoal por baixo do acorde */
+.bar { grid-template-rows: auto auto; align-content: center; }
+.bar .txt { max-width: calc(100% - 8px); padding: 0 4px 6px; margin-top: -4px; font: 600 10.5px/1.25 var(--f-body); text-align: center; color: var(--ink-soft);
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; outline: none; }
+.chart.colored .bar[data-pc] .txt { color: rgba(18, 18, 18, .78); }
+.bar.writing .txt { cursor: text; background: rgba(255, 255, 255, .85); color: #121212 !important; border-radius: 5px; padding: 2px 6px; margin: -2px 4px 6px; display: block; -webkit-line-clamp: unset; min-width: 70%; }
+.bar.writing .txt:empty::before { content: attr(data-ph); color: #8a8a8a; }
 
 /* Páginas de texto (Como funciona, Termos) */
 body.doc .top { position: sticky; top: 0; z-index: 5; border-bottom: 1px solid var(--line); }

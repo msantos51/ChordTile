@@ -11,6 +11,7 @@ import { VisualDelay } from './app/sync';
 import { releaseAudio, unlockAudio } from './app/audio-unlock';
 import { TOUR_STEPS, markTourSeen, tourSeen, visibleTarget } from './app/tour';
 import { cloudEnabled, deleteRemoteSong, fetchEntitlement, sendSignInLink, signOut, syncLibrary, uploadSong, watchAccount, type Account } from './app/cloud';
+import { signInErrorMessage } from './app/auth-errors';
 import { FREE_SONG_LIMIT, GUEST, canSaveSong, planLabel, planState, type PlanState } from './app/plan';
 import { OFFERS, checkoutUrl, paymentsEnabled, portalUrl } from './app/billing';
 import { addLoop, addTime, cleanTrainer, isMastered, nextSpeed, progressText, type SongProgress, type TrainerSettings } from './app/practice';
@@ -1008,7 +1009,7 @@ $('signInForm').addEventListener('submit', async e => {
   try {
     await sendSignInLink(email);
     toast('Check your inbox: we sent a sign-in link to ' + email + '.');
-  } catch { toast('Couldn’t send the link. Check the email address and try again.'); }
+  } catch (err) { toast(signInErrorMessage(err)); }
   finally { btn.disabled = false; }
 });
 $('syncBtn').addEventListener('click', () => (plan.premium ? runSync(false) : openPaywall('sync')));
@@ -1097,7 +1098,7 @@ $('pwSignIn').addEventListener('submit', async e => {
   const email = input('pwEmail').value.trim(), btn = $<HTMLButtonElement>('pwSignInBtn');
   btn.disabled = true;
   try { await sendSignInLink(email); closePaywall(); toast('Check your inbox: open the link we sent to ' + email + ' to start your trial.'); }
-  catch { toast('Couldn’t send the link. Check the email address and try again.'); }
+  catch (err) { toast(signInErrorMessage(err)); }
   finally { btn.disabled = false; }
 });
 // Volta do checkout da Stripe: o Premium é ativado pelo webhook, por isso esperamos um pouco.

@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Aprender músicas a partir de ficheiros Guitar Pro: esquema por secções e compassos, com cores por nota e leitor para praticar.",
   "scripts": {
-    "vendor": "node scripts/copy-alphatab.mjs",
+    "vendor": "node scripts/copy-alphatab.mjs && node scripts/pdf-fonts.mjs",
     "predev": "npm run vendor",
     "prebuild": "npm run vendor",
     "dev": "vite",

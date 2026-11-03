@@ -411,13 +411,18 @@ $('pdfBtn').addEventListener('click', async () => {
       meta,
       perRow: st.perRow,
       colors: input('optColors').checked,
+      theme: currentTheme(),
+      noteKey: [...$('noteKey').children].map(el => el.textContent ?? ''),
       watermark: plan.premium ? undefined : 'FREE PLAN',
       sections: st.sections.map((sec, k) => {
         const end = secEnd(k), bars = [];
-        for (let i = sec.start; i < end; i++) bars.push({ n: i + 1, text: barText(i), pcs: pitchClassesOf(barText(i)), note: st.texts[i] });
+        for (let i = sec.start; i < end; i++) {
+          const mb = s.masterBars[i];
+          bars.push({ n: i + 1, text: barText(i), pcs: pitchClassesOf(barText(i)), note: st.texts[i], repeatStart: mb.isRepeatStart, repeats: mb.repeatCount });
+        }
         return { name: sec.name, range: 'b. ' + (sec.start + 1) + '–' + end, bars };
       }),
-    });
+    }, base);
     toast(plan.premium ? 'Chart PDF downloaded.' : 'Chart PDF downloaded. Premium exports it without the watermark.');
   } catch { toast('Couldn’t create the PDF.'); }
   finally { btn.disabled = false; }

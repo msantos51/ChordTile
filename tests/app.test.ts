@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs';
 import { jsPDF } from 'jspdf';
 import { describe, expect, it } from 'vitest';
 import { pitchClassesOf, tokenPc } from '../src/app/notes';
@@ -61,6 +62,29 @@ describe('PDF do esquema', () => {
   it('passa para a página seguinte quando a música é longa', () => {
     const long: PdfChart = { ...chart, sections: Array.from({ length: 12 }, (_, k) => ({ name: 'S' + k, range: '', bars: bars(1, Array(16).fill('C')) })) };
     expect(buildPdf(jsPDF, long).getNumberOfPages()).toBeGreaterThan(1);
+  });
+
+  it('usa as cores do tema do site no fundo da página', () => {
+    // Fundo do tema escuro (#1f2024) e do claro (#f4f2f0), em RGB de 0 a 1 (2 casas decimais)
+    expect(buildPdf(jsPDF, chart).output()).toContain('0.12 0.13 0.14 rg');
+    expect(buildPdf(jsPDF, { ...chart, theme: 'light' }).output()).toContain('0.96 0.95 0.94 rg');
+  });
+
+  it('desenha os sinais de repetição e a legenda das notas', () => {
+    const rep: PdfChart = { ...chart, noteKey: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+      sections: [{ name: 'INTRO', range: 'b. 1–2', bars: [{ n: 1, text: 'A', pcs: [9], repeatStart: true }, { n: 2, text: 'B', pcs: [11], repeats: 2 }] }] };
+    const out = buildPdf(jsPDF, rep).output();
+    expect(out).toContain('CHART');
+    expect(out).toContain('G#');
+  });
+
+  const fontDir = 'public/vendor/fonts/';
+  it.skipIf(!existsSync(fontDir + 'Roboto-Regular.ttf'))('usa a letra Roboto do site quando as fontes estão disponíveis', () => {
+    const b64 = (f: string) => readFileSync(fontDir + f).toString('base64');
+    const fonts = { regular: b64('Roboto-Regular.ttf'), medium: b64('Roboto-Medium.ttf'), bold: b64('Roboto-Bold.ttf'), mono: b64('RobotoMono-Regular.ttf'), monoMedium: b64('RobotoMono-Medium.ttf') };
+    const out = buildPdf(jsPDF, chart, fonts).output();
+    expect(out).toContain('/FontName /Roboto');
+    expect(out).toContain('/FontName /RobotoMono');
   });
 
   it('dá um nome de ficheiro limpo', () => {

@@ -10,7 +10,10 @@ import { autoSub, beatInfo, countLabels, slotOf, type Sub } from './app/count';
 import { VisualDelay } from './app/sync';
 import { releaseAudio, unlockAudio } from './app/audio-unlock';
 import { TOUR_STEPS, markTourSeen, tourSeen, visibleTarget } from './app/tour';
-import { cloudEnabled, deleteRemoteSong, sendSignInLink, signOut, syncLibrary, uploadSong, watchAccount, type Account } from './app/cloud';
+import { cloudEnabled, deleteRemoteSong, fetchEntitlement, sendSignInLink, signOut, syncLibrary, uploadSong, watchAccount, type Account } from './app/cloud';
+import { FREE_SONG_LIMIT, GUEST, canSaveSong, planLabel, planState, type PlanState } from './app/plan';
+import { OFFERS, checkoutUrl, paymentsEnabled, portalUrl } from './app/billing';
+import { addLoop, addTime, cleanTrainer, isMastered, nextSpeed, progressText, type SongProgress, type TrainerSettings } from './app/practice';
 import { askPersistentStorage, deleteSong, getSong, listSongs, relativeDay, saveSong, takePendingFile, touchSong } from './app/library';
 import { TAB_COLORS, applyTheme, currentTheme, type Theme } from './app/theme';
 
@@ -143,6 +146,7 @@ function loadBytes(bytes: Uint8Array, name: string, isSample: boolean): boolean 
   st.overridesByTrack = saved?.overridesByTrack ?? (saved?.overrides ? { [st.viewTrack]: saved.overrides } : {});
   if (saved?.perRow) { st.perRow = saved.perRow; select('perRow').value = String(saved.perRow); }
 
+  practice.progress = storage.get<SongProgress>('mapa:progress:' + st.fileKey) ?? {}; practice.lastTick = -1; practice.lastAt = 0;
   renderInfo(name); renderTrackControls(); detect(); renderChart(); renderTab(); updateNow(-1, 0);
   return true;
 }
@@ -250,6 +254,8 @@ function renderChart() {
     mark.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); mark.blur(); } });
     const meta = document.createElement('span'); meta.className = 'sec-meta';
     meta.textContent = 'b. ' + (sec.start + 1) + '–' + end + ' · ' + (end - sec.start) + ' bars';
+    // Progresso fora de .sec-meta, para se ver também no telemóvel
+    const prog = document.createElement('span'); prog.className = 'sec-prog-wrap'; prog.dataset.start = String(sec.start);
     const acts = document.createElement('div'); acts.className = 'sec-actions';
     const loopB = document.createElement('button'); loopB.type = 'button'; loopB.className = 'sbtn' + (st.loopSection === k ? ' on' : '');
     loopB.innerHTML = ICON_LOOP + '<span>' + (st.loopSection === k ? 'Practising' : 'Practise') + '</span>';
@@ -257,7 +263,7 @@ function renderChart() {
     loopB.addEventListener('click', () => practiceSection(k));
     loopB.setAttribute('aria-pressed', String(st.loopSection === k));
     acts.append(loopB);
-    head.append(mark, meta, acts); wrap.append(head);
+    head.append(mark, meta, prog, acts); wrap.append(head);
 
     for (let r = sec.start; r < end; r += st.perRow) {
       const row = document.createElement('div'); row.className = 'row'; row.style.setProperty('--per', String(st.perRow));
@@ -268,6 +274,7 @@ function renderChart() {
   });
   markPlaying(st.playingBar, false);
   if (st.playingBar >= 0) updateNow(st.playingBar, 0);
+  renderProgress();
 }
 
 function barCell(i: number) {
@@ -385,13 +392,14 @@ $('pdfBtn').addEventListener('click', async () => {
       meta,
       perRow: st.perRow,
       colors: input('optColors').checked,
+      watermark: plan.premium ? undefined : 'FREE PLAN',
       sections: st.sections.map((sec, k) => {
         const end = secEnd(k), bars = [];
         for (let i = sec.start; i < end; i++) bars.push({ n: i + 1, text: barText(i), pcs: pitchClassesOf(barText(i)) });
         return { name: sec.name, range: 'b. ' + (sec.start + 1) + '–' + end, bars };
       }),
     });
-    toast('Chart PDF downloaded.');
+    toast(plan.premium ? 'Chart PDF downloaded.' : 'Chart PDF downloaded. Premium exports it without the watermark.');
   } catch { toast('Couldn’t create the PDF.'); }
   finally { btn.disabled = false; }
 });
@@ -649,7 +657,7 @@ function initApi() {
   a.soundFontLoad.on(e => { if (e.total) $('status').textContent = 'Loading sounds… ' + Math.round((e.loaded / e.total) * 100) + '%'; });
   a.playerReady.on(() => {
     st.ready = true;
-    ['playBtn', 'stopBtn', 'prevBtn', 'nextBtn', 'loopBtn', 'metroBtn', 'countBtn', 'muteBtn', 'soloBtn'].forEach(id => ($<HTMLButtonElement>(id).disabled = false));
+    ['playBtn', 'stopBtn', 'prevBtn', 'nextBtn', 'loopBtn', 'metroBtn', 'countBtn', 'muteBtn', 'soloBtn', 'trainerBtn'].forEach(id => ($<HTMLButtonElement>(id).disabled = false));
     $('status').textContent = 'Ready to play';
     a.playbackSpeed = +input('speed').value / 100;
     applyMute();
@@ -658,7 +666,7 @@ function initApi() {
   a.renderFinished.on(() => { $('tabLoading').hidden = true; if (st.tabSel >= 0 && !modal.open) placeTabSel(); });
   a.playerStateChanged.on(e => {
     const playing = e.state === PLAYING;
-    if (!playing) { delay.clear(); releaseAudio(); }
+    if (!playing) { delay.clear(); releaseAudio(); practice.lastAt = 0; flushProgress(); }
     $('playIcon').innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
     $('playBtn').setAttribute('aria-label', playing ? 'Pause' : 'Play');
     setStatus(playing ? 'Playing' : 'Paused');
@@ -671,6 +679,7 @@ function initApi() {
     let frac = 0; try { frac = beat.playbackStart / mb.calculateDuration(); } catch { /* compasso vazio */ }
     updateNow(i, frac);
     if (modal.open && i === modal.bar) highlightModal(beat.playbackStart, beat.id);
+    trackPractice(i, barTick(i) + beat.playbackStart);
   }));
   // Clicar numa nota da tablatura leva o esquema para esse compasso.
   a.beatMouseDown.on(beat => {
@@ -739,6 +748,7 @@ function leaveLoopIfOutside(i: number) {
 /** Leva o leitor, a tablatura e o esquema para o compasso i. `fromChart`: não mexe no scroll do esquema. */
 function goBar(i: number, fromChart = false) {
   if (!st.ready) return;
+  practice.lastTick = -1;
   i = Math.max(0, Math.min(score().masterBars.length - 1, i));
   leaveLoopIfOutside(i);
   delay.clear();
@@ -755,7 +765,8 @@ function playFrom(i: number) {
 function practiceSection(k: number) {
   if (!st.ready) { toast('The sounds are still loading.'); return; }
   if (st.loopSection === k) { clearLoop(); renderChart(); setStatus(api().playerState === PLAYING ? 'Playing' : 'Paused'); return; }
-  st.loopSection = k; st.loopBar = -1;
+  st.loopSection = k; st.loopBar = -1; practice.lastTick = -1;
+  if (trainer.on) startTrainer();
   const s = st.sections[k], end = secEnd(k);
   api().playbackRange = { startTick: barTick(s.start), endTick: barEndTick(end - 1) } as AlphaTab.synth.PlaybackRange;
   api().isLooping = true; setPressed('loopBtn', true);
@@ -776,7 +787,8 @@ function setLoopBar(i: number) {
 function practiceBar(i: number) {
   if (!st.ready) { toast('The sounds are still loading.'); return; }
   if (st.loopBar === i) { clearLoop(); placeTabSel(); setStatus(api().playerState === PLAYING ? 'Playing' : 'Paused'); return; }
-  setLoopBar(i);
+  setLoopBar(i); practice.lastTick = -1;
+  if (trainer.on) startTrainer();
   delay.clear();
   api().tickPosition = barTick(i);
   if (api().playerState !== PLAYING) api().play();
@@ -825,6 +837,7 @@ addEventListener('keydown', e => {
     if (e.key === 'ArrowLeft') { e.preventDefault(); $('tourPrev').click(); }
     return;
   }
+  if (e.key === 'Escape' && !$('paywall').hidden) { closePaywall(); return; }
   if (e.key === 'Escape' && !$('helpMenu').hidden) { openHelp(false); return; }
   if (e.key === 'Escape' && !$('settings').hidden) { openSettings(false); return; }
   if (e.key === 'Escape' && !$('library').hidden) { openLibrary(false); $('libraryBtn').focus(); return; }
@@ -866,10 +879,21 @@ function openImported(bytes: Uint8Array, name: string): boolean {
   st.api?.stop(); clearLoop();
   if (!loadBytes(bytes, name, false)) return false;
   // Guarda a música neste browser para a próxima vez
-  const s = score();
-  saveSong({ id: st.fileKey, fileName: name, title: $('songTitle').textContent || name, artist: s.artist || '', bars: s.masterBars.length }, bytes)
-    .then(() => { askPersistentStorage(); renderLibrary(); toast('Saved to “My songs”.'); if (account) uploadSong(st.fileKey).catch(() => setSyncStatus('Couldn’t upload the last song. Try “Sync now”.')); })
-    .catch(() => toast('Couldn’t save the song in this browser (private mode?).'));
+  const s = score(), id = st.fileKey;
+  listSongs().catch(() => []).then(saved => {
+    // Plano Free: até 3 músicas guardadas. A música abre na mesma; só não fica em "My songs".
+    if (!canSaveSong(plan, saved.map(x => x.id), id)) {
+      toast('Opened, but not saved: the free plan keeps ' + FREE_SONG_LIMIT + ' songs.');
+      openPaywall('library');
+      return;
+    }
+    return saveSong({ id, fileName: name, title: $('songTitle').textContent || name, artist: s.artist || '', bars: s.masterBars.length }, bytes)
+      .then(() => {
+        askPersistentStorage(); renderLibrary(); toast('Saved to “My songs”.');
+        if (account && plan.premium) uploadSong(id).catch(() => setSyncStatus('Couldn’t upload the last song. Try “Sync now”.'));
+      })
+      .catch(() => toast('Couldn’t save the song in this browser (private mode?).'));
+  });
   openLibrary(false);
   return true;
 }
@@ -892,6 +916,7 @@ async function renderLibrary() {
   try { songs = await listSongs(); } catch { /* sem IndexedDB */ }
   list.innerHTML = '';
   $('libEmpty').hidden = songs.length > 0;
+  renderLibLimit(songs.length);
   for (const song of songs) {
     const li = document.createElement('li'); li.className = 'lib-item' + (song.id === st.fileKey && !st.isSample ? ' cur' : '');
     const open = document.createElement('button'); open.type = 'button'; open.className = 'lib-open';
@@ -946,6 +971,7 @@ function setSyncStatus(t: string) { $('syncStatus').textContent = t; }
 function plural(n: number, w: string) { return n + ' ' + w + (n === 1 ? '' : 's'); }
 async function runSync(quiet: boolean) {
   if (!account || syncing) return;
+  if (!plan.premium) { setSyncStatus('Sync across devices is a Premium feature. Your songs stay in this browser.'); return; }
   syncing = true; $<HTMLButtonElement>('syncBtn').disabled = true; setSyncStatus('Syncing…');
   try {
     const r = await syncLibrary();
@@ -961,17 +987,19 @@ async function runSync(quiet: boolean) {
 }
 function showAccount(a: Account | null) {
   const was = account?.id; account = a;
+  if (!a) setPlan(GUEST);
   $('signInForm').hidden = !!a; $('accountOn').hidden = !a;
   $('libLocalHint').textContent = a
     ? 'Songs are kept in your account and in this browser.'
     : 'Songs are saved only in this browser on this device. Sign in below to use them on your other devices.';
-  if (a) { $('accountEmail').textContent = a.email; if (a.id !== was) runSync(true); }
+  if (a) { $('accountEmail').textContent = a.email; if (a.id !== was) refreshPlan().then(() => runSync(true)); }
+  $('pwTrial').hidden = !!a;
 }
 if (cloudEnabled) {
   $('account').hidden = false;
   watchAccount(showAccount).catch(() => { $('account').hidden = true; });
   // Ao voltar ao separador, apanha o que mudou noutros dispositivos
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') runSync(true); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refreshPlan().then(() => runSync(true)); });
 }
 $('signInForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -983,11 +1011,185 @@ $('signInForm').addEventListener('submit', async e => {
   } catch { toast('Couldn’t send the link. Check the email address and try again.'); }
   finally { btn.disabled = false; }
 });
-$('syncBtn').addEventListener('click', () => runSync(false));
+$('syncBtn').addEventListener('click', () => (plan.premium ? runSync(false) : openPaywall('sync')));
 $('signOutBtn').addEventListener('click', async () => {
   await signOut().catch(() => {});
   setSyncStatus(''); toast('Signed out. Your songs stay in this browser.');
 });
+
+// ---------- Plano (Free / Premium) ----------
+let plan: PlanState = GUEST;
+function setPlan(p: PlanState) {
+  const was = plan.premium; plan = p;
+  const btn = $('premiumBtn');
+  btn.classList.toggle('on', p.premium);
+  $('premiumBtnText').textContent = p.kind === 'trial' ? planLabel(p).replace('Premium trial · ', 'Trial · ') : p.premium ? 'Premium' : 'Go Premium';
+  const badge = $('planBadge'); badge.textContent = planLabel(p); badge.classList.toggle('premium', p.premium);
+  const paid = p.kind === 'monthly' || p.kind === 'yearly' || p.kind === 'lifetime';
+  $('planAction').textContent = paid ? (portalUrl && p.kind !== 'lifetime' ? 'Manage subscription' : 'Thank you!') : 'Go Premium';
+  $<HTMLButtonElement>('planAction').disabled = paid && !(portalUrl && p.kind !== 'lifetime');
+  if (!p.premium && trainer.on) setTrainer(false);
+  if (was !== p.premium) { renderProgress(); renderLibrary(); }
+}
+async function refreshPlan() {
+  if (!account) { setPlan(GUEST); return; }
+  try { setPlan(planState(await fetchEntitlement())); } catch { /* sem rede: mantém o que estava */ }
+}
+$('planAction').addEventListener('click', () => {
+  if (plan.premium && plan.kind !== 'trial') { if (portalUrl) open(portalUrl, '_blank', 'noopener'); return; }
+  openPaywall('upgrade');
+});
+async function renderLibLimit(count: number) {
+  const el = $('libLimit');
+  if (plan.premium) { el.hidden = true; return; }
+  el.hidden = false; el.textContent = '';
+  const left = Math.max(0, FREE_SONG_LIMIT - count);
+  el.append(left
+    ? 'Free plan: ' + count + ' of ' + FREE_SONG_LIMIT + ' songs saved.'
+    : 'Free plan: ' + FREE_SONG_LIMIT + ' of ' + FREE_SONG_LIMIT + ' songs saved. New songs still open, they just aren’t kept.');
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'linkbtn';
+  b.textContent = account ? 'Go Premium' : 'Try Premium free';
+  b.addEventListener('click', () => openPaywall('library'));
+  el.append(' ', b);
+}
+
+// ---------- Janela do Premium ----------
+type PaywallReason = 'upgrade' | 'library' | 'sync' | 'trainer' | 'progress';
+const PAYWALL_COPY: Record<PaywallReason, [string, string]> = {
+  upgrade: ['Keep everything you’ve built', 'Practising is always free. Premium is for the songs you keep coming back to.'],
+  library: ['Keep all your songs', 'The free plan keeps ' + FREE_SONG_LIMIT + ' songs in “My songs”. Premium keeps them all, on every device.'],
+  sync: ['Your songs on every device', 'Premium keeps “My songs” in sync between your phone, tablet and computer.'],
+  trainer: ['Get it up to speed', 'The speed trainer starts slow and speeds up a little every time the loop repeats.'],
+  progress: ['See how far you’ve come', 'Premium shows the time you’ve practised each section, your best speed and what you’ve mastered.'],
+};
+function openPaywall(reason: PaywallReason) {
+  const [title, lead] = PAYWALL_COPY[reason];
+  $('pwTitle').textContent = title; $('pwLead').textContent = lead;
+  $('pwKicker').textContent = plan.kind === 'trial' ? planLabel(plan) : 'Premium';
+  // Sem conta: primeiro a experiência grátis (só com o email). Com conta: os planos.
+  $('pwTrial').hidden = !!account || !cloudEnabled;
+  const offers = $('pwOffers'); offers.innerHTML = '';
+  offers.hidden = !account;
+  for (const o of OFFERS) {
+    const url = account ? checkoutUrl(o.id, account) : null;
+    const a = document.createElement('a'); a.className = 'pw-offer' + (o.id === 'yearly' ? ' best' : '');
+    a.innerHTML = '<span class="n"></span><span class="p"></span><span class="t"></span>';
+    a.querySelector('.n')!.textContent = o.name;
+    const price = a.querySelector('.p')!; price.textContent = o.price;
+    const per = document.createElement('small'); per.textContent = o.per; price.append(per);
+    a.querySelector('.t')!.textContent = paymentsEnabled(o.id) ? o.note : 'Coming soon';
+    if (url) a.href = url; else { a.setAttribute('aria-disabled', 'true'); a.setAttribute('role', 'link'); }
+    offers.append(a);
+  }
+  $('pwFoot').hidden = !account;
+  $('paywall').hidden = false; $('pwScrim').hidden = false;
+  (account ? offers.querySelector<HTMLElement>('.best') ?? $('pwClose') : input('pwEmail')).focus();
+}
+function closePaywall() { $('paywall').hidden = true; $('pwScrim').hidden = true; }
+$('premiumBtn').addEventListener('click', () => {
+  if (plan.premium && plan.kind !== 'trial') { openLibrary(true); return; }
+  openPaywall('upgrade');
+});
+$('pwClose').addEventListener('click', closePaywall);
+$('pwScrim').addEventListener('click', closePaywall);
+$('pwSignIn').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = input('pwEmail').value.trim(), btn = $<HTMLButtonElement>('pwSignInBtn');
+  btn.disabled = true;
+  try { await sendSignInLink(email); closePaywall(); toast('Check your inbox: open the link we sent to ' + email + ' to start your trial.'); }
+  catch { toast('Couldn’t send the link. Check the email address and try again.'); }
+  finally { btn.disabled = false; }
+});
+// Volta do checkout da Stripe: o Premium é ativado pelo webhook, por isso esperamos um pouco.
+if (new URLSearchParams(location.search).has('checkout')) {
+  history.replaceState(null, '', location.pathname + location.hash);
+  toast('Thank you! Activating Premium…');
+  let tries = 0;
+  const poll = setInterval(async () => {
+    await refreshPlan();
+    if ((plan.premium && plan.kind !== 'trial') || ++tries > 10) {
+      clearInterval(poll);
+      if (plan.premium && plan.kind !== 'trial') { toast('Premium is on. Enjoy!'); runSync(true); }
+    }
+  }, 3000);
+}
+
+// ---------- Treino de velocidade ----------
+const trainer = { on: false, cfg: cleanTrainer(storage.get<TrainerSettings>('mapa:trainer')) };
+for (const id of ['trStart', 'trTarget']) {
+  for (let v = 25; v <= 150; v += 5) { const o = document.createElement('option'); o.value = String(v); o.textContent = v + '%'; select(id).append(o); }
+}
+function showTrainerCfg() {
+  select('trStart').value = String(trainer.cfg.start); select('trStep').value = String(trainer.cfg.step); select('trTarget').value = String(trainer.cfg.target);
+}
+showTrainerCfg();
+for (const id of ['trStart', 'trStep', 'trTarget']) select(id).addEventListener('change', () => {
+  trainer.cfg = cleanTrainer({ start: +select('trStart').value, step: +select('trStep').value, target: +select('trTarget').value });
+  storage.set('mapa:trainer', trainer.cfg); showTrainerCfg();
+});
+function setSpeed(v: number) { input('speed').value = String(v); input('speed').dispatchEvent(new Event('input')); }
+function startTrainer() { setSpeed(trainer.cfg.start); }
+function setTrainer(v: boolean) {
+  trainer.on = v; setPressed('trainerBtn', v);
+  if (!v) return;
+  startTrainer();
+  toast(st.loopSection >= 0 || st.loopBar >= 0
+    ? 'Speed trainer: ' + trainer.cfg.start + '% → ' + trainer.cfg.target + '%, +' + trainer.cfg.step + '% each loop.'
+    : 'Speed trainer on. Now practise a section (or loop a bar): it speeds up each time it repeats.');
+}
+$('trainerBtn').addEventListener('click', () => {
+  if (!plan.premium) { openPaywall('trainer'); return; }
+  setTrainer(!trainer.on);
+});
+
+// ---------- Progresso por secção ----------
+const practice = { progress: {} as SongProgress, lastTick: -1, lastAt: 0, dirty: false, savedAt: 0 };
+function flushProgress() {
+  if (!practice.dirty || !st.fileKey || st.isSample) return;
+  storage.set('mapa:progress:' + st.fileKey, practice.progress);
+  practice.dirty = false; practice.savedAt = Date.now();
+}
+/** Chamado a cada nota tocada: soma tempo à secção e deteta o fim de cada volta do loop. */
+function trackPractice(bar: number, tick: number) {
+  const now = performance.now();
+  if (st.isSample) return;
+  const k = secOf(bar), start = st.sections[k]?.start ?? 0;
+  if (practice.lastAt) { practice.progress = addTime(practice.progress, start, now - practice.lastAt, Date.now()); practice.dirty = true; }
+  practice.lastAt = now;
+  const looping = st.loopSection >= 0 || st.loopBar >= 0;
+  if (looping && practice.lastTick >= 0 && tick < practice.lastTick) onLoopDone();
+  practice.lastTick = tick;
+  if (Date.now() - practice.savedAt > 5000) flushProgress();
+}
+function onLoopDone() {
+  const speed = +input('speed').value;
+  if (st.loopSection >= 0) {
+    const start = st.sections[st.loopSection].start;
+    const before = isMastered(practice.progress[start]);
+    practice.progress = addLoop(practice.progress, start, speed); practice.dirty = true;
+    if (plan.premium && !before && isMastered(practice.progress[start])) toast('“' + st.sections[st.loopSection].name + '” mastered!');
+    renderProgress();
+  }
+  if (trainer.on && plan.premium) {
+    const next = nextSpeed(speed, trainer.cfg);
+    if (next !== speed) { setSpeed(next); if (next === trainer.cfg.target) toast('Target speed reached: ' + next + '%.'); }
+  }
+}
+function renderProgress() {
+  document.querySelectorAll<HTMLElement>('.sec-prog-wrap').forEach(w => {
+    const p = practice.progress[+w.dataset.start!];
+    const text = progressText(p);
+    w.innerHTML = '';
+    if (!text) return;
+    if (plan.premium) {
+      const sp = document.createElement('span'); sp.className = 'sec-prog' + (isMastered(p) ? ' mastered' : ''); sp.textContent = text; w.append(sp);
+    } else {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'sec-lock'; b.textContent = 'Progress · Premium';
+      b.addEventListener('click', () => openPaywall('progress')); w.append(b);
+    }
+  });
+}
+addEventListener('pagehide', flushProgress);
 
 // ---------- Ajuda e tutorial ----------
 function openHelp(v: boolean) {

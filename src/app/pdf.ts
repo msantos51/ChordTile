@@ -11,6 +11,8 @@ export interface PdfChart {
   sections: PdfSection[];
   perRow: number;
   colors: boolean;
+  /** Plano Free: texto em diagonal em cada página (o Premium exporta sem marca de água). */
+  watermark?: string;
 }
 
 type Rgb = [number, number, number];
@@ -80,7 +82,17 @@ export function buildPdf(JsPdf: typeof JsPDF, chart: PdfChart): JsPDF {
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...SOFT);
-    doc.text('Mapa de Compassos', M, H - M + 2);
+    doc.text(chart.watermark ? 'Made with Mapa de Compassos (Free)' : 'Mapa de Compassos', M, H - M + 2);
+    if (chart.watermark) {
+      // Semitransparente, para não tapar os acordes
+      doc.saveGraphicsState();
+      const GState = (doc as unknown as { GState: new (o: { opacity: number }) => Parameters<JsPDF['setGState']>[0] }).GState;
+      doc.setGState(new GState({ opacity: 0.1 }));
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(44); doc.setTextColor(...INK);
+      doc.text(chart.watermark, W / 2, H / 2, { align: 'center', angle: 35 });
+      doc.restoreGraphicsState();
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...SOFT);
+    }
     doc.text(p + ' / ' + pages, W - M, H - M + 2, { align: 'right' });
   }
   return doc;

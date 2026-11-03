@@ -4,6 +4,7 @@
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { planSync, storageKey, type RemoteSong } from './cloud-plan';
+import type { Entitlement } from './plan';
 import { deleteSong, getSong, listSongs, putSong, touchSong, type SongMeta } from './library';
 
 const URL_ = import.meta.env.VITE_SUPABASE_URL as string | undefined;
@@ -115,4 +116,14 @@ export async function syncLibrary(): Promise<SyncResult> {
   for (const p of plan.pullOpened) await touchSong(p.id, undefined, p.openedAt);
 
   return { uploaded: plan.upload.length, downloaded: plan.download.length, deleted: plan.deleteLocal.length };
+}
+
+/** Plano da conta (experiência, subscrição ou vitalícia). null se ainda não houver linha. */
+export async function fetchEntitlement(): Promise<Entitlement | null> {
+  const c = await sb(); const u = await uid(c);
+  const { data, error } = await c.from('entitlements').select('plan,trial_ends_at,premium_until').eq('user_id', u).maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const r = data as { plan: Entitlement['plan']; trial_ends_at: string; premium_until: string | null };
+  return { plan: r.plan, trialEndsAt: ms(r.trial_ends_at), premiumUntil: r.premium_until ? ms(r.premium_until) : null };
 }

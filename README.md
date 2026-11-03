@@ -127,3 +127,33 @@ Como funciona a sincronização (`src/app/cloud.ts`, plano em `src/app/cloud-pla
 - ao iniciar sessão, ao voltar ao separador e em "Sync now", junta as duas bibliotecas: o que falta de cada lado passa para o outro;
 - importar uma música envia-a logo; apagar marca-a como apagada na conta, e os outros dispositivos apagam-na também;
 - uma música reimportada depois de apagada volta para a conta.
+
+## Premium
+
+Praticar é sempre grátis. O Premium é para quem quer guardar e acompanhar o que pratica.
+
+| Free | Premium |
+|---|---|
+| Abrir qualquer ficheiro, esquema, tablatura, loop, velocidade | Tudo o do Free |
+| Guardar até **3 músicas** em "My songs" (as seguintes abrem, mas não ficam guardadas) | Músicas ilimitadas |
+| — | **Sincronização** entre dispositivos (também imposta no servidor, nas regras RLS) |
+| — | **Treino de velocidade**: começa devagar e sobe a cada volta do loop (Ajustes → Speed trainer) |
+| Progresso registado, mas escondido | **Progresso por secção**: tempo, melhor velocidade, "Mastered" (3 voltas a 100 %) |
+| PDF com marca de água | PDF limpo |
+
+- **Experiência ("reverse trial")**: cada conta nova tem 14 dias de Premium, sem cartão (gatilho em `auth.users`, ver `supabase/migrations/002_entitlements.sql`). Depois passa para Free e mantém tudo o que já tinha.
+- **Preços** (em `src/app/billing.ts`): 3,99 €/mês, 29 €/ano, 49 € vitalício (preço de fundador).
+- **Código**: regras do plano em `src/app/plan.ts`; treino e progresso em `src/app/practice.ts` (ambos testados); pagamentos em `src/app/billing.ts`; função do servidor em `supabase/functions/stripe-webhook`.
+
+### Ativar os pagamentos (Stripe)
+
+A tabela, as regras e a função `stripe-webhook` já estão no projeto Supabase. Falta a parte da Stripe:
+
+1. Na Stripe, cria um produto **Premium** com 3 preços: 3,99 € mensal, 29 € anual (recorrentes) e 49 € único.
+2. Cria um **Payment Link** para cada preço. Em *After payment*, escolhe "Don't show confirmation page" e redireciona para `https://msantos51.github.io/learnfast/player.html?checkout=success`. Ativa a recolha de morada/IVA se usares o Stripe Tax.
+3. Em **Settings → Billing → Customer portal**, ativa o portal e copia o *link de login*.
+4. Põe os 3 links e o do portal em `.env.production` (`VITE_STRIPE_LINK_*` e `VITE_STRIPE_PORTAL_URL`).
+5. Em **Developers → Webhooks**, adiciona o endpoint `https://dgxmxzhkbbosiadexayy.supabase.co/functions/v1/stripe-webhook` com os eventos `checkout.session.completed`, `customer.subscription.updated` e `customer.subscription.deleted`.
+6. No Supabase, em **Edge Functions → Secrets**, cria `STRIPE_SECRET_KEY` (chave secreta da Stripe, `sk_...` ou uma *restricted key* com leitura de subscrições) e `STRIPE_WEBHOOK_SECRET` (o `whsec_...` do passo 5).
+
+O site junta o id da conta a cada link (`client_reference_id`); a função recebe o pagamento e ativa o Premium dessa conta. Ao voltar do pagamento (`?checkout=success`), o site espera uns segundos até o Premium aparecer.

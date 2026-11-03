@@ -194,6 +194,8 @@
     <button type="button" class="bm-play" id="bmPlay"><svg class="i f" viewBox="0 0 24 24" id="bmPlayIcon"><path d="M8 5v14l11-7z"/></svg><span id="bmPlayText">Play on loop</span></button>
     <label class="bm-opt"><input type="checkbox" id="bmCountIn" checked> 1-bar count-in</label>
     <label class="bm-opt"><input type="checkbox" id="bmMetro" checked> Metronome</label>
+    <select class="bm-sound" id="bmSound" aria-label="Metronome sound"></select>
+    <label class="bm-opt bm-rhythm" title="Hear just the rhythm: the same short sound on every note you have to play, without the notes. Learn the rhythm first, then play it with the notes."><input type="checkbox" id="bmRhythm"> Rhythm only</label>
     <label class="bm-opt">Speed <input type="range" id="bmSpeed" min="25" max="150" step="5" value="100" aria-label="Speed"><output id="bmSpeedOut">100%</output></label>
     <span class="bm-reps">Repeat <strong id="bmReps">0</strong></span>
   </footer>
@@ -268,6 +270,12 @@
       <button class="ibtn" id="syncPlus" type="button" aria-label="10 ms more">+</button>
     </div>
     <span class="hint">If the tab and squares move before you hear the note, increase this value. With Bluetooth headphones it is usually between 150 and 300 ms.</span>
+  </fieldset>
+  <fieldset>
+    <legend>Metronome</legend>
+    <label for="metroSound">Sound <select id="metroSound"></select></label>
+    <div class="set-row"><button class="btn" type="button" id="metroTest">▶ Listen</button></div>
+    <span class="hint">Used by the metronome and the count-in. The voice counts the beats of each bar: “one, two, three, four”.</span>
   </fieldset>
   <fieldset>
     <legend>Speed trainer <span class="pill">Premium</span></legend>

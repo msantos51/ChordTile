@@ -24,7 +24,7 @@ export function mountAuth(box: HTMLElement, mode: AuthMode, opts: { message?: st
       ${mode === 'signup' ? '<label class="auth-field"><span>Name</span><input name="name" autocomplete="name" maxlength="60" placeholder="Your name"></label>' : ''}
       <label class="auth-field"><span>Email</span><input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
       ${mode !== 'reset' ? `<label class="auth-field"><span>Password</span><span class="auth-pw"><input name="password" type="password" required minlength="8"
-        autocomplete="${mode === 'signup' ? 'new-password' : 'current-password'}" placeholder="${mode === 'signup' ? 'At least 8 characters, with a number' : 'Your password'}">
+        autocomplete="${mode === 'signup' ? 'new-password' : 'current-password'}" placeholder="${mode === 'signup' ? '8+ characters, with a number' : 'Your password'}">
         <button type="button" class="auth-eye" aria-label="Show password">${EYE}</button></span></label>` : ''}
       ${mode === 'signin' ? '<button type="button" class="auth-link auth-forgot" data-go="reset">Forgot your password?</button>' : ''}
       <p class="auth-err" role="alert" hidden></p>

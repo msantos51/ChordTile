@@ -617,7 +617,7 @@ function renderBarModal() {
   });
 
   // Subdivisão (automática)
-  const names2: Record<Sub, string> = { 1: 'beats (1 2 3)', 2: 'eighth notes (1 & 2 &)', 4: 'sixteenth notes (1 e & a)' };
+  const names2: Record<Sub, string> = { 1: 'beats (1 2 3 4)', 2: 'eighth notes (1 & 2 &)', 4: 'sixteenth notes (1 e & a)' };
   $('bmSubName').textContent = names2[sub];
   modal.lastSlot = -1;
 }

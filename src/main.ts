@@ -1047,6 +1047,7 @@ $('libraryBtn').addEventListener('click', () => openLibrary(true));
 $('closeLibrary').addEventListener('click', () => { openLibrary(false); $('libraryBtn').focus(); });
 $('libSample').addEventListener('click', () => { openLibrary(false); openSample(); });
 
+const ICON_NOTE = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
 const ICON_TRASH = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>';
 async function renderLibrary() {
   const list = $('libList');
@@ -1054,14 +1055,20 @@ async function renderLibrary() {
   try { songs = await listSongs(); } catch { /* sem IndexedDB */ }
   list.innerHTML = '';
   $('libEmpty').hidden = songs.length > 0;
+  $('libCount').textContent = songs.length ? plural(songs.length, 'song') + ' saved' : 'Nothing saved yet';
   renderLibLimit(songs.length);
   for (const song of songs) {
-    const li = document.createElement('li'); li.className = 'lib-item' + (song.id === st.fileKey && !st.isSample ? ' cur' : '');
+    const li = document.createElement('li'); li.className = 'lib-item';
     const open = document.createElement('button'); open.type = 'button'; open.className = 'lib-open';
+    const cur = song.id === st.fileKey && !st.isSample;
+    const ic = document.createElement('span'); ic.className = 'lib-icon'; ic.innerHTML = ICON_NOTE;
+    const txt = document.createElement('span'); txt.className = 'lib-text';
     const t = document.createElement('span'); t.className = 'lib-title'; t.textContent = song.title;
     const m = document.createElement('span'); m.className = 'lib-meta';
     m.textContent = [song.artist, song.bars + ' bars', 'opened ' + relativeDay(song.openedAt)].filter(Boolean).join(' · ');
-    open.append(t, m);
+    if (cur) { const now = document.createElement('span'); now.className = 'lib-now'; now.textContent = 'Open'; m.prepend(now); }
+    txt.append(t, m); open.append(ic, txt);
+    if (cur) open.setAttribute('aria-current', 'true');
     open.addEventListener('click', () => openSaved(song.id));
     const del = document.createElement('button'); del.type = 'button'; del.className = 'lib-del'; del.innerHTML = ICON_TRASH;
     del.setAttribute('aria-label', 'Delete ' + song.title);
@@ -1078,6 +1085,7 @@ async function renderLibrary() {
       no.addEventListener('click', () => renderLibrary());
       c.append(yes, no); del.replaceWith(c); no.focus();
     });
+    li.classList.toggle('cur', cur);
     li.append(open, del); list.append(li);
   }
 }
@@ -1192,7 +1200,8 @@ function setPlan(p: PlanState) {
   const was = plan.premium; plan = p;
   const btn = $('premiumBtn');
   btn.classList.toggle('on', p.premium);
-  $('setPremiumText').textContent = p.premium ? planLabel(p) : 'Go Premium · try 14 days free';
+  $('setPremiumText').textContent = p.premium ? planLabel(p) : 'Go Premium';
+  $('setPremiumSub').textContent = p.premium ? 'All features unlocked. Thank you!' : 'Try 14 days free: sync, more songs and the speed trainer';
   $('premiumBtnText').textContent = p.kind === 'trial' ? planLabel(p).replace('Premium trial · ', 'Trial · ') : p.premium ? 'Premium' : 'Go Premium';
   const badge = $('planBadge'); badge.textContent = planLabel(p); badge.classList.toggle('premium', p.premium);
   const paid = p.kind === 'monthly' || p.kind === 'yearly' || p.kind === 'lifetime';

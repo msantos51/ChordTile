@@ -688,6 +688,10 @@ function initApi() {
     },
   });
   st.api = a;
+  // Todos os textos da tablatura (títulos, marcações, andamento, números) em Roboto, como o resto do site
+  const fonts = a.settings.display.resources.elementFonts;
+  for (const [el, f] of fonts) fonts.set(el, new at.model.Font('Roboto', f.size, f.style, f.weight));
+  a.updateSettings();
   a.customCursorHandler = delay.cursorHandler(at.midi.MidiTickLookupFindBeatResultCursorMode.ToNextBext);
   a.soundFontLoad.on(e => { if (e.total) $('status').textContent = 'Loading sounds… ' + Math.round((e.loaded / e.total) * 100) + '%'; });
   a.playerReady.on(() => {

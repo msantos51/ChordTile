@@ -41,7 +41,7 @@ public/leitor.html, ajuda.html, licencas.html   Redirecionam os endereços antig
 src/
   main.ts                  Interface: esquema, tablatura sincronizada, leitor, ajustes
   fonts.ts                 Fontes alojadas no site (Fontsource)
-  styles.css               Estilos do leitor e das páginas de texto (design "Azul profundo": tema escuro e claro, tokens de cor)
+  styles.css               Estilos do leitor e das páginas de texto (design "Vermelho, branco e preto": tema escuro e claro, tokens de cor)
   landing.css              Estilos da página inicial (mesma paleta)
   analysis/
     analyze.ts             Deteção do tom por compasso e secções (módulo puro, testado)
@@ -82,7 +82,7 @@ sons Sonivox (Apache 2.0) vêm no pacote do alphaTab; o script copia também os 
 
 ### Fontes
 
-Geist, Geist Mono e Plus Jakarta Sans (títulos da página inicial), todas OFL, vêm do [Fontsource](https://fontsource.org)
+DM Sans (texto), Anton (títulos e logótipo) e Geist Mono (números), todas OFL, vêm do [Fontsource](https://fontsource.org)
 e são servidas pelo próprio site (`src/fonts.ts`, `src/landing.ts`). Não há pedidos a servidores de terceiros, o que evita enviar o IP de quem visita à Google.
 
 ## Músicas guardadas e tutorial

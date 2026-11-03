@@ -6,182 +6,135 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#023661">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#c8102e">
 <title>Mapa de Compassos · Learn songs bar by bar</title>
-<meta name="description" content="Load a Guitar Pro file and learn the song by sections and bars, with colours per note, synced tablature, looping and adjustable speed.">
+<meta name="description" content="Load a Guitar Pro file and learn the song by sections and bars, with colours per note, synced tablature, looping and a speed trainer.">
 </head>
-<body class="landing">
-<!-- Decoration: staff with notes and blue light waves -->
-<div class="l-deco" aria-hidden="true">
-  <svg class="l-staff" viewBox="0 0 800 420" preserveAspectRatio="xMidYMin slice">
-    <g class="l-staff-lines">
-      <path d="M0 330 C180 300 300 120 520 110 S760 40 800 20"/>
-      <path d="M0 346 C180 316 300 136 520 126 S760 56 800 36"/>
-      <path d="M0 362 C180 332 300 152 520 142 S760 72 800 52"/>
-      <path d="M0 378 C180 348 300 168 520 158 S760 88 800 68"/>
-      <path d="M0 394 C180 364 300 184 520 174 S760 104 800 84"/>
-    </g>
-    <g class="l-staff-notes">
-      <ellipse cx="330" cy="236" rx="15" ry="11" transform="rotate(-22 330 236)"/><rect x="342" y="140" width="3.5" height="92" rx="1.5"/><path d="M345.5 140 q22 18 20 46 q-6 -22 -20 -26z"/>
-      <ellipse cx="470" cy="150" rx="15" ry="11" transform="rotate(-22 470 150)"/><ellipse cx="540" cy="128" rx="15" ry="11" transform="rotate(-22 540 128)"/>
-      <rect x="482" y="60" width="3.5" height="86" rx="1.5"/><rect x="552" y="38" width="3.5" height="86" rx="1.5"/><path d="M482 60 L555.5 38 V50 L482 72z"/>
-      <ellipse cx="700" cy="88" rx="15" ry="11" transform="rotate(-22 700 88)"/><rect x="712" y="0" width="3.5" height="84" rx="1.5"/>
-    </g>
-  </svg>
-</div>
+<body>
+<section class="hero">
+  <div class="left">
+    <div class="top">
+      <a class="brand" href="./"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Mapa de Compassos</a>
+      <nav class="nav" aria-label="Main"><a href="#how">How it works</a><a href="#premium">Premium</a></nav>
+      <a class="mob-player" href="./player.html">Player</a>
+    </div>
+    <div class="copy">
+      <p class="kicker caps">Learn it bar by bar</p>
+      <h1>See the whole song.<br><em>Then play it.</em></h1>
+      <p class="lead">Load a Guitar Pro file and get the song’s map: every section, every bar marked with its chord, and a player that loops the hard part and speeds you up as you get it.</p>
+      <div class="finish">Every note has its colour
+        <span><i style="background:var(--n0)"></i><i style="background:var(--n2)"></i><i style="background:var(--n5)"></i><i style="background:var(--n7)"></i><i style="background:var(--n9)"></i></span></div>
+      <div class="buy">
+        <div class="price-tag">€0<small>Free to start</small></div>
+        <button class="btn" type="button" data-pick><span class="plus" aria-hidden="true">+</span>Load a Guitar Pro file</button>
+        <a class="link" href="./player.html?sample">Try the sample</a>
+      </div>
+      <p class="err" id="landingErr" role="alert" hidden></p>
+    </div>
+    <div class="slider"><span id="secNo">01 / 04</span><span class="bar"><i id="secBar"></i></span><span id="secName">INTRO</span></div>
+    <span class="vert l">Scroll down</span>
+  </div>
 
-<header class="l-wrap l-top">
-  <a class="l-brand" href="./">
-    <span class="l-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-    Mapa de Compassos
-  </a>
-  <nav class="l-nav" aria-label="Main">
-    <a href="#how">How it works</a>
-    <a href="./player.html#songs">My songs</a>
-    <a href="./help.html">Help</a>
-    <a class="l-btn l-btn-sm primary" href="./player.html">Open the player</a>
-  </nav>
-</header>
+  <div class="right">
+    <div class="right-top"><nav class="nav-r" aria-label="Player"><a href="./player.html#songs">My songs</a><a href="./help.html">Help</a></nav><a class="pill-white" href="./player.html">Open the player</a></div>
+    <figure class="board" aria-label="Animated example of a song map">
+      <div class="board-head"><span class="song-t">Sample song</span><span class="song-m">BASS · 4/4 · 112 BPM</span></div>
+      <div class="rows" id="rows">
+        <div class="row"><div class="row-l">Intro <span>4 bars</span></div><div class="tiles">
+          <div class="t" data-n="9">Am</div><div class="t" data-n="5">F</div><div class="t" data-n="0">C</div><div class="t" data-n="7">G</div></div></div>
+        <div class="row long"><div class="row-l">Verse <span>8 bars</span></div><div class="tiles">
+          <div class="t" data-n="9">Am</div><div class="t" data-n="9">Am</div><div class="t" data-n="5">F</div><div class="t" data-n="7">G</div>
+          <div class="t" data-n="0">C</div><div class="t" data-n="7">G</div><div class="t" data-n="9">Am</div><div class="t" data-n="9">Am</div></div></div>
+        <div class="row long loop"><div class="row-l">Chorus <span>8 bars</span></div><div class="tiles">
+          <div class="t" data-n="5">F</div><div class="t" data-n="7">G</div><div class="t" data-n="0">C</div><div class="t" data-n="9">Am</div>
+          <div class="t" data-n="5">F</div><div class="t" data-n="7">G</div><div class="t" data-n="0">C</div><div class="t" data-n="0">C</div></div></div>
+        <div class="row"><div class="row-l">Bridge <span>4 bars</span></div><div class="tiles">
+          <div class="t" data-n="2">Dm</div><div class="t" data-n="4">E</div><div class="t" data-n="9">Am</div><div class="t" data-n="9">Am</div></div></div>
+      </div>
+      <div class="transport">
+        <a class="play" href="./player.html?sample" aria-label="Play the sample"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></a>
+        <span id="where">Intro · bar 1</span><span class="beats" id="beats"><i></i><i></i><i></i><i></i></span><span class="spd" id="spd">100%</span>
+      </div>
+      <div class="legend" id="legend"><b>Find a note</b>
+        <button style="--c:var(--n0)" data-n="0" aria-label="C"></button><button style="--c:var(--n2)" data-n="2" aria-label="D"></button>
+        <button style="--c:var(--n4)" data-n="4" aria-label="E"></button><button style="--c:var(--n5)" data-n="5" aria-label="F"></button>
+        <button style="--c:var(--n7)" data-n="7" aria-label="G"></button><button style="--c:var(--n9)" data-n="9" aria-label="A"></button>
+      </div>
+    </figure>
+    <span class="vert r">Guitar · Bass</span>
+  </div>
+</section>
 
 <main>
-  <section class="l-hero-band">
-    <svg class="l-waves" viewBox="0 0 1440 360" preserveAspectRatio="none" aria-hidden="true">
-      <defs>
-        <linearGradient id="lw1" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#3b8ff0" stop-opacity="0"/><stop offset=".55" stop-color="#3b8ff0" stop-opacity=".55"/><stop offset="1" stop-color="#7cc0ff" stop-opacity=".95"/></linearGradient>
-        <linearGradient id="lw2" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#1e6fd0" stop-opacity="0"/><stop offset=".6" stop-color="#1e6fd0" stop-opacity=".45"/><stop offset="1" stop-color="#4fa3ff" stop-opacity=".7"/></linearGradient>
-        <filter id="lglow" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
-      </defs>
-      <path d="M0 330 C420 330 760 300 1000 220 S1330 70 1440 40 V360 H0z" fill="#0b4a86" opacity=".35"/>
-      <path d="M0 345 C460 340 820 310 1060 240 S1360 110 1440 90" fill="none" stroke="url(#lw2)" stroke-width="10" filter="url(#lglow)"/>
-      <path d="M0 345 C460 340 820 310 1060 240 S1360 110 1440 90" fill="none" stroke="url(#lw1)" stroke-width="2"/>
-      <path d="M200 360 C600 350 900 320 1120 260 S1380 160 1440 140" fill="none" stroke="url(#lw1)" stroke-width="1.5" opacity=".7"/>
-      <!-- Luz que percorre a onda (animação) -->
-      <path class="l-wave-run" pathLength="1000" d="M0 345 C460 340 820 310 1060 240 S1360 110 1440 90" fill="none" stroke="#bfe0ff" stroke-width="3" stroke-linecap="round"/>
-      <path class="l-wave-run l-wave-run-2" pathLength="1000" d="M200 360 C600 350 900 320 1120 260 S1380 160 1440 140" fill="none" stroke="#9cc8ff" stroke-width="2" stroke-linecap="round"/>
-    </svg>
-
-    <div class="l-wrap l-hero">
-      <div class="l-hero-text">
-        <span class="l-pill"><i aria-hidden="true"></i>For Guitar Pro files</span>
-        <h1>Learn the song bar by <em>bar.</em></h1>
-        <p class="l-lead">Load the tab and see the structure right away: sections, the chord of each bar in a colour and the tab following the sound. Loop the chorus, slow it down and play along.</p>
-        <div class="l-ctas">
-          <button type="button" class="l-btn primary" data-pick>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>Load file
-          </button>
-          <a class="l-btn outline" href="./player.html?sample">
-            <svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Try a sample song
-          </a>
-        </div>
-        <p class="l-note-line">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-          Your file is only read in your browser. Nothing is sent to a server.
-        </p>
-        <p class="l-error" id="landingErr" role="alert" hidden></p>
-      </div>
-
-      <figure class="l-mock" aria-label="Example of a song chart in the player">
-        <div class="l-mock-head">
-          <div>
-            <strong>Sample song</strong>
-            <span>Guitar 1 · 4/4 · 112 bpm</span>
-          </div>
-          <span class="l-chip">Chart</span>
-        </div>
-        <div class="l-mock-body">
-          <div class="l-sec">
-            <p><b>Intro</b> <span>4 bars</span></p>
-            <div class="l-bars"><i class="n9">Am</i><i class="n5">F</i><i class="n0">C</i><i class="n7">G</i></div>
-          </div>
-          <div class="l-sec">
-            <p><b>Verse</b> <span>8 bars</span></p>
-            <div class="l-bars"><i class="n9">Am</i><i class="n9">Am</i><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n7">G</i><i class="n9">Am</i><i class="n9">Am</i></div>
-          </div>
-          <div class="l-sec">
-            <p><b>Chorus</b> <span>8 bars</span> <em>Loop</em></p>
-            <div class="l-bars"><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n9">Am</i><i class="n5">F</i><i class="n7">G</i><i class="n0">C</i><i class="n0">C</i></div>
-          </div>
-          <div class="l-sec">
-            <p><b>Bridge</b> <span>4 bars</span></p>
-            <div class="l-bars"><i class="n2">Dm</i><i class="n4">E</i><i class="n9">Am</i><i class="n9">Am</i></div>
-          </div>
-        </div>
-        <div class="l-mock-player">
-          <a class="l-play" href="./player.html?sample" aria-label="Listen to the sample song">
-            <svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path id="mockPlayIcon" d="M8 5v14l11-7z"/></svg>
-          </a>
-          <span class="l-progress" aria-hidden="true"><i></i></span>
-          <span class="l-mono">75%</span>
-          <span class="l-sep" aria-hidden="true"></span>
-          <span class="l-beats" id="mockBeats" aria-hidden="true"><i>1</i><i>2</i><i>3</i><i>4</i></span>
-        </div>
-      </figure>
+  <section class="wrap block" id="how">
+    <p class="eyebrow caps">Why it works</p>
+    <h2>A tab shows the notes. <em>This shows the song.</em></h2>
+    <div class="three">
+      <div class="feat"><div class="num">01</div><h3>The structure at a glance</h3><p>Intro, verse, chorus, bridge: straight from the file. You always know where you are and what comes next.</p></div>
+      <div class="feat"><div class="num">02</div><h3>Harmony in colour</h3><p>Every bar shows its chord with the colour of its note. Patterns jump out before you play a thing.</p></div>
+      <div class="feat"><div class="num">03</div><h3>Synced tab and player</h3><p>The tab follows the sound. Mute your part and play along, or hear only your instrument.</p></div>
     </div>
   </section>
 
-  <section class="l-notekey" aria-label="Colour of each note">
-    <div class="l-wrap">
-      <span>Every note has its colour:</span>
-      <ul>
-        <li class="n0">C</li><li class="n1">C#</li><li class="n2">D</li><li class="n3">D#</li><li class="n4">E</li><li class="n5">F</li>
-        <li class="n6">F#</li><li class="n7">G</li><li class="n8">G#</li><li class="n9">A</li><li class="n10">A#</li><li class="n11">B</li>
-      </ul>
+  <section class="split">
+    <div class="dark">
+      <p class="eyebrow caps">Speed trainer</p>
+      <h2>Tame the hard part.</h2>
+      <p>Loop the section you can’t play yet. It starts at 60% and goes up a notch every time round, until you’re playing it at full speed. Your progress is kept per section.</p>
+      <a class="btn" href="./player.html?sample"><span class="plus" aria-hidden="true">+</span>Try it on the sample</a>
+    </div>
+    <div class="pic">
+      <div class="ramp">
+        <div class="ramp-bars"><i class="done" style="height:45%"></i><i class="done" style="height:52%"></i><i class="done" style="height:59%"></i><i class="done" style="height:66%"></i><i class="done" style="height:73%"></i><i class="done" style="height:80%"></i><i style="height:87%"></i><i style="height:94%"></i><i style="height:100%"></i></div>
+        <div class="ramp-l"><span>60%</span><span>LOOP BY LOOP</span><span>100%</span></div>
+      </div>
     </div>
   </section>
 
-  <section class="l-wrap l-section" id="how">
-    <p class="l-eyebrow">How it works</p>
-    <h2>From file to rehearsal in three steps.</h2>
-    <ol class="l-steps">
-      <li><span>1</span><h3>Load the tab</h3><p>Pick a Guitar Pro file of the song you want to play and choose your instrument.</p></li>
-      <li><span>2</span><h3>See the song map</h3><p>Intro, verse, chorus: each section with its bars and the chord of each one in a colour.</p></li>
-      <li><span>3</span><h3>Practise in parts</h3><p>Loop the hard section, set the speed from 25% to 150%, use the metronome and a count-in.</p></li>
-    </ol>
-  </section>
-
-  <section class="l-wrap l-section l-section-tight" aria-label="Features">
-    <ul class="l-features">
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></span><h3>Chord per bar</h3><p>Each bar shows the detected chord in the colour of its note. You see the harmony before you play.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></svg></span><h3>Synced tablature</h3><p>The cursor follows the sound and the chart keeps up. Click a bar to jump straight to it.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></span><h3>Loop any section</h3><p>Repeat just the chorus, or just that one bar, until it sounds clean.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19 5L5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span><h3>Speed 25–150%</h3><p>Slow down without changing the pitch and speed up as you gain confidence.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span><h3>Play along</h3><p>Mute your track and play with the band, or hear only your instrument.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg></span><h3>Chart as PDF</h3><p>Edit chords and section names and export the map to take to rehearsal.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 21h8l-1.5-17h-5z"/><path d="M12 14l5-7"/></svg></span><h3>Metronome and count-in</h3><p>A count-in before you start and subdivisions (1 &amp; 2 &amp;) so you never lose the beat.</p></li>
-      <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg></span><h3>My songs</h3><p>The songs you import are saved in this browser and open where you left them.</p></li>
-    </ul>
-  </section>
-
-  <section class="l-wrap l-section l-section-cta">
-    <div class="l-cta">
-      <div>
-        <h2>What’s your next song?</h2>
-        <p>Drag the file onto this page and start playing in seconds.</p>
+  <section class="wrap block" id="premium">
+    <p class="eyebrow caps">Pricing</p>
+    <h2>Practise free. <em>Go further with Premium.</em></h2>
+    <p class="sub">Every new account gets 14 days of Premium. No card needed.</p>
+    <div class="plans">
+      <div class="plan">
+        <h3 class="caps">Free</h3>
+        <div class="big">€0<small>forever</small></div>
+        <ul><li>Open any Guitar Pro file</li><li>Song map, colours and synced tab</li><li>Loop, speed, metronome, play along</li>
+          <li class="off">3 songs saved</li><li class="off">PDF with watermark</li></ul>
+        <a class="btn dark" href="./player.html">Start practising</a>
       </div>
-      <button type="button" class="l-btn black" data-pick>Load file</button>
+      <div class="plan pro">
+        <h3 class="caps">Premium</h3>
+        <div class="opts"><div class="opt"><b>€3.99</b>per month</div><div class="opt"><b>€29</b>per year</div><div class="opt"><b>€49</b>lifetime</div></div>
+        <ul><li>Unlimited songs, synced on every device</li><li>Speed trainer</li><li>Progress per section: time, best speed, mastered</li><li>Clean PDF charts</li></ul>
+        <a class="btn white" href="./player.html"><span class="plus" aria-hidden="true">+</span>Try 14 days free</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap block" id="faq">
+    <p class="eyebrow caps">Questions</p>
+    <h2>Good to know.</h2>
+    <div class="faq">
+      <details open><summary>Which files can I open?</summary><p>Guitar Pro 3 to 8 (.gp3, .gp4, .gp5, .gpx, .gp) and MusicXML. If a file opens in Guitar Pro but not here, save it as .gp5.</p></details>
+      <details><summary>Do my files get uploaded?</summary><p>No. Files are read in your browser. They only go to your account if you sign in and sync your songs across devices.</p></details>
+      <details><summary>Does it work for bass?</summary><p>Yes, guitar and bass. The chord of each bar is detected from the instrument you pick.</p></details>
+      <details><summary>Can I cancel Premium?</summary><p>Any time. Premium stays on until the end of the period you paid for, and you keep all your songs.</p></details>
     </div>
   </section>
 </main>
 
-<footer class="l-foot">
-  <div class="l-wrap">
-    <span>© 2026 Mapa de Compassos</span>
-    <span><a href="./help.html">How it works</a> · <a href="./licenses.html">Terms, privacy and licenses</a></span>
+<section class="final">
+  <div class="wrap">
+    <h2>Pick the song.<br>We’ll map it.</h2>
+    <button class="btn white" type="button" data-pick><span class="plus" aria-hidden="true">+</span>Load a Guitar Pro file</button>
   </div>
-</footer>
-<div class="l-tail" aria-hidden="true">
-  <svg viewBox="0 0 1440 260" preserveAspectRatio="none">
-    <path d="M0 200 C300 120 560 230 860 170 S1260 60 1440 90 V260 H0z" fill="#0b4a86" opacity=".45"/>
-    <path d="M0 200 C300 120 560 230 860 170 S1260 60 1440 90" fill="none" stroke="url(#lw2)" stroke-width="10" filter="url(#lglow)"/>
-    <path d="M0 200 C300 120 560 230 860 170 S1260 60 1440 90" fill="none" stroke="url(#lw1)" stroke-width="2"/>
-    <path class="l-wave-run" pathLength="1000" d="M0 200 C300 120 560 230 860 170 S1260 60 1440 90" fill="none" stroke="#bfe0ff" stroke-width="3" stroke-linecap="round"/>
-    <path d="M0 236 C360 170 640 250 940 200 S1300 120 1440 140" fill="none" stroke="url(#lw1)" stroke-width="1.5" opacity=".6"/>
-  </svg>
-</div>
+</section>
+<footer><div class="wrap"><span>© 2026 Mapa de Compassos</span><span><a href="./help.html">How it works</a><a href="./licenses.html">Terms, privacy and licenses</a></span></div></footer>
 
-<input type="file" id="landingFile" class="l-sr" tabindex="-1" aria-hidden="true">
-<div class="l-drop" id="landingDrop" hidden><div>Drop the file here</div></div>
+<input type="file" id="landingFile" class="sr-only" tabindex="-1" aria-hidden="true">
+<div class="drop" id="landingDrop" hidden><div>Drop the file here</div></div>
 
 <script type="module" src="/src/landing.ts"></script>
 </body>

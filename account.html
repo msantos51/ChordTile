@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<script>
+  // Apply the saved theme before the page paints (avoids a flash)
+  try { if (localStorage.getItem('mapa:theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="./favicon.ico" sizes="32x32">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<title>Your account · ChordTile</title>
+<meta name="description" content="Sign in to ChordTile, manage your profile, plan and security, or delete your account.">
+</head>
+<body class="doc acc">
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./">
+      <span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      ChordTile
+    </a>
+    <a class="btn primary" href="./player.html">Open the player</a>
+  </div>
+</header>
+
+<main class="wrap doc-body acc-body">
+  <p class="acc-loading" id="accLoading">Loading your account…</p>
+
+  <!-- Sem sessão: entrar ou criar conta -->
+  <section class="acc-auth" id="accAuth" hidden></section>
+
+  <!-- Nova palavra-passe (link do email) -->
+  <section class="acc-card" id="accReset" hidden>
+    <h2>Choose a new password</h2>
+    <form class="acc-form" id="resetForm">
+      <label class="auth-field"><span>New password</span><input type="password" id="resetPw" autocomplete="new-password" placeholder="At least 8 characters, with a number" required></label>
+      <p class="auth-err" id="resetErr" hidden></p>
+      <button class="btn primary" type="submit">Save new password</button>
+    </form>
+  </section>
+
+  <!-- Com sessão -->
+  <div id="accOn" hidden>
+    <h1>Your account</h1>
+    <p class="lead">Signed in as <strong id="accEmailTop"></strong></p>
+
+    <section class="acc-card" aria-labelledby="hProfile">
+      <h2 id="hProfile">Profile</h2>
+      <form class="acc-form" id="nameForm">
+        <label class="auth-field"><span>Name</span><input id="accName" maxlength="60" autocomplete="name" placeholder="Your name"></label>
+        <button class="btn" type="submit">Save name</button>
+      </form>
+      <p class="acc-row"><span class="acc-k">Email</span><span id="accEmail"></span></p>
+    </section>
+
+    <section class="acc-card" aria-labelledby="hPlan">
+      <h2 id="hPlan">Plan</h2>
+      <p class="acc-plan"><span class="plan-badge" id="accPlanBadge">Free</span> <span class="hint" id="accPlanInfo"></span></p>
+      <ul class="acc-feats" id="accFeats"></ul>
+      <div class="set-row">
+        <a class="btn primary" id="accUpgrade" href="./player.html?premium">Go Premium</a>
+        <a class="btn" id="accManage" href="#" target="_blank" rel="noopener" hidden>Manage subscription</a>
+      </div>
+    </section>
+
+    <section class="acc-card" aria-labelledby="hSecurity">
+      <h2 id="hSecurity">Security</h2>
+      <form class="acc-form" id="pwForm">
+        <label class="auth-field"><span>New password</span><input type="password" id="newPw" autocomplete="new-password" placeholder="At least 8 characters, with a number"></label>
+        <button class="btn" type="submit">Change password</button>
+      </form>
+      <form class="acc-form" id="emailForm">
+        <label class="auth-field"><span>New email</span><input type="email" id="newEmail" autocomplete="email" placeholder="new@example.com"></label>
+        <button class="btn" type="submit">Change email</button>
+      </form>
+      <div class="set-row">
+        <button class="btn" type="button" id="signOutHere">Sign out</button>
+        <button class="btn" type="button" id="signOutAll">Sign out on all devices</button>
+      </div>
+    </section>
+
+    <section class="acc-card acc-danger" aria-labelledby="hDelete">
+      <h2 id="hDelete">Delete account</h2>
+      <p>This permanently deletes your account, your songs saved in the account, your plan and any active subscription. Songs saved only in this browser stay here. This can’t be undone.</p>
+      <form class="acc-form" id="delForm">
+        <label class="auth-field"><span>Type <strong>DELETE</strong> to confirm</span><input id="delConfirm" autocomplete="off" placeholder="DELETE"></label>
+        <button class="btn acc-del" type="submit" id="delBtn" disabled>Delete my account</button>
+      </form>
+    </section>
+  </div>
+  <div class="toast" id="toast" hidden></div>
+</main>
+
+<script type="module" src="/src/account.ts"></script>
+</body>
+</html>

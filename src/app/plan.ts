@@ -2,7 +2,8 @@
 // A mesma regra está em supabase/migrations/002_entitlements.sql (private.is_premium), que é
 // quem manda de facto na sincronização; aqui decide só o que o site mostra.
 
-/** Músicas guardadas em "My songs" no plano Free. */
+/** Músicas em "My songs": sem conta 1, conta grátis 3, Premium sem limite. */
+export const GUEST_SONG_LIMIT = 1;
 export const FREE_SONG_LIMIT = 3;
 export const TRIAL_DAYS = 14;
 
@@ -31,9 +32,26 @@ export function planState(e: Entitlement | null, now = Date.now()): PlanState {
   return { kind: 'free', premium: false, until: null };
 }
 
-/** Pode guardar esta música em "My songs"? (reabrir uma que já lá está é sempre possível) */
+export const songLimit = (plan: PlanState) => (plan.premium ? Infinity : plan.kind === 'guest' ? GUEST_SONG_LIMIT : FREE_SONG_LIMIT);
+
+/** Pode carregar esta música? (reabrir uma que já está em "My songs" é sempre possível) */
 export function canSaveSong(plan: PlanState, savedIds: string[], id: string): boolean {
-  return plan.premium || savedIds.includes(id) || savedIds.length < FREE_SONG_LIMIT;
+  return savedIds.includes(id) || savedIds.length < songLimit(plan);
+}
+
+/**
+ * Funções com cadeado:
+ * - tools: loop, velocidade, metrónomo, contagem, play along, solo, praticar secção (precisa de conta)
+ * - notes: escrever notas nos quadrados (precisa de conta)
+ * - expand, pdf, trainer, progress, sync: Premium
+ */
+export type Feature = 'tools' | 'notes' | 'expand' | 'pdf' | 'trainer' | 'progress' | 'sync';
+const PREMIUM_ONLY: Feature[] = ['expand', 'pdf', 'trainer', 'progress', 'sync'];
+/** 'ok' = pode usar; 'account' = precisa de criar conta; 'premium' = precisa do Premium. */
+export function access(plan: PlanState, f: Feature): 'ok' | 'account' | 'premium' {
+  if (plan.premium) return 'ok';
+  if (plan.kind === 'guest') return 'account';
+  return PREMIUM_ONLY.includes(f) ? 'premium' : 'ok';
 }
 
 export function daysLeft(until: number, now = Date.now()): number {

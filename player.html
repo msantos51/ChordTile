@@ -34,6 +34,9 @@
     </div>
   </div>
   <div class="top-actions">
+    <button class="btn account-btn" id="accountBtn" type="button">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span id="accountBtnText">Sign in</span>
+    </button>
     <button class="btn premium-btn" id="premiumBtn" type="button" aria-haspopup="dialog" aria-controls="paywall">
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg><span id="premiumBtnText">Go Premium</span>
     </button>
@@ -80,7 +83,7 @@
         <div class="panel-head">
           <h2>Chart</h2>
           <div class="actions">
-            <button class="btn sm" id="pdfBtn" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15l3 3 3-3"/></svg>Export PDF</button>
+            <button class="btn sm" id="pdfBtn" data-gate="pdf" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15l3 3 3-3"/></svg>Export PDF</button>
           </div>
         </div>
         <div class="notekey" id="noteKey" aria-label="Colour of each note"></div>
@@ -103,8 +106,8 @@
               <div class="tab-sel" id="tabSel" hidden>
                 <div class="tab-sel-bar" id="tabSelBar">
                   <span id="tsLabel">Bar 1</span>
-                  <button type="button" id="tsExpand"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>Expand</button>
-                  <button type="button" id="tsLoop" class="accent" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span>Loop</span></button>
+                  <button type="button" id="tsExpand" data-gate="expand"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>Expand</button>
+                  <button type="button" id="tsLoop" data-gate="tools" class="accent" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span>Loop</span></button>
                 </div>
               </div>
             </div>
@@ -137,16 +140,16 @@
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
     </button>
     <div class="tools" id="dockTools">
-      <label class="speed" for="speed" title="Speed">
+      <label class="speed" for="speed" data-gate="tools" title="Speed">
         <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 14l4-5"/></svg>
         <input type="range" id="speed" min="25" max="150" step="5" value="100" aria-label="Speed"><output id="speedOut">100%</output>
       </label>
-      <button class="tbtn accent" id="loopBtn" aria-pressed="false" disabled title="Loop"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span>Loop</span></button>
-      <button class="tbtn" id="metroBtn" aria-pressed="false" disabled title="Metronome"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l3.5 18h-13z"/><path d="M12 16l6-8"/></svg><span>Metronome</span></button>
-      <button class="tbtn" id="countBtn" aria-pressed="false" disabled title="Count-in"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg><span>Count-in</span></button>
-      <button class="tbtn" id="muteBtn" aria-pressed="false" disabled title="Mute my instrument and play along"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg><span>Play along</span></button>
-      <button class="tbtn" id="trainerBtn" aria-pressed="false" disabled title="Speed trainer: speeds up a little each time the loop repeats"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg><span>Trainer</span></button>
-      <button class="tbtn" id="soloBtn" aria-pressed="false" disabled title="Only my instrument: mutes the rest of the band" aria-label="Only my instrument"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><span>Solo</span></button>
+      <button class="tbtn accent" id="loopBtn" data-gate="tools" aria-pressed="false" disabled title="Loop"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span>Loop</span></button>
+      <button class="tbtn" id="metroBtn" data-gate="tools" aria-pressed="false" disabled title="Metronome"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l3.5 18h-13z"/><path d="M12 16l6-8"/></svg><span>Metronome</span></button>
+      <button class="tbtn" id="countBtn" data-gate="tools" aria-pressed="false" disabled title="Count-in"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg><span>Count-in</span></button>
+      <button class="tbtn" id="muteBtn" data-gate="tools" aria-pressed="false" disabled title="Mute my instrument and play along"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg><span>Play along</span></button>
+      <button class="tbtn" id="trainerBtn" data-gate="trainer" aria-pressed="false" disabled title="Speed trainer: speeds up a little each time the loop repeats"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg><span>Trainer</span></button>
+      <button class="tbtn" id="soloBtn" data-gate="tools" aria-pressed="false" disabled title="Only my instrument: mutes the rest of the band" aria-label="Only my instrument"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><span>Solo</span></button>
     </div>
   </div>
 </div>
@@ -154,8 +157,8 @@
 <div class="barbar" id="barbar" hidden>
   <b id="bbLabel">Bar 1</b>
   <button id="bbPlay" type="button">Play from here</button>
-  <button id="bbExpand" type="button">Expand</button>
-  <button id="bbText" type="button">Add note</button>
+  <button id="bbExpand" data-gate="expand" type="button">Expand</button>
+  <button id="bbText" data-gate="notes" type="button">Add note</button>
   <button id="bbSplit" type="button">New section here</button>
   <button id="bbClose" type="button" aria-label="Close">✕</button>
 </div>
@@ -214,20 +217,21 @@
   <button class="btn" id="libSample" type="button">Open the sample song</button>
   <p class="hint" id="libLocalHint">Songs are saved only in this browser on this device. They are never sent to a server.</p>
   <section class="account" id="account" hidden aria-labelledby="accountTitle">
-    <h3 id="accountTitle">Sync across devices</h3>
-    <form class="account-in" id="signInForm">
-      <p class="hint">Sign in with your email to start a free 14-day Premium trial and keep “My songs” on your phone, tablet and computer. No password: we send you a link.</p>
+    <h3 id="accountTitle">Your account</h3>
+    <div class="account-in" id="signInForm">
+      <p class="hint">Without an account you can keep 1 song. A free account keeps 3 and unlocks all practice tools, with 14 days of Premium included.</p>
       <div class="account-row">
-        <input type="email" id="signInEmail" required autocomplete="email" placeholder="you@example.com" aria-label="Email">
-        <button class="btn primary" type="submit" id="signInBtn">Send link</button>
+        <button class="btn primary" type="button" id="libSignup">Create free account</button>
+        <button class="btn" type="button" id="libSignin">Sign in</button>
       </div>
-    </form>
+    </div>
     <div class="account-on" id="accountOn" hidden>
       <p class="account-who"><span class="hint">Signed in as</span> <strong id="accountEmail"></strong></p>
       <p class="account-plan"><span class="plan-badge" id="planBadge">Free</span> <button class="linkbtn" type="button" id="planAction">Go Premium</button></p>
       <p class="hint" id="syncStatus"></p>
       <div class="account-row">
         <button class="btn sm" type="button" id="syncBtn">Sync now</button>
+        <a class="btn sm" href="./account.html">Account</a>
         <button class="btn sm" type="button" id="signOutBtn">Sign out</button>
       </div>
     </div>
@@ -295,18 +299,19 @@
   <h2 id="pwTitle">Keep everything you’ve built</h2>
   <p class="pw-lead" id="pwLead">Practising is always free. Premium is for the songs you keep coming back to.</p>
   <ul class="pw-feats">
-    <li><b>Unlimited “My songs”</b> <span>Free keeps 3</span></li>
-    <li><b>Sync across devices</b> <span>Phone, tablet and computer</span></li>
+    <li><b>Unlimited “My songs”</b> <span>Free account keeps 3</span></li>
+    <li><b>Expand any bar</b> <span>Notes up close, how to count them, rhythm-only mode</span></li>
+    <li><b>PDF charts</b> <span>Take the song map to rehearsal</span></li>
     <li><b>Speed trainer</b> <span>Starts slow, speeds up every loop</span></li>
     <li><b>Progress per section</b> <span>Time practised, best speed, mastered</span></li>
-    <li><b>Clean PDF charts</b> <span>No watermark</span></li>
+    <li><b>Sync across devices</b> <span>Phone, tablet and computer</span></li>
   </ul>
   <div class="pw-trial" id="pwTrial">
-    <p><b>Try everything free for 14 days.</b> No card needed: just your email.</p>
-    <form class="account-row" id="pwSignIn">
-      <input type="email" id="pwEmail" required autocomplete="email" placeholder="you@example.com" aria-label="Email">
-      <button class="btn primary" type="submit" id="pwSignInBtn">Start free trial</button>
-    </form>
+    <p><b>Try everything free for 14 days.</b> Create a free account: no card needed.</p>
+    <div class="account-row">
+      <button class="btn primary" type="button" id="pwSignup">Create free account</button>
+      <button class="btn" type="button" id="pwSignin">Sign in</button>
+    </div>
   </div>
   <div class="pw-offers" id="pwOffers"></div>
   <p class="hint pw-foot" id="pwFoot">Secure payment by Stripe. Prices include VAT.</p>

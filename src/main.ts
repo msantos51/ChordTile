@@ -11,9 +11,9 @@ import { autoSub, beatInfo, countLabels, slotOf, type Sub } from './app/count';
 import { VisualDelay } from './app/sync';
 import { releaseAudio, unlockAudio } from './app/audio-unlock';
 import { TOUR_STEPS, markTourSeen, tourSeen, visibleTarget } from './app/tour';
-import { cloudEnabled, deleteRemoteSong, fetchEntitlement, sendSignInLink, signOut, syncLibrary, uploadSong, watchAccount, type Account } from './app/cloud';
-import { signInErrorMessage } from './app/auth-errors';
-import { FREE_SONG_LIMIT, GUEST, canSaveSong, planLabel, planState, type PlanState } from './app/plan';
+import { cloudEnabled, deleteRemoteSong, fetchEntitlement, signOut, syncLibrary, uploadSong, watchAccount, type Account } from './app/cloud';
+import { openAuthDialog } from './app/auth-ui';
+import { FREE_SONG_LIMIT, GUEST, GUEST_SONG_LIMIT, access, canSaveSong, planLabel, planState, songLimit, type Feature, type PlanState } from './app/plan';
 import { OFFERS, checkoutUrl, paymentsEnabled, portalUrl } from './app/billing';
 import { addLoop, addTime, cleanTrainer, isMastered, nextSpeed, progressText, type SongProgress, type TrainerSettings } from './app/practice';
 import { askPersistentStorage, deleteSong, getSong, listSongs, relativeDay, saveSong, takePendingFile, touchSong } from './app/library';
@@ -264,7 +264,7 @@ function renderChart() {
     const loopB = document.createElement('button'); loopB.type = 'button'; loopB.className = 'sbtn' + (st.loopSection === k ? ' on' : '');
     loopB.innerHTML = ICON_LOOP + '<span>' + (st.loopSection === k ? 'Practising' : 'Practise') + '</span>';
     loopB.title = 'Loop this section'; loopB.setAttribute('aria-label', 'Practise ' + sec.name + ' on loop');
-    loopB.addEventListener('click', () => practiceSection(k));
+    loopB.addEventListener('click', () => practiceSection(k)); loopB.dataset.gate = 'tools';
     loopB.setAttribute('aria-pressed', String(st.loopSection === k));
     acts.append(loopB);
     head.append(mark, meta, prog, acts); wrap.append(head);
@@ -278,7 +278,7 @@ function renderChart() {
   });
   markPlaying(st.playingBar, false);
   if (st.playingBar >= 0) updateNow(st.playingBar, 0);
-  renderProgress();
+  renderProgress(); applyLocks();
 }
 
 function barCell(i: number) {
@@ -311,6 +311,7 @@ function focusBar(i: number) {
 }
 /** Escreve (ou muda) o texto por baixo do acorde do compasso i. Vazio = apaga. */
 function editText(i: number) {
+  if (!gateOk('notes')) return;
   const cell = document.querySelector<HTMLElement>('.bar[data-bar="' + i + '"]');
   const txt = cell?.querySelector<HTMLElement>('.txt');
   if (!cell || !txt) return;
@@ -508,7 +509,7 @@ const modal = {
 const LINE_GAP = 44;
 
 function openBarModal(i: number) {
-  if (!st.score) return;
+  if (!st.score || !gateOk('expand')) return;
   modal.open = true;
   $('barModal').hidden = false; $('bmScrim').hidden = false;
   $('tabSel').hidden = true;
@@ -1001,27 +1002,38 @@ function readFile(f: File | undefined) {
   r.readAsArrayBuffer(f);
 }
 /** Abre um ficheiro importado (daqui ou da página inicial) e guarda-o em "As minhas músicas". */
-function openImported(bytes: Uint8Array, name: string): boolean {
-  st.api?.stop(); clearLoop();
-  if (!loadBytes(bytes, name, false)) return false;
-  // Guarda a música neste browser para a próxima vez
+function openImported(bytes: Uint8Array, name: string): Promise<boolean> {
+  // Limite de músicas: sem conta 1, conta grátis 3, Premium sem limite (reabrir uma guardada é sempre possível)
+  return listSongs().catch(() => []).then(saved => {
+    let id = '';
+    try { const sc = parseScore(at, bytes); id = (sc.title || name) + '|' + (sc.artist || '') + '|' + sc.masterBars.length; } catch { /* loadBytes mostra o erro */ }
+    if (id && !canSaveSong(plan, saved.map(x => x.id), id)) { songLimitReached(); return false; }
+    st.api?.stop(); clearLoop();
+    if (!loadBytes(bytes, name, false)) return false;
+    saveImported(bytes, name);
+    openLibrary(false);
+    return true;
+  });
+}
+function songLimitReached() {
+  if (plan.kind === 'guest') {
+    openAuthDialog('signup', 'Without an account you can keep ' + GUEST_SONG_LIMIT + ' song. Create a free account to keep ' + FREE_SONG_LIMIT + ' and unlock all practice tools.');
+  } else {
+    toast('The free plan keeps ' + FREE_SONG_LIMIT + ' songs. Delete one in “My songs” or go Premium for unlimited songs.');
+    openPaywall('library');
+  }
+}
+/** Guarda a música neste browser (e na conta, com Premium) para a próxima vez. */
+function saveImported(bytes: Uint8Array, name: string) {
   const s = score(), id = st.fileKey;
-  listSongs().catch(() => []).then(saved => {
-    // Plano Free: até 3 músicas guardadas. A música abre na mesma; só não fica em "My songs".
-    if (!canSaveSong(plan, saved.map(x => x.id), id)) {
-      toast('Opened, but not saved: the free plan keeps ' + FREE_SONG_LIMIT + ' songs.');
-      openPaywall('library');
-      return;
-    }
+  void (async () => {
     return saveSong({ id, fileName: name, title: $('songTitle').textContent || name, artist: s.artist || '', bars: s.masterBars.length }, bytes)
       .then(() => {
         askPersistentStorage(); renderLibrary(); toast('Saved to “My songs”.');
         if (account && plan.premium) uploadSong(id).catch(() => setSyncStatus('Couldn’t upload the last song. Try “Sync now”.'));
       })
       .catch(() => toast('Couldn’t save the song in this browser (private mode?).'));
-  });
-  openLibrary(false);
-  return true;
+  })();
 }
 
 // ---------- As minhas músicas ----------
@@ -1116,10 +1128,14 @@ function showAccount(a: Account | null) {
   if (!a) setPlan(GUEST);
   $('signInForm').hidden = !!a; $('accountOn').hidden = !a;
   $('libLocalHint').textContent = a
-    ? 'Songs are kept in your account and in this browser.'
-    : 'Songs are saved only in this browser on this device. Sign in below to use them on your other devices.';
+    ? 'Songs are kept in this browser (and in your account with Premium).'
+    : 'Songs are saved only in this browser on this device.';
+  $('accountBtnText').textContent = a ? (a.name.split(' ')[0] || 'Account') : 'Sign in';
+  $('accountBtn').classList.toggle('signed', !!a);
+  $('accountBtn').setAttribute('aria-label', a ? 'Your account' : 'Sign in or create an account');
   if (a) { $('accountEmail').textContent = a.email; if (a.id !== was) refreshPlan().then(() => runSync(true)); }
   $('pwTrial').hidden = !!a;
+  applyLocks();
 }
 if (cloudEnabled) {
   $('account').hidden = false;
@@ -1127,21 +1143,48 @@ if (cloudEnabled) {
   // Ao voltar ao separador, apanha o que mudou noutros dispositivos
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refreshPlan().then(() => runSync(true)); });
 }
-$('signInForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const email = input('signInEmail').value.trim(), btn = $<HTMLButtonElement>('signInBtn');
-  btn.disabled = true;
-  try {
-    await sendSignInLink(email);
-    toast('Check your inbox: we sent a sign-in link to ' + email + '.');
-  } catch (err) { toast(signInErrorMessage(err)); }
-  finally { btn.disabled = false; }
-});
+const welcome = () => toast('You’re signed in. Welcome!');
+$('accountBtn').addEventListener('click', () => { if (account) location.href = './account.html'; else openAuthDialog('signin', undefined, welcome); });
+$('libSignup').addEventListener('click', () => openAuthDialog('signup', undefined, welcome));
+$('libSignin').addEventListener('click', () => openAuthDialog('signin', undefined, welcome));
+// Sem Supabase configurado (por exemplo em desenvolvimento) não há contas: tudo fica desbloqueado
+if (!cloudEnabled) { $('accountBtn').hidden = true; queueMicrotask(() => setPlan({ kind: 'lifetime', premium: true, until: null })); }
 $('syncBtn').addEventListener('click', () => (plan.premium ? runSync(false) : openPaywall('sync')));
 $('signOutBtn').addEventListener('click', async () => {
   await signOut().catch(() => {});
   setSyncStatus(''); toast('Signed out. Your songs stay in this browser.');
 });
+
+// ---------- Cadeados (sem conta / conta grátis / Premium) ----------
+const GATE_NAMES: Record<Feature, string> = {
+  tools: 'Loop, speed, the metronome and the other practice tools', notes: 'Notes on the bars', expand: 'Expanding a bar',
+  pdf: 'The PDF chart', trainer: 'The speed trainer', progress: 'Progress per section', sync: 'Sync across devices',
+};
+/** Pode usar a função? Se não, pede conta (sem conta) ou mostra o Premium (conta grátis). */
+function gateOk(f: Feature): boolean {
+  const a = access(plan, f);
+  if (a === 'ok') return true;
+  if (a === 'account') {
+    const premiumOnly = access({ kind: 'free', premium: false, until: null }, f) === 'premium';
+    openAuthDialog('signup', GATE_NAMES[f] + (premiumOnly ? ' is Premium: create a free account to try it for 14 days.' : ' need a free account.'), welcome);
+  } else openPaywall(f as PaywallReason);
+  return false;
+}
+// Os botões com data-gate não fazem nada (e mostram a mensagem) enquanto estiverem bloqueados
+document.addEventListener('click', e => {
+  const el = (e.target as HTMLElement).closest<HTMLElement>('[data-gate]');
+  if (!el || gateOk(el.dataset.gate as Feature)) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+}, true);
+/** Mostra o cadeado nos botões que o plano atual não deixa usar. */
+function applyLocks() {
+  document.querySelectorAll<HTMLElement>('[data-gate]').forEach(el => {
+    const locked = access(plan, el.dataset.gate as Feature) !== 'ok';
+    el.classList.toggle('locked', locked);
+    el.title = locked ? GATE_NAMES[el.dataset.gate as Feature] + (access(plan, el.dataset.gate as Feature) === 'account' ? ' · free account' : ' · Premium') : el.title.replace(/ · (free account|Premium)$/, '');
+  });
+  input('speed').disabled = access(plan, 'tools') !== 'ok';
+}
 
 // ---------- Plano (Free / Premium) ----------
 let plan: PlanState = GUEST;
@@ -1157,6 +1200,7 @@ function setPlan(p: PlanState) {
   $<HTMLButtonElement>('planAction').disabled = paid && !(portalUrl && p.kind !== 'lifetime');
   if (!p.premium && trainer.on) setTrainer(false);
   if (was !== p.premium) { renderProgress(); renderLibrary(); }
+  applyLocks();
 }
 async function refreshPlan() {
   if (!account) { setPlan(GUEST); return; }
@@ -1170,21 +1214,21 @@ async function renderLibLimit(count: number) {
   const el = $('libLimit');
   if (plan.premium) { el.hidden = true; return; }
   el.hidden = false; el.textContent = '';
-  const left = Math.max(0, FREE_SONG_LIMIT - count);
-  el.append(left
-    ? 'Free plan: ' + count + ' of ' + FREE_SONG_LIMIT + ' songs saved.'
-    : 'Free plan: ' + FREE_SONG_LIMIT + ' of ' + FREE_SONG_LIMIT + ' songs saved. New songs still open, they just aren’t kept.');
+  const lim = songLimit(plan), who = plan.kind === 'guest' ? 'Without an account' : 'Free plan';
+  el.append(who + ': ' + Math.min(count, lim) + ' of ' + lim + ' song' + (lim === 1 ? '' : 's') + (count >= lim ? '. Delete one to load another.' : '.'));
   const b = document.createElement('button'); b.type = 'button'; b.className = 'linkbtn';
-  b.textContent = account ? 'Go Premium' : 'Try Premium free';
-  b.addEventListener('click', () => openPaywall('library'));
+  b.textContent = plan.kind === 'guest' ? 'Create free account' : 'Go Premium';
+  b.addEventListener('click', () => (plan.kind === 'guest' ? openAuthDialog('signup', undefined, welcome) : openPaywall('library')));
   el.append(' ', b);
 }
 
 // ---------- Janela do Premium ----------
-type PaywallReason = 'upgrade' | 'library' | 'sync' | 'trainer' | 'progress';
+type PaywallReason = 'upgrade' | 'library' | 'sync' | 'trainer' | 'progress' | 'expand' | 'pdf';
 const PAYWALL_COPY: Record<PaywallReason, [string, string]> = {
   upgrade: ['Keep everything you’ve built', 'Practising is always free. Premium is for the songs you keep coming back to.'],
   library: ['Keep all your songs', 'The free plan keeps ' + FREE_SONG_LIMIT + ' songs in “My songs”. Premium keeps them all, on every device.'],
+  expand: ['See every bar up close', 'Expand any bar to see its notes large, how to count them, and practise it on its own, with rhythm-only mode.'],
+  pdf: ['Take the chart to rehearsal', 'Premium exports the song chart as a clean PDF, with your notes.'],
   sync: ['Your songs on every device', 'Premium keeps “My songs” in sync between your phone, tablet and computer.'],
   trainer: ['Get it up to speed', 'The speed trainer starts slow and speeds up a little every time the loop repeats.'],
   progress: ['See how far you’ve come', 'Premium shows the time you’ve practised each section, your best speed and what you’ve mastered.'],
@@ -1210,7 +1254,7 @@ function openPaywall(reason: PaywallReason) {
   }
   $('pwFoot').hidden = !account;
   $('paywall').hidden = false; $('pwScrim').hidden = false;
-  (account ? offers.querySelector<HTMLElement>('.best') ?? $('pwClose') : input('pwEmail')).focus();
+  (account ? offers.querySelector<HTMLElement>('.best') ?? $('pwClose') : $('pwSignup')).focus();
 }
 function closePaywall() { $('paywall').hidden = true; $('pwScrim').hidden = true; }
 $('premiumBtn').addEventListener('click', () => {
@@ -1219,14 +1263,8 @@ $('premiumBtn').addEventListener('click', () => {
 });
 $('pwClose').addEventListener('click', closePaywall);
 $('pwScrim').addEventListener('click', closePaywall);
-$('pwSignIn').addEventListener('submit', async e => {
-  e.preventDefault();
-  const email = input('pwEmail').value.trim(), btn = $<HTMLButtonElement>('pwSignInBtn');
-  btn.disabled = true;
-  try { await sendSignInLink(email); closePaywall(); toast('Check your inbox: open the link we sent to ' + email + ' to start your trial.'); }
-  catch (err) { toast(signInErrorMessage(err)); }
-  finally { btn.disabled = false; }
-});
+$('pwSignup').addEventListener('click', () => { closePaywall(); openAuthDialog('signup', undefined, welcome); });
+$('pwSignin').addEventListener('click', () => { closePaywall(); openAuthDialog('signin', undefined, welcome); });
 // Volta do checkout da Stripe: o Premium é ativado pelo webhook, por isso esperamos um pouco.
 if (new URLSearchParams(location.search).has('checkout')) {
   history.replaceState(null, '', location.pathname + location.hash);
@@ -1265,7 +1303,6 @@ function setTrainer(v: boolean) {
     : 'Speed trainer on. Now practise a section (or loop a bar): it speeds up each time it repeats.');
 }
 $('trainerBtn').addEventListener('click', () => {
-  if (!plan.premium) { openPaywall('trainer'); return; }
   setTrainer(!trainer.on);
 });
 
@@ -1388,7 +1425,7 @@ if (wantSample || wantOpen) history.replaceState(null, '', location.pathname + l
 async function boot(): Promise<unknown> {
   if (wantOpen) {
     const f = await takePendingFile().catch(() => null);
-    if (f && openImported(f.bytes, f.name)) return;
+    if (f && await openImported(f.bytes, f.name)) return;
   }
   if (wantSample) return openSample();
   const songs = await listSongs();
@@ -1396,6 +1433,13 @@ async function boot(): Promise<unknown> {
 }
 boot()
   .catch(() => openSample())
+  // Ligações diretas: player.html?premium abre os planos; ?signup a criação de conta
+  .then(() => {
+    const q = new URLSearchParams(location.search);
+    if (q.has('premium')) openPaywall('upgrade');
+    if (q.has('signup') && !account) openAuthDialog('signup', undefined, welcome);
+    if (q.has('premium') || q.has('signup')) history.replaceState(null, '', location.pathname + location.hash);
+  })
   .then(() => { if (location.hash === '#songs' || location.hash === '#musicas') openLibrary(true); })
   // Primeira visita: tutorial (depois de a música aparecer, para os destaques ficarem no sítio certo)
   .finally(() => { if (!tourSeen()) setTimeout(startTour, 600); });

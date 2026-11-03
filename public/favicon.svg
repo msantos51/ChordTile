@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>ChordTile</title>
+  <style>.k{fill:#121212}@media (prefers-color-scheme:dark){.k{fill:#ffffff}}</style>
+  <rect class="k" x="12" y="12" width="104" height="104" rx="24"/>
+  <rect fill="#C8102E" x="140" y="12" width="104" height="104" rx="24"/>
+  <rect class="k" x="12" y="140" width="104" height="104" rx="24"/>
+  <rect class="k" x="140" y="140" width="104" height="104" rx="24"/>
+</svg>

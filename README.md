@@ -82,7 +82,7 @@ sons Sonivox (Apache 2.0) vêm no pacote do alphaTab; o script copia também os 
 
 ### Fontes
 
-DM Sans (texto), Anton (títulos e logótipo) e Geist Mono (números), todas OFL, vêm do [Fontsource](https://fontsource.org)
+Roboto (todo o texto e títulos) e Roboto Mono (números), ambas OFL, vêm do [Fontsource](https://fontsource.org)
 e são servidas pelo próprio site (`src/fonts.ts`, `src/landing.ts`). Não há pedidos a servidores de terceiros, o que evita enviar o IP de quem visita à Google.
 
 ## Músicas guardadas e tutorial

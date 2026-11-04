@@ -667,9 +667,9 @@ input('bmMetro').addEventListener('change', () => { setPressed('metroBtn', input
 input('bmMute').addEventListener('change', () => { const v = input('bmMute').checked; setPressed('muteBtn', v); if (v) setPressed('soloBtn', false); applyMute(); });
 input('bmSolo').addEventListener('change', () => { const v = input('bmSolo').checked; setPressed('soloBtn', v); if (v) setPressed('muteBtn', false); applyMute(); });
 input('bmCountIn').addEventListener('change', () => { setPressed('countBtn', input('bmCountIn').checked); applyMetronome(); });
-input('bmSpeed').addEventListener('input', () => {
-  input('speed').value = input('bmSpeed').value;
-  input('speed').dispatchEvent(new Event('input'));
+select('bmSpeed').addEventListener('change', () => {
+  select('speed').value = select('bmSpeed').value;
+  select('speed').dispatchEvent(new Event('change'));
 });
 $('bmPrev').addEventListener('click', () => setModalBar(modal.bar - 1));
 $('bmNext').addEventListener('click', () => setModalBar(modal.bar + 1));
@@ -712,7 +712,7 @@ function initApi() {
     st.ready = true;
     ['playBtn', 'stopBtn', 'prevBtn', 'nextBtn', 'loopBtn', 'metroBtn', 'countBtn', 'muteBtn', 'soloBtn'].forEach(id => ($<HTMLButtonElement>(id).disabled = false));
     $('status').textContent = 'Ready to play';
-    a.playbackSpeed = +input('speed').value / 100;
+    a.playbackSpeed = +select('speed').value / 100;
     setupInjector(a);
     applyMetronome(); if (metro.sound !== 'click') void clicker.load(metro.sound);
     applyMute();
@@ -769,7 +769,7 @@ function setStatus(txt: string) {
   const s = $('status'); s.textContent = txt;
   const what = st.loopSection >= 0 ? st.sections[st.loopSection].name : st.loopBar >= 0 ? 'bar ' + (st.loopBar + 1) : '';
   if (what) { const l = document.createElement('span'); l.className = 'loopinfo'; l.textContent = ' · looping ' + what; s.append(l); }
-  s.append(' · ' + input('speed').value + '%');
+  s.append(' · ' + select('speed').value + '%');
 }
 
 function renderTab() {
@@ -993,9 +993,9 @@ $('stopBtn').addEventListener('click', () => {
 });
 $('prevBtn').addEventListener('click', () => goBar((st.playingBar < 0 ? 0 : st.playingBar) - 1));
 $('nextBtn').addEventListener('click', () => goBar((st.playingBar < 0 ? -1 : st.playingBar) + 1));
-input('speed').addEventListener('input', () => {
-  const v = +input('speed').value; $('speedOut').textContent = v + '%';
-  input('bmSpeed').value = String(v); $('bmSpeedOut').textContent = v + '%';
+select('speed').addEventListener('change', () => {
+  const v = +select('speed').value;
+  select('bmSpeed').value = String(v);
   if (st.api) st.api.playbackSpeed = v / 100;
   if (st.ready) setStatus(api().playerState === PLAYING ? 'Playing' : 'Paused');
 });
@@ -1238,7 +1238,8 @@ function applyLocks() {
     el.classList.toggle('locked', locked);
     el.title = locked ? GATE_NAMES[el.dataset.gate as Feature] + (access(plan, el.dataset.gate as Feature) === 'account' ? ' · free account' : ' · Premium') : el.title.replace(/ · (free account|Premium)$/, '');
   });
-  input('speed').disabled = access(plan, 'tools') !== 'ok';
+  select('speed').disabled = access(plan, 'tools') !== 'ok';
+  select('bmSpeed').disabled = select('speed').disabled;
 }
 
 // ---------- Plano (Free / Premium) ----------
@@ -1345,7 +1346,7 @@ function trackPractice(bar: number, tick: number) {
   if (Date.now() - practice.savedAt > 5000) flushProgress();
 }
 function onLoopDone() {
-  const speed = +input('speed').value;
+  const speed = +select('speed').value;
   if (st.loopSection >= 0) {
     const start = st.sections[st.loopSection].start;
     const before = isMastered(practice.progress[start]);

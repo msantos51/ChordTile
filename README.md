@@ -4,7 +4,7 @@ Plataforma para aprender músicas a partir de ficheiros Guitar Pro. Carregas o f
 
 - divide a música pelas **secções** marcadas no ficheiro (Intro, Verso, Refrão…);
 - deteta o **tom de cada compasso** e mostra-o num quadrado com a **cor da nota** (convenção Boomwhackers: Dó vermelho … Si rosa);
-- mostra a **tablatura** sincronizada e toca a música, com **loop por secção**, velocidade de 25 % a 150 %, metrónomo, contagem e "tocar por cima" (silencia a tua pista) ou "só o meu instrumento" (ouve-se só a tua pista);
+- mostra a **tablatura** sincronizada e toca a música, com **loop por secção**, velocidade (25, 50, 75, 100 e 125 %), metrónomo, contagem e "tocar por cima" (silencia a tua pista) ou "só o meu instrumento" (ouve-se só a tua pista);
 - deixa **mudar o nome e dividir as secções**, escrever **notas em cada compasso** e **exportar o esquema para PDF** (com o mesmo aspeto do site);
 - **guarda as músicas importadas** neste browser ("My songs") e abre a última ao voltar; com Premium sincroniza-as entre dispositivos;
 - tem um **tutorial** na primeira visita e uma página **How it works** (`help.html`).
@@ -95,7 +95,7 @@ micro-janelas de 64 amostras). Fica sempre alinhado com a música, mesmo que o �
 públicos do alphaTab (se não os encontrar, volta ao método antigo). O som "Click" é o do próprio sintetizador.
 
 Para confirmar, compara-se, no mesmo fluxo, o clique do alphaTab (volume 1) com o som do site: coincidem na mesma
-amostra em todas as batidas (a 60 %, 100 % e 150 %, com contagem, a meio da música, depois de pausar e em loop).
+amostra em todas as batidas (a velocidades diferentes, com contagem, a meio da música, depois de pausar e em loop).
 
 ### alphaTab
 

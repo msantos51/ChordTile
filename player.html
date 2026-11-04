@@ -142,7 +142,7 @@
     <div class="tools" id="dockTools">
       <label class="speed" for="speed" data-gate="tools" title="Speed">
         <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 14l4-5"/></svg>
-        <input type="range" id="speed" min="25" max="150" step="5" value="100" aria-label="Speed"><output id="speedOut">100%</output>
+        <select id="speed" aria-label="Speed"><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="100" selected>100%</option><option value="125">125%</option></select>
       </label>
       <button class="tbtn accent" id="loopBtn" data-gate="tools" aria-pressed="false" disabled title="Loop"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span>Loop</span></button>
       <button class="tbtn" id="metroBtn" data-gate="tools" aria-pressed="false" disabled title="Metronome"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l3.5 18h-13z"/><path d="M12 16l6-8"/></svg><span>Metronome</span></button>
@@ -200,7 +200,7 @@
     <label class="bm-opt" title="Mute my instrument and play along"><input type="checkbox" id="bmMute"> Play along</label>
     <label class="bm-opt" title="Only my instrument: mutes the rest of the band"><input type="checkbox" id="bmSolo"> Solo</label>
     <select class="bm-sound" id="bmSound" aria-label="Metronome sound"></select>
-        <label class="bm-opt">Speed <input type="range" id="bmSpeed" min="25" max="150" step="5" value="100" aria-label="Speed"><output id="bmSpeedOut">100%</output></label>
+        <label class="bm-opt">Speed <select id="bmSpeed" aria-label="Speed"><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="100" selected>100%</option><option value="125">125%</option></select></label>
     <span class="bm-reps">Repeat <strong id="bmReps">0</strong></span>
   </footer>
 </section>

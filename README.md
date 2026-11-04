@@ -60,7 +60,7 @@ src/
     audio-unlock.ts        Som no iPhone mesmo com o interruptor de silêncio ligado
     library.ts             "My songs": ficheiros importados guardados no browser (IndexedDB)
     tour.ts                Tutorial da primeira visita (passos e destaques)
-    tone.ts                Estilos de som (Original, Pop, Rock, Metal): EQ, saturação, compressão e reverb na mistura (testado)
+    tone.ts                Estilos de som (Original, Pop, Rock, Metal): distorção, EQ, compressão e reverb na mistura (testado)
     metronome.ts           Sons do metrónomo e da contagem (clique, voz, woodblock…) e a sua geração em amostras
     metro-grid.ts          Grelha das batidas, calculada como o sintetizador do alphaTab a calcula (puro, testado)
     metro-inject.ts        Mistura o metrónomo e a contagem no fluxo de áudio da música, na amostra exata
@@ -101,8 +101,8 @@ amostra em todas as batidas (a velocidades diferentes, com contagem, a meio da m
 ### Estilos de som
 
 Em Settings → Audio & sync, "Sound style" (`src/app/tone.ts`) põe uma cadeia de efeitos Web Audio entre a saída do
-sintetizador e os altifalantes, no AudioContext do alphaTab: EQ (graves, médios, agudos), saturação suave (ganho 1
-nos sons baixos), compressor, reverberação de sala gerada no momento e um limitador. Como o alphaTab mistura tudo
+sintetizador e os altifalantes, no AudioContext do alphaTab: corte de graves, distorção (tanh), filtro de
+"coluna", EQ (graves, médios, agudos), compressor, reverberação de sala gerada no momento e um limitador. Como o alphaTab mistura tudo
 num só sinal, os efeitos são da mistura inteira (não por instrumento). "Original" liga diretamente aos altifalantes.
 O volume final de cada estilo foi acertado pela medição (o compressor do browser junta ganho automático) para todos
 soarem tão alto como Original.

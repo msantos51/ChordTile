@@ -5,15 +5,15 @@ describe('estilos de som', () => {
   it('tem Original, Pop, Rock e Metal, e Original não muda nada', () => {
     expect(TONES.map(t => t.id)).toEqual(['original', 'pop', 'rock', 'metal']);
     const o = toneById('original');
-    expect([o.low.db, o.mid.db, o.high.db, o.drive, o.reverb.mix, o.makeup]).toEqual([0, 0, 0, 0, 0, 0]);
+    expect([o.low.db, o.mid.db, o.high.db, o.drive, o.reverb.mix, o.makeup, o.tighten, o.cabinet]).toEqual([0, 0, 0, 0, 0, 0, 0, 0]);
     expect(o.comp.ratio).toBe(1);
   });
   it('valores dentro de limites razoáveis (sem estragar o som nem o volume)', () => {
     for (const t of TONES) {
-      for (const v of [t.low.db, t.mid.db, t.high.db]) expect(Math.abs(v)).toBeLessThanOrEqual(6);
-      expect(t.reverb.mix).toBeLessThanOrEqual(0.3);
-      expect(t.drive).toBeLessThanOrEqual(5);
-      expect(Math.abs(t.makeup)).toBeLessThanOrEqual(8);
+      for (const v of [t.low.db, t.mid.db, t.high.db]) expect(Math.abs(v)).toBeLessThanOrEqual(9);
+      expect(t.reverb.mix).toBeLessThanOrEqual(0.35);
+      expect(t.drive).toBeLessThanOrEqual(16);
+      expect(Math.abs(t.makeup)).toBeLessThanOrEqual(24);
     }
   });
   it('só aceita estilos conhecidos', () => {
@@ -28,13 +28,12 @@ describe('saturação', () => {
     const c = saturationCurve(0, 5);
     expect(Array.from(c)).toEqual([-1, -0.5, 0, 0.5, 1]);
   });
-  it('com drive não muda o volume dos sons baixos, só arredonda os picos', () => {
-    const c = saturationCurve(3, 2001), at = (x: number) => c[Math.round((x + 1) / 2 * 2000)];
-    expect(at(0)).toBeCloseTo(0, 6);
-    expect(at(0.01) / 0.01).toBeCloseTo(1, 2);          // ganho 1 nos sons baixos
-    expect(at(-0.5)).toBeCloseTo(-at(0.5), 6);          // simétrica
-    expect(at(1)).toBeLessThan(0.5);                    // os picos ficam arredondados
-    for (let i = 1; i < c.length; i++) expect(c[i]).toBeGreaterThan(c[i - 1]);
+  it('com drive espreme o sinal (mais harmónicos) mas o máximo continua no máximo', () => {
+    const c = saturationCurve(6, 2001), at = (x: number) => c[Math.round((x + 1) / 2 * 2000)];
+    expect(at(0)).toBeCloseTo(0, 6); expect(at(1)).toBeCloseTo(1, 6); expect(at(-1)).toBeCloseTo(-1, 6);
+    expect(at(-0.3)).toBeCloseTo(-at(0.3), 6);   // simétrica
+    expect(at(0.3)).toBeGreaterThan(0.9);         // um sinal a 30 % já fica quase no máximo (distorção a sério)
+    for (let i = 1; i < c.length; i++) expect(c[i]).toBeGreaterThanOrEqual(c[i - 1]);
   });
 });
 

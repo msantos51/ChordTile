@@ -9,6 +9,7 @@ import { exportPdf } from './app/pdf';
 import { barView, type BarView } from './analysis/bar';
 import { Clicker, METRO_SOUNDS, isMetroSound, nextTickTime, type MetroSound } from './app/metronome';
 import { MetroInjector, type GridSource } from './app/metro-inject';
+import { TONES, ToneChain, isToneId, type ToneId } from './app/tone';
 import type { GridEvent } from './app/metro-grid';
 import { autoSub, beatInfo, countLabels, slotOf, type Sub } from './app/count';
 import { VisualDelay } from './app/sync';
@@ -715,6 +716,7 @@ function initApi() {
     $('status').textContent = 'Ready to play';
     a.playbackSpeed = +select('speed').value / 100;
     setupInjector(a);
+    setupTone(a);
     applyMetronome(); if (metro.sound !== 'click') void clicker.load(metro.sound);
     applyMute();
   });
@@ -832,6 +834,33 @@ const curNumerator = () => {
   const i = Math.max(0, st.playingBar);
   return st.score?.masterBars[i]?.timeSignatureNumerator ?? 4;
 };
+// ---------- Estilo do som (Sound style) ----------
+// Os efeitos (app/tone.ts) ficam entre a saída do sintetizador e os altifalantes, no mesmo AudioContext:
+// o alphaTab cria o nó de saída em cada play e liga-o aos altifalantes; aqui essa ligação passa pelos efeitos.
+let tone: ToneChain | null = null;
+let toneId: ToneId = (() => { const v = storage.get<string>('mapa:tone'); return isToneId(v) ? v : 'original'; })();
+for (const t of TONES) { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; select('toneSel').append(o); }
+select('toneSel').value = toneId;
+select('toneSel').addEventListener('change', () => {
+  const v = select('toneSel').value; if (!isToneId(v)) return;
+  toneId = v; storage.set('mapa:tone', v); tone?.set(v);
+});
+function setupTone(a: AlphaTab.AlphaTabApi) {
+  if (tone) return;
+  const ctx = (a as unknown as { player?: { output?: { context?: AudioContext | null } } }).player?.output?.context;
+  if (!ctx || typeof ctx.createScriptProcessor !== 'function') return;   // sem isto, o som fica como sempre
+  const chain = new ToneChain(ctx);
+  chain.set(toneId); chain.connect(ctx.destination);
+  const create = ctx.createScriptProcessor.bind(ctx);
+  ctx.createScriptProcessor = ((...args: Parameters<BaseAudioContext['createScriptProcessor']>) => {
+    const node = create(...args);
+    const connect = node.connect.bind(node) as (d: AudioNode, ...r: number[]) => AudioNode;
+    (node as unknown as { connect: unknown }).connect = (d: AudioNode, ...r: number[]) => connect(d === ctx.destination ? chain.input : d, ...r);
+    return node;
+  }) as BaseAudioContext['createScriptProcessor'];
+  tone = chain;
+}
+
 /**
  * Metrónomo e contagem exatos: o som é misturado no próprio fluxo de áudio da música, na amostra certa
  * (ver app/metro-inject.ts). O som "Click" é o do próprio alphaTab, que já vem dentro do sintetizador.

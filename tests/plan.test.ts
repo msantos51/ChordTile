@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FREE_SONG_LIMIT, GUEST, access, canSaveSong, planLabel, planState, songLimit } from '../src/app/plan';
-import { addLoop, addTime, cleanTrainer, isMastered, nextSpeed, progressText, songSummary } from '../src/app/practice';
+import { addLoop, addTime, isMastered, progressText, songSummary } from '../src/app/practice';
 
 const DAY = 86_400_000, now = 1_000 * DAY;
 
@@ -42,19 +42,6 @@ describe('cadeados', () => {
     expect(access(FREE, 'expand')).toBe('premium');
     expect(access(FREE, 'pdf')).toBe('premium');
     expect(access(PRO, 'pdf')).toBe('ok');
-  });
-});
-
-describe('treino de velocidade', () => {
-  it('sobe um passo por volta até ao alvo', () => {
-    const t = { start: 60, step: 15, target: 100 };
-    expect(nextSpeed(60, t)).toBe(75);
-    expect(nextSpeed(90, t)).toBe(100);
-    expect(nextSpeed(100, t)).toBe(100);
-  });
-  it('valores inválidos voltam aos predefinidos e o alvo nunca fica abaixo do início', () => {
-    expect(cleanTrainer(null)).toEqual({ start: 60, step: 5, target: 100 });
-    expect(cleanTrainer({ start: 90, target: 70, step: 7 })).toEqual({ start: 90, step: 5, target: 90 });
   });
 });
 

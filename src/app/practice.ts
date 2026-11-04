@@ -1,22 +1,5 @@
-// Treino de velocidade progressivo e progresso por secção (funcionalidades Premium).
+// Progresso por secção (funcionalidade Premium).
 // Módulo puro: o leitor diz quando acaba uma volta do loop e quanto tempo se tocou.
-
-export interface TrainerSettings { start: number; step: number; target: number }
-export const DEFAULT_TRAINER: TrainerSettings = { start: 60, step: 5, target: 100 };
-
-/** Velocidade da volta seguinte: sobe `step` até chegar ao alvo (nunca o ultrapassa). */
-export function nextSpeed(current: number, t: TrainerSettings): number {
-  if (current >= t.target) return t.target;
-  return Math.min(t.target, current + t.step);
-}
-
-export function cleanTrainer(t: Partial<TrainerSettings> | null): TrainerSettings {
-  const clamp = (v: unknown, lo: number, hi: number, d: number) => (typeof v === 'number' && isFinite(v) ? Math.max(lo, Math.min(hi, Math.round(v / 5) * 5)) : d);
-  const start = clamp(t?.start, 25, 150, DEFAULT_TRAINER.start);
-  const target = Math.max(start, clamp(t?.target, 25, 150, DEFAULT_TRAINER.target));
-  const step = clamp(t?.step, 5, 25, DEFAULT_TRAINER.step);
-  return { start, step, target };
-}
 
 /** Progresso de uma secção (identificada pelo compasso onde começa). */
 export interface SectionProgress {

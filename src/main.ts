@@ -5,17 +5,19 @@ import { analyzeBar, isBassTrack, label, sectionsFromScore, type LabelOptions, t
 import { parseScore } from './analysis/parse';
 import { pitchClassesOf } from './app/notes';
 import { exportPdf } from './app/pdf';
-import { barView, rhythmOnsets, type BarView } from './analysis/bar';
+import { barView, type BarView } from './analysis/bar';
 import { Clicker, METRO_SOUNDS, isMetroSound, nextTickTime, type MetroSound } from './app/metronome';
+import { MetroInjector, type GridSource } from './app/metro-inject';
+import type { GridEvent } from './app/metro-grid';
 import { autoSub, beatInfo, countLabels, slotOf, type Sub } from './app/count';
 import { VisualDelay } from './app/sync';
 import { releaseAudio, unlockAudio } from './app/audio-unlock';
 import { TOUR_STEPS, markTourSeen, tourSeen, visibleTarget } from './app/tour';
-import { cloudEnabled, deleteRemoteSong, fetchEntitlement, signOut, syncLibrary, uploadSong, watchAccount, type Account } from './app/cloud';
+import { cloudEnabled, deleteRemoteSong, fetchEntitlement, syncLibrary, uploadSong, watchAccount, type Account } from './app/cloud';
 import { openAuthDialog } from './app/auth-ui';
 import { FREE_SONG_LIMIT, GUEST, GUEST_SONG_LIMIT, access, canSaveSong, planLabel, planState, songLimit, type Feature, type PlanState } from './app/plan';
-import { OFFERS, checkoutUrl, paymentsEnabled, portalUrl } from './app/billing';
-import { addLoop, addTime, cleanTrainer, isMastered, nextSpeed, progressText, type SongProgress, type TrainerSettings } from './app/practice';
+import { OFFERS, checkoutUrl, paymentsEnabled } from './app/billing';
+import { addLoop, addTime, isMastered, progressText, type SongProgress } from './app/practice';
 import { askPersistentStorage, deleteSong, getSong, listSongs, relativeDay, saveSong, takePendingFile, touchSong } from './app/library';
 import { TAB_COLORS, applyTheme, currentTheme, type Theme } from './app/theme';
 
@@ -34,7 +36,12 @@ const base = new URL('.', location.href).href;
 const vendor = base + 'vendor/alphatab/';
 const PLAYING = 1; // alphaTab.synth.PlayerState.Playing
 /** Tablatura mais compacta em ecrãs estreitos (dois compassos por linha em vez de um). */
-const tabLayout = () => (innerWidth < 600 ? { scale: 0.78, barsPerRow: 2 } : { scale: 0.95, barsPerRow: -1 });
+/** Compassos por linha da tablatura (Settings → Tab): 0 = automático (2 no telemóvel, os que couberem no computador). */
+let tabPerRow = 0;
+const tabLayout = () => {
+  const auto = innerWidth < 600 ? { scale: 0.78, barsPerRow: 2 } : { scale: 0.95, barsPerRow: -1 };
+  return tabPerRow > 0 ? { ...auto, barsPerRow: tabPerRow } : auto;
+};
 
 interface State {
   score: Score | null;
@@ -120,6 +127,7 @@ function setSync(v: number) {
   storage.set('mapa:sync', st.syncMs);
 }
 setSync(storage.get<number>('mapa:sync') ?? 0);
+{ const saved = storage.get<number>('mapa:tabPerRow'); tabPerRow = typeof saved === 'number' && saved >= 0 && saved <= 6 ? Math.round(saved) : 0; select('tabPerRow').value = String(tabPerRow); }
 input('syncMs').addEventListener('input', () => setSync(+input('syncMs').value));
 $('syncMinus').addEventListener('click', () => setSync(st.syncMs - 10));
 $('syncPlus').addEventListener('click', () => setSync(st.syncMs + 10));
@@ -172,24 +180,23 @@ function trackLabel(t: Track, i: number) {
   return isBassTrack(t) && !/bass|baixo|bajo/i.test(name) ? name + ' · bass' : name;
 }
 
-/** Preenche os dois seletores de instrumento (ajustes e barra de topo). A bateria fica de fora: não tem tom. */
+/** Preenche o seletor de instrumento da barra de topo. A bateria fica de fora: não tem tom. */
 function renderTrackControls() {
   const s = score();
-  for (const sel of [select('viewTrack'), select('trackQuick')]) {
-    sel.innerHTML = '';
-    s.tracks.forEach((t, i) => {
-      if (isPercussion(t)) return;
-      const o = document.createElement('option'); o.value = String(i); o.textContent = trackLabel(t, i);
-      o.selected = i === st.viewTrack; sel.append(o);
-    });
-  }
+  const sel = select('trackQuick');
+  sel.innerHTML = '';
+  s.tracks.forEach((t, i) => {
+    if (isPercussion(t)) return;
+    const o = document.createElement('option'); o.value = String(i); o.textContent = trackLabel(t, i);
+    o.selected = i === st.viewTrack; sel.append(o);
+  });
 }
 
 /** Muda o instrumento: volta a detetar o tom só com ele, e atualiza a tablatura. */
 function setTrack(i: number) {
   if (i === st.viewTrack) return;
   st.viewTrack = i;
-  select('viewTrack').value = String(i); select('trackQuick').value = String(i);
+  select('trackQuick').value = String(i);
   save(); detect(); renderChart(); renderTab();
   toast('Key detected from: ' + trackLabel(score().tracks[i], i));
 }
@@ -462,10 +469,13 @@ $('scrim').addEventListener('click', () => { openSettings(false, false); openLib
 input('optColors').addEventListener('change', renderChart);
 ['optMinor', 'optSplit', 'optFileChords', 'optNames', 'optAcc'].forEach(id => $(id).addEventListener('change', () => { detect(); renderChart(); }));
 select('perRow').addEventListener('change', () => { st.perRow = +select('perRow').value; save(); renderChart(); });
+select('tabPerRow').addEventListener('change', () => {
+  tabPerRow = +select('tabPerRow').value; storage.set('mapa:tabPerRow', tabPerRow);
+  if (st.api) { Object.assign(st.api.settings.display, tabLayout()); st.api.updateSettings(); st.api.render(); }
+});
 $('resetBtn').addEventListener('click', () => {
   st.overridesByTrack[st.viewTrack] = {}; st.sections = sectionsFromScore(score()); clearLoop(); save(); renderChart(); toast('Chart reset from the file.');
 });
-select('viewTrack').addEventListener('change', () => setTrack(+select('viewTrack').value));
 select('trackQuick').addEventListener('change', () => setTrack(+select('trackQuick').value));
 
 // ---------- Compasso escolhido na tablatura ----------
@@ -516,6 +526,7 @@ const LINE_GAP = 44;
 function openBarModal(i: number) {
   if (!st.score || !gateOk('expand')) return;
   modal.open = true;
+  syncModalToggles();
   $('barModal').hidden = false; $('bmScrim').hidden = false;
   $('tabSel').hidden = true;
   setModalBar(i);
@@ -525,7 +536,6 @@ function closeBarModal() {
   if (!modal.open) return;
   modal.open = false;
   $('barModal').hidden = true; $('bmScrim').hidden = true;
-  if (rhythm.on) applyMute(); // volta a ouvir-se a música
   // Ao fechar, o loop do compasso termina.
   if (st.loopBar >= 0) {
     st.api?.pause(); clearLoop();
@@ -539,7 +549,6 @@ function setModalBar(i: number) {
   const wasLooping = st.loopBar >= 0, wasPlaying = st.api?.playerState === PLAYING;
   modal.bar = i; modal.reps = 0; modal.lastSlot = -1;
   modal.view = barView(s, i, st.viewTrack);
-  rhythm.onsets = rhythmOnsets(s, i, st.viewTrack);
   const k = secOf(i);
   $('bmTitle').innerHTML = '';
   $('bmTitle').append('Bar ' + (i + 1) + ' ');
@@ -654,11 +663,10 @@ $('bmPlay').addEventListener('click', () => {
   api().play();
 });
 input('bmMetro').addEventListener('change', () => { setPressed('metroBtn', input('bmMetro').checked); applyMetronome(); });
+// "Play along" e "Solo" da janela do compasso são os mesmos do leitor (nunca ligados os dois ao mesmo tempo)
+input('bmMute').addEventListener('change', () => { const v = input('bmMute').checked; setPressed('muteBtn', v); if (v) setPressed('soloBtn', false); applyMute(); });
+input('bmSolo').addEventListener('change', () => { const v = input('bmSolo').checked; setPressed('soloBtn', v); if (v) setPressed('muteBtn', false); applyMute(); });
 input('bmCountIn').addEventListener('change', () => { setPressed('countBtn', input('bmCountIn').checked); applyMetronome(); });
-input('bmRhythm').addEventListener('change', () => {
-  rhythm.on = input('bmRhythm').checked; clicker.ensure(); applyMute();
-  if (rhythm.on) toast('Rhythm only: you hear a click on every note to play, without the notes.');
-});
 input('bmSpeed').addEventListener('input', () => {
   input('speed').value = input('bmSpeed').value;
   input('speed').dispatchEvent(new Event('input'));
@@ -675,7 +683,7 @@ for (const ev of ['pointerdown', 'keydown'] as const) {
     const t = e.target as HTMLElement | null;
     const startsAudio = ev === 'keydown' ? (e as KeyboardEvent).key === ' '
       : !!t?.closest('#playBtn, #bmPlay, #tsLoop, #bbPlay, .sbtn, #nextBtn, #prevBtn, #progress');
-    if (startsAudio) { unlockAudio(); if (metro.sound !== 'click' || rhythm.on) clicker.ensure(); }
+    if (startsAudio) { unlockAudio(); if (metro.sound !== 'click') clicker.ensure(); }
   }, { capture: true });
 }
 
@@ -702,9 +710,10 @@ function initApi() {
   a.soundFontLoad.on(e => { if (e.total) $('status').textContent = 'Loading sounds… ' + Math.round((e.loaded / e.total) * 100) + '%'; });
   a.playerReady.on(() => {
     st.ready = true;
-    ['playBtn', 'stopBtn', 'prevBtn', 'nextBtn', 'loopBtn', 'metroBtn', 'countBtn', 'muteBtn', 'soloBtn', 'trainerBtn'].forEach(id => ($<HTMLButtonElement>(id).disabled = false));
+    ['playBtn', 'stopBtn', 'prevBtn', 'nextBtn', 'loopBtn', 'metroBtn', 'countBtn', 'muteBtn', 'soloBtn'].forEach(id => ($<HTMLButtonElement>(id).disabled = false));
     $('status').textContent = 'Ready to play';
     a.playbackSpeed = +input('speed').value / 100;
+    setupInjector(a);
     applyMetronome(); if (metro.sound !== 'click') void clicker.load(metro.sound);
     applyMute();
   });
@@ -774,23 +783,28 @@ function renderTab() {
   if (st.ready) applyMute();
 }
 
+/** Os botões do leitor e as opções da janela do compasso mostram sempre o mesmo estado. */
+function syncModalToggles() {
+  const on = (id: string) => $(id).getAttribute('aria-pressed') === 'true';
+  input('bmCountIn').checked = on('countBtn'); input('bmMetro').checked = on('metroBtn');
+  input('bmMute').checked = on('muteBtn'); input('bmSolo').checked = on('soloBtn');
+}
 /** "Tocar por cima" silencia o instrumento selecionado; "Só o meu instrumento" deixa só esse a tocar. */
 function applyMute() {
+  syncModalToggles();
   if (!st.api || !st.score) return;
   const all = st.score.tracks, mine = [all[st.viewTrack]];
   const mute = $('muteBtn').getAttribute('aria-pressed') === 'true';
   const solo = $('soloBtn').getAttribute('aria-pressed') === 'true';
   st.api.changeTrackMute(all, false);
   st.api.changeTrackSolo(all, false);
-  if (rhythm.on && modal.open) { st.api.changeTrackMute(all, true); return; }
   if (mute) st.api.changeTrackMute(mine, true);
   if (solo) st.api.changeTrackSolo(mine, true);
 }
 
-// ---------- Sons do metrónomo e modo "só o ritmo" ----------
+// ---------- Sons do metrónomo ----------
 const clicker = new Clicker(base);
 const metro = { sound: 'click' as MetroSound, last: null as number | null, countInLeft: 0 };
-const rhythm = { on: false, onsets: [] as number[] };
 for (const id of ['metroSound', 'bmSound']) {
   for (const o of METRO_SOUNDS) { const el = document.createElement('option'); el.value = o.id; el.textContent = o.label; select(id).append(el); }
   select(id).addEventListener('change', () => { clicker.ensure(); setMetroSound(select(id).value as MetroSound); });
@@ -799,11 +813,13 @@ function setMetroSound(v: MetroSound) {
   metro.sound = v; select('metroSound').value = v; select('bmSound').value = v;
   storage.set('mapa:metroSound', v);
   if (v !== 'click') void clicker.load(v);
+  void injector?.prepare();
   applyMetronome();
 }
 { const saved = storage.get<string>('mapa:metroSound'); metro.sound = isMetroSound(saved) ? saved : 'click'; select('metroSound').value = metro.sound; select('bmSound').value = metro.sound; }
 /** O clique próprio do alphaTab só se ouve com o som "Click"; os outros sons tocamos nós. */
 function applyMetronome() {
+  syncModalToggles();
   if (!st.api) return;
   const metroOn = $('metroBtn').getAttribute('aria-pressed') === 'true';
   const countOn = $('countBtn').getAttribute('aria-pressed') === 'true';
@@ -815,7 +831,51 @@ const curNumerator = () => {
   const i = Math.max(0, st.playingBar);
   return st.score?.masterBars[i]?.timeSignatureNumerator ?? 4;
 };
+/**
+ * Metrónomo e contagem exatos: o som é misturado no próprio fluxo de áudio da música, na amostra certa
+ * (ver app/metro-inject.ts). O som "Click" é o do próprio alphaTab, que já vem dentro do sintetizador.
+ * Se isto não puder ser instalado, usa-se o método antigo (onMetronome), que agenda os sons pelos avisos.
+ */
+let injector: MetroInjector | null = null;
+let gridCache: { score: AlphaTab.model.Score; source: GridSource } | null = null;
+/** Eventos de tempo e compasso do MIDI da música, iguais aos que o sintetizador usa para a sua grelha. */
+function gridSource(): GridSource | null {
+  const a = st.api, sc = a?.score;
+  if (!a || !sc) return null;
+  if (gridCache?.score === sc) return gridCache.source;
+  const mf = new at.midi.MidiFile();
+  new at.midi.MidiFileGenerator(sc, a.settings, new at.midi.AlphaSynthMidiFileHandler(mf, false)).generate();
+  const events: GridEvent[] = [];
+  let abs = 0, prev = 0;
+  for (const e of mf.events) {
+    abs += e.tick - prev; prev = e.tick;   // o alphaTab soma as diferenças entre eventos
+    if (e.type === at.midi.MidiEventType.TempoChange) events.push({ kind: 'tempo', tick: abs, bpm: (e as AlphaTab.midi.TempoChangeEvent).beatsPerMinute });
+    else if (e.type === at.midi.MidiEventType.TimeSignature) {
+      const t = e as AlphaTab.midi.TimeSignatureEvent;
+      events.push({ kind: 'signature', tick: abs, numerator: t.numerator, denominatorIndex: t.denominatorIndex });
+    }
+  }
+  const source = { division: mf.division, tickShift: mf.tickShift, endTick: abs, events };
+  gridCache = { score: sc, source };
+  return source;
+}
+function setupInjector(a: AlphaTab.AlphaTabApi) {
+  if (injector) return;
+  const inj = new MetroInjector({
+    player: (a as unknown as { player: unknown }).player,
+    source: gridSource,
+    speed: () => a.playbackSpeed,
+    countInVolume: () => a.countInVolume,
+    sound: () => metro.sound,
+    metroOn: () => $('metroBtn').getAttribute('aria-pressed') === 'true',
+    countInOn: () => $('countBtn').getAttribute('aria-pressed') === 'true',
+    samples: (sound, rate) => clicker.samples(sound, rate),
+    resync: () => { a.tickPosition = a.tickPosition; },
+  });
+  if (inj.install()) { injector = inj; void inj.prepare(); }
+}
 function onMetronome(m: AlphaTab.midi.AlphaTabMetronomeEvent) {
+  if (injector?.active) return;
   const speed = st.api?.playbackSpeed || 1;
   const sec = m.metronomeDurationInMilliseconds / 1000 / speed;
   metro.last = nextTickTime(metro.last, clicker.now(), sec);
@@ -823,16 +883,6 @@ function onMetronome(m: AlphaTab.midi.AlphaTabMetronomeEvent) {
   if (inCountIn) metro.countInLeft--;
   const on = $(inCountIn ? 'countBtn' : 'metroBtn').getAttribute('aria-pressed') === 'true';
   if (on && metro.sound !== 'click') clicker.tick(metro.sound, m.metronomeNumerator, metro.last, sec);
-  if (!inCountIn) scheduleRhythm(m.tick, m.metronomeDurationInTicks, metro.last, sec);
-}
-/** Só o ritmo: em cada tempo, agenda um golpe para cada nota que começa dentro desse tempo. */
-function scheduleRhythm(tick: number, durTicks: number, when: number, sec: number) {
-  if (!rhythm.on || !modal.open || st.loopBar !== modal.bar || !st.score) return;
-  const start = barTick(modal.bar);
-  for (const o of rhythm.onsets) {
-    const abs = start + o;
-    if (abs >= tick && abs < tick + durTicks) clicker.hit(when + ((abs - tick) / durTicks) * sec);
-  }
 }
 $('metroTest').addEventListener('click', () => {
   clicker.ensure();
@@ -897,7 +947,6 @@ function practiceSection(k: number) {
   if (!st.ready) { toast('The sounds are still loading.'); return; }
   if (st.loopSection === k) { clearLoop(); renderChart(); setStatus(api().playerState === PLAYING ? 'Playing' : 'Paused'); return; }
   st.loopSection = k; st.loopBar = -1; practice.lastTick = -1;
-  if (trainer.on) startTrainer();
   const s = st.sections[k], end = secEnd(k);
   api().playbackRange = { startTick: barTick(s.start), endTick: barEndTick(end - 1) } as AlphaTab.synth.PlaybackRange;
   api().isLooping = true; setPressed('loopBtn', true);
@@ -919,7 +968,6 @@ function practiceBar(i: number) {
   if (!st.ready) { toast('The sounds are still loading.'); return; }
   if (st.loopBar === i) { clearLoop(); placeTabSel(); setStatus(api().playerState === PLAYING ? 'Playing' : 'Paused'); return; }
   setLoopBar(i); practice.lastTick = -1;
-  if (trainer.on) startTrainer();
   delay.clear();
   api().tickPosition = barTick(i);
   if (api().playerState !== PLAYING) api().play();
@@ -1119,6 +1167,8 @@ addEventListener('drop', e => { e.preventDefault(); dragN = 0; $('drop').hidden 
 let account: Account | null = null;
 let syncing = false;
 function setSyncStatus(t: string) { $('syncStatus').textContent = t; }
+/** A linha de sincronização de "My songs" só aparece com conta e Premium. */
+function updateSyncRow() { $('libSync').hidden = !(account && plan.premium); }
 function plural(n: number, w: string) { return n + ' ' + w + (n === 1 ? '' : 's'); }
 async function runSync(quiet: boolean) {
   if (!account || syncing) return;
@@ -1139,39 +1189,31 @@ async function runSync(quiet: boolean) {
 function showAccount(a: Account | null) {
   const was = account?.id; account = a;
   if (!a) setPlan(GUEST);
-  $('signInForm').hidden = !!a; $('accountOn').hidden = !a;
   $('libLocalHint').textContent = a
     ? 'Songs are kept in this browser (and in your account with Premium).'
     : 'Songs are saved only in this browser on this device.';
   $('accountBtnText').textContent = a ? (a.name.split(' ')[0] || 'Account') : 'Sign in';
   $('accountBtn').classList.toggle('signed', !!a);
   $('accountBtn').setAttribute('aria-label', a ? 'Your account' : 'Sign in or create an account');
-  if (a) { $('accountEmail').textContent = a.email; if (a.id !== was) refreshPlan().then(() => runSync(true)); }
+  if (a && a.id !== was) refreshPlan().then(() => runSync(true));
   $('pwTrial').hidden = !!a;
-  applyLocks();
+  updateSyncRow(); applyLocks();
 }
 if (cloudEnabled) {
-  $('account').hidden = false;
-  watchAccount(showAccount).catch(() => { $('account').hidden = true; });
+  watchAccount(showAccount).catch(() => { /* sem sessão */ });
   // Ao voltar ao separador, apanha o que mudou noutros dispositivos
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refreshPlan().then(() => runSync(true)); });
 }
 const welcome = () => toast('You’re signed in. Welcome!');
 $('accountBtn').addEventListener('click', () => { if (account) location.href = './account.html'; else openAuthDialog('signin', undefined, welcome); });
-$('libSignup').addEventListener('click', () => openAuthDialog('signup', undefined, welcome));
-$('libSignin').addEventListener('click', () => openAuthDialog('signin', undefined, welcome));
 // Sem Supabase configurado (por exemplo em desenvolvimento) não há contas: tudo fica desbloqueado
 if (!cloudEnabled) { $('accountBtn').hidden = true; queueMicrotask(() => setPlan({ kind: 'lifetime', premium: true, until: null })); }
 $('syncBtn').addEventListener('click', () => (plan.premium ? runSync(false) : openPaywall('sync')));
-$('signOutBtn').addEventListener('click', async () => {
-  await signOut().catch(() => {});
-  setSyncStatus(''); toast('Signed out. Your songs stay in this browser.');
-});
 
 // ---------- Cadeados (sem conta / conta grátis / Premium) ----------
 const GATE_NAMES: Record<Feature, string> = {
   tools: 'Loop, speed, the metronome and the other practice tools', notes: 'Notes on the bars', expand: 'Expanding a bar',
-  pdf: 'The PDF chart', trainer: 'The speed trainer', progress: 'Progress per section', sync: 'Sync across devices',
+  pdf: 'The PDF chart', progress: 'Progress per section', sync: 'Sync across devices',
 };
 /** Pode usar a função? Se não, pede conta (sem conta) ou mostra o Premium (conta grátis). */
 function gateOk(f: Feature): boolean {
@@ -1206,24 +1248,15 @@ function setPlan(p: PlanState) {
   const btn = $('premiumBtn');
   btn.classList.toggle('on', p.premium);
   $('setPremiumText').textContent = p.premium ? planLabel(p) : 'Go Premium';
-  $('setPremiumSub').textContent = p.premium ? 'All features unlocked. Thank you!' : 'Try 14 days free: sync, more songs and the speed trainer';
+  $('setPremiumSub').textContent = p.premium ? 'All features unlocked. Thank you!' : 'Try 14 days free: sync, more songs and every bar up close';
   $('premiumBtnText').textContent = p.kind === 'trial' ? planLabel(p).replace('Premium trial · ', 'Trial · ') : p.premium ? 'Premium' : 'Go Premium';
-  const badge = $('planBadge'); badge.textContent = planLabel(p); badge.classList.toggle('premium', p.premium);
-  const paid = p.kind === 'monthly' || p.kind === 'yearly' || p.kind === 'lifetime';
-  $('planAction').textContent = paid ? (portalUrl && p.kind !== 'lifetime' ? 'Manage subscription' : 'Thank you!') : 'Go Premium';
-  $<HTMLButtonElement>('planAction').disabled = paid && !(portalUrl && p.kind !== 'lifetime');
-  if (!p.premium && trainer.on) setTrainer(false);
   if (was !== p.premium) { renderProgress(); renderLibrary(); }
-  applyLocks();
+  updateSyncRow(); applyLocks();
 }
 async function refreshPlan() {
   if (!account) { setPlan(GUEST); return; }
   try { setPlan(planState(await fetchEntitlement())); } catch { /* sem rede: mantém o que estava */ }
 }
-$('planAction').addEventListener('click', () => {
-  if (plan.premium && plan.kind !== 'trial') { if (portalUrl) open(portalUrl, '_blank', 'noopener'); return; }
-  openPaywall('upgrade');
-});
 async function renderLibLimit(count: number) {
   const el = $('libLimit');
   if (plan.premium) { el.hidden = true; return; }
@@ -1237,14 +1270,13 @@ async function renderLibLimit(count: number) {
 }
 
 // ---------- Janela do Premium ----------
-type PaywallReason = 'upgrade' | 'library' | 'sync' | 'trainer' | 'progress' | 'expand' | 'pdf';
+type PaywallReason = 'upgrade' | 'library' | 'sync' | 'progress' | 'expand' | 'pdf';
 const PAYWALL_COPY: Record<PaywallReason, [string, string]> = {
   upgrade: ['Keep everything you’ve built', 'Practising is always free. Premium is for the songs you keep coming back to.'],
   library: ['Keep all your songs', 'The free plan keeps ' + FREE_SONG_LIMIT + ' songs in “My songs”. Premium keeps them all, on every device.'],
-  expand: ['See every bar up close', 'Expand any bar to see its notes large, how to count them, and practise it on its own, with rhythm-only mode.'],
+  expand: ['See every bar up close', 'Expand any bar to see its notes large, how to count them, and practise it on its own.'],
   pdf: ['Take the chart to rehearsal', 'Premium exports the song chart as a clean PDF, with your notes.'],
   sync: ['Your songs on every device', 'Premium keeps “My songs” in sync between your phone, tablet and computer.'],
-  trainer: ['Get it up to speed', 'The speed trainer starts slow and speeds up a little every time the loop repeats.'],
   progress: ['See how far you’ve come', 'Premium shows the time you’ve practised each section, your best speed and what you’ve mastered.'],
 };
 function openPaywall(reason: PaywallReason) {
@@ -1293,33 +1325,6 @@ if (new URLSearchParams(location.search).has('checkout')) {
   }, 3000);
 }
 
-// ---------- Treino de velocidade ----------
-const trainer = { on: false, cfg: cleanTrainer(storage.get<TrainerSettings>('mapa:trainer')) };
-for (const id of ['trStart', 'trTarget']) {
-  for (let v = 25; v <= 150; v += 5) { const o = document.createElement('option'); o.value = String(v); o.textContent = v + '%'; select(id).append(o); }
-}
-function showTrainerCfg() {
-  select('trStart').value = String(trainer.cfg.start); select('trStep').value = String(trainer.cfg.step); select('trTarget').value = String(trainer.cfg.target);
-}
-showTrainerCfg();
-for (const id of ['trStart', 'trStep', 'trTarget']) select(id).addEventListener('change', () => {
-  trainer.cfg = cleanTrainer({ start: +select('trStart').value, step: +select('trStep').value, target: +select('trTarget').value });
-  storage.set('mapa:trainer', trainer.cfg); showTrainerCfg();
-});
-function setSpeed(v: number) { input('speed').value = String(v); input('speed').dispatchEvent(new Event('input')); }
-function startTrainer() { setSpeed(trainer.cfg.start); }
-function setTrainer(v: boolean) {
-  trainer.on = v; setPressed('trainerBtn', v);
-  if (!v) return;
-  startTrainer();
-  toast(st.loopSection >= 0 || st.loopBar >= 0
-    ? 'Speed trainer: ' + trainer.cfg.start + '% → ' + trainer.cfg.target + '%, +' + trainer.cfg.step + '% each loop.'
-    : 'Speed trainer on. Now practise a section (or loop a bar): it speeds up each time it repeats.');
-}
-$('trainerBtn').addEventListener('click', () => {
-  setTrainer(!trainer.on);
-});
-
 // ---------- Progresso por secção ----------
 const practice = { progress: {} as SongProgress, lastTick: -1, lastAt: 0, dirty: false, savedAt: 0 };
 function flushProgress() {
@@ -1347,10 +1352,6 @@ function onLoopDone() {
     practice.progress = addLoop(practice.progress, start, speed); practice.dirty = true;
     if (plan.premium && !before && isMastered(practice.progress[start])) toast('“' + st.sections[st.loopSection].name + '” mastered!');
     renderProgress();
-  }
-  if (trainer.on && plan.premium) {
-    const next = nextSpeed(speed, trainer.cfg);
-    if (next !== speed) { setSpeed(next); if (next === trainer.cfg.target) toast('Target speed reached: ' + next + '%.'); }
   }
 }
 function renderProgress() {

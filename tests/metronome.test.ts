@@ -22,22 +22,3 @@ describe('metrónomo', () => {
     expect(isMetroSound('tambourine')).toBe(false);
   });
 });
-
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import * as alphaTab from '@coderline/alphatab';
-import { rhythmOnsets } from '../src/analysis/bar';
-import { parseScore } from '../src/analysis/parse';
-
-describe('só o ritmo', () => {
-  it('dá um golpe por cada nota atacada do compasso, por ordem e sem repetir', () => {
-    const bytes = readFileSync(fileURLToPath(new URL('./fixtures/exemplo.gp5', import.meta.url)));
-    const score = parseScore(alphaTab, new Uint8Array(bytes));
-    const track = score.tracks.findIndex(t => t.staves.some(s => !s.isPercussion));
-    const on = rhythmOnsets(score, 4, track);
-    expect(on.length).toBeGreaterThan(0);
-    expect(on).toEqual([...new Set(on)].sort((a, b) => a - b));
-    expect(on[0]).toBeGreaterThanOrEqual(0);
-    expect(on[on.length - 1]).toBeLessThan(score.masterBars[4].calculateDuration());
-  });
-});

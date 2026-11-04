@@ -9,7 +9,7 @@ export type AuthMode = 'signin' | 'signup' | 'reset';
 const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 
 /** Desenha o formulário de conta em `box`. `done` é chamado quando a pessoa entra. */
-export function mountAuth(box: HTMLElement, mode: AuthMode, opts: { message?: string; done?: () => void } = {}): void {
+export function mountAuth(box: HTMLElement, mode: AuthMode, opts: { message?: string; done?: () => void; heading?: 'h1' | 'h2' } = {}): void {
   const titles: Record<AuthMode, string> = { signin: 'Sign in', signup: 'Create your free account', reset: 'Reset your password' };
   const subs: Record<AuthMode, string> = {
     signin: 'Welcome back. Your songs and plan are waiting.',
@@ -18,7 +18,7 @@ export function mountAuth(box: HTMLElement, mode: AuthMode, opts: { message?: st
   };
   box.innerHTML = `
     <form class="auth" novalidate>
-      <h2 class="auth-title">${titles[mode]}</h2>
+      <${opts.heading ?? 'h2'} class="auth-title">${titles[mode]}</${opts.heading ?? 'h2'}>
       ${opts.message ? `<p class="auth-why">${opts.message}</p>` : ''}
       <p class="auth-sub">${subs[mode]}</p>
       ${mode === 'signup' ? '<label class="auth-field"><span>Name</span><input name="name" autocomplete="name" maxlength="60" placeholder="Your name"></label>' : ''}

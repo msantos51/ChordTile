@@ -19,11 +19,19 @@
 </script>
 <title>Player · ChordTile</title>
 <meta name="description" content="Load a Guitar Pro file and learn the song by sections and bars, with colours per note and synced tablature.">
+<link rel="canonical" href="https://msantos51.github.io/ChordTile/player.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ChordTile">
+<meta property="og:title" content="Player · ChordTile">
+<meta property="og:description" content="Load a Guitar Pro file and learn the song by sections and bars, with colours per note and synced tablature.">
+<meta property="og:url" content="https://msantos51.github.io/ChordTile/player.html">
+<meta property="og:image" content="https://msantos51.github.io/ChordTile/icon-512.png">
+<meta name="twitter:card" content="summary">
 </head>
 <body>
 <header class="top">
   <div class="top-left">
-    <a class="brand" href="./">
+    <a class="brand" href="./" aria-label="ChordTile home">
       <svg class="logo" viewBox="16 16 224 224" aria-hidden="true"><path fill-rule="evenodd" d="M76 16H180A60 60 0 0 1 240 76V180A60 60 0 0 1 180 240H76A60 60 0 0 1 16 180V76A60 60 0 0 1 76 16ZM199 104A43 43 0 0 0 156 61H108A43 43 0 0 0 65 104V152A43 43 0 0 0 108 195H156A43 43 0 0 0 199 152H169A13 13 0 0 1 156 165H108A13 13 0 0 1 95 152V104A13 13 0 0 1 108 91H156A13 13 0 0 1 169 104Z"/></svg>
       <span class="brand-name">ChordTile</span>
     </a>
@@ -61,7 +69,7 @@
       <svg class="i theme-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
       <svg class="i theme-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
     </button>
-    <button class="btn" id="settingsBtn" type="button" aria-expanded="false" aria-controls="settings">
+    <button class="btn" id="settingsBtn" type="button" aria-label="Settings" aria-expanded="false" aria-controls="settings">
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span>Settings</span>
     </button>
     <label class="btn primary" for="fileInput">
@@ -103,7 +111,7 @@
             <button class="btn sm" id="pdfBtn" data-gate="pdf" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15l3 3 3-3"/></svg>Export PDF</button>
           </div>
         </div>
-        <div class="notekey" id="noteKey" aria-label="Colour of each note"></div>
+        <div class="notekey" id="noteKey" role="group" aria-label="Colour of each note"></div>
         <div class="chart" id="chart"></div>
         <div class="legend">
           <span>Click a bar to jump there (the tab scrolls to it). Double-click to add your own note.</span>
@@ -118,7 +126,7 @@
             <span class="now-chip" id="nowChip"></span>
           </div>
           <div class="tabwrap">
-            <div id="tabScroll">
+            <div id="tabScroll" tabindex="0" role="region" aria-label="Tablature">
               <div id="tab"></div>
               <div class="tab-sel" id="tabSel" hidden>
                 <div class="tab-sel-bar" id="tabSelBar">
@@ -140,7 +148,7 @@
   </main>
 </div>
 
-<div class="dock" id="dock">
+<div class="dock" id="dock" role="region" aria-label="Player controls">
   <div class="progress" id="progress" title="Click to jump to that part of the song"><div class="progress-fill" id="progressFill"></div></div>
   <div class="dock-row">
     <div class="tp">
@@ -198,11 +206,11 @@
   <div class="bm-body">
     <div class="bm-grid">
       <div></div>
-      <div class="bm-pulses" id="bmPulses" aria-label="Beats"></div>
+      <div class="bm-pulses" id="bmPulses" role="group" aria-label="Beats"></div>
       <div class="bm-strings" id="bmStrings" aria-hidden="true"></div>
-      <div class="bm-staff" id="bmStaff" aria-label="Tab of the bar"></div>
+      <div class="bm-staff" id="bmStaff" role="group" aria-label="Tab of the bar"></div>
       <div></div>
-      <div class="bm-count" id="bmCount" aria-label="How to count"></div>
+      <div class="bm-count" id="bmCount" role="group" aria-label="How to count"></div>
     </div>
     <div class="bm-subrow">
       <span class="bm-label">Counting in</span>

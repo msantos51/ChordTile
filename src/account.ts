@@ -21,7 +21,7 @@ async function render(a: Account | null, recovery = false) {
   show('accReset', false);
   if (!a) {
     show('accOn', false); show('accAuth', true);
-    mountAuth($('accAuth'), new URLSearchParams(location.search).has('signup') ? 'signup' : 'signin', { done: () => toast('You’re signed in. Welcome!') });
+    mountAuth($('accAuth'), new URLSearchParams(location.search).has('signup') ? 'signup' : 'signin', { heading: 'h1', done: () => toast('You’re signed in. Welcome!') });
     return;
   }
   show('accAuth', false); show('accOn', true);

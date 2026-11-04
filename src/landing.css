@@ -3,14 +3,18 @@
    (importar → secções → loop → compasso aberto); em baixo, na largura toda, os 4 passos (sincronizados
    com a animação) e as ligações legais.
    Só esta página usa estes estilos; o leitor e as páginas de texto usam src/styles.css. */
+/* Fontes de recurso com as medidas da Roboto (sem saltos do layout quando a Roboto chega) */
+@font-face { font-family: "Roboto Fallback"; src: local("Arial"), local("Helvetica"), local("Liberation Sans"); size-adjust: 100.3%; ascent-override: 92.4%; descent-override: 24.3%; line-gap-override: 0%; }
+@font-face { font-family: "Roboto Mono Fallback"; src: local("Courier New"), local("Liberation Mono"); size-adjust: 99.9%; ascent-override: 104.9%; descent-override: 27.5%; line-gap-override: 0%; }
+
 :root {
-  --white: #ffffff; --off: #f4f2f0; --black: #121212; --ink-2: #555; --ink-3: #8c8c8c; --line: #e6e3df;
+  --white: #ffffff; --off: #f4f2f0; --black: #121212; --ink-2: #555; --ink-3: #6b6b6b; --line: #e6e3df;
   --red: #c8102e; --red-2: #a50d26; --red-3: #e23b4e;
   --n0: #ff4d4d; --n1: #ff6d3a; --n2: #ff9a2e; --n3: #ffbe1f; --n4: #f2d40a; --n5: #9bd13b;
   --n6: #3ccf6e; --n7: #1cc2b0; --n8: #3b9cff; --n9: #7c5cff; --n10: #c056f0; --n11: #ff5fa8;
-  --f-display: "Roboto", system-ui, sans-serif;
-  --f-body: "Roboto", system-ui, sans-serif;
-  --f-mono: "Roboto Mono", ui-monospace, monospace;
+  --f-display: "Roboto", "Roboto Fallback", system-ui, sans-serif;
+  --f-body: "Roboto", "Roboto Fallback", system-ui, sans-serif;
+  --f-mono: "Roboto Mono", "Roboto Mono Fallback", ui-monospace, monospace;
   --ease: cubic-bezier(.2, .8, .2, 1);
 }
 * { box-sizing: border-box; }
@@ -36,7 +40,7 @@ a { color: inherit; }
   font: 700 11px var(--f-body); letter-spacing: .16em; text-transform: uppercase; text-decoration: none; }
 .right-top { display: flex; justify-content: flex-end; align-items: center; gap: 28px; }
 .nav-r { display: flex; gap: 26px; white-space: nowrap; }
-.nav-r a { font: 700 11px var(--f-body); letter-spacing: .18em; text-transform: uppercase; text-decoration: none; color: rgba(255, 255, 255, .85); }
+.nav-r a { font: 700 11px var(--f-body); letter-spacing: .18em; text-transform: uppercase; text-decoration: none; color: rgba(255, 255, 255, .85); display: inline-block; padding: 6px 0; }
 .nav-r a:hover { color: #fff; }
 .pill-white { display: inline-flex; align-items: center; height: 40px; padding: 0 20px; border-radius: 999px; background: #fff; color: var(--black);
   font: 700 11px var(--f-body); letter-spacing: .16em; text-transform: uppercase; text-decoration: none; white-space: nowrap; }
@@ -53,7 +57,7 @@ h1 em { font-style: normal; color: var(--red); }
   cursor: pointer; white-space: nowrap; box-shadow: 0 12px 24px -10px rgba(200, 16, 46, .7); transition: transform .15s, background .15s; }
 .btn:hover { background: var(--red-2); transform: translateY(-1px); }
 .btn .plus { font: 400 22px/1 var(--f-body); letter-spacing: 0; margin-top: -2px; }
-.link { font: 700 12.5px var(--f-body); letter-spacing: .14em; text-transform: uppercase; text-decoration: none; border-bottom: 2px solid var(--black); padding-bottom: 3px; white-space: nowrap; }
+.link { font: 700 12.5px var(--f-body); letter-spacing: .14em; text-transform: uppercase; text-decoration: none; border-bottom: 2px solid var(--black); padding: 4px 0 3px; display: inline-block; white-space: nowrap; }
 .err { margin: 16px 0 0; padding: 12px 16px; border-radius: 12px; background: #fde8eb; color: #8a0b20; font-size: 14px; max-width: 34em; }
 
 /* Rodapé da página: "How it works" (4 passos que acendem com a animação) e ligações legais, na largura toda */
@@ -62,6 +66,7 @@ h1 em { font-style: normal; color: var(--red); }
 .eyebrow { margin: 0 0 clamp(4px, 1vh, 8px); color: var(--red); }
 .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px 28px; }
 .steps button { all: unset; position: relative; display: grid; grid-template-columns: 30px 1fr; gap: 8px; padding: clamp(6px, 1.1vh, 10px) 0 clamp(8px, 1.3vh, 12px); cursor: pointer; width: 100%; }
+.steps button:focus-visible { outline: 3px solid var(--black); outline-offset: 3px; border-radius: 4px; }
 .steps b { font: 900 22px/1.1 var(--f-display); color: var(--ink-3); transition: color .2s; }
 .steps strong { display: block; font: 700 14px/1.3 var(--f-body); color: var(--ink-3); transition: color .2s; }
 .steps span { font-size: 13px; line-height: 1.4; color: var(--ink-3); transition: color .2s; }
@@ -74,7 +79,7 @@ h1 em { font-style: normal; color: var(--red); }
 .steps li.done .prog i { transform: scaleX(1); background: var(--black); }
 .steps button:hover strong { color: var(--black); }
 .legal { display: flex; gap: 18px; margin-top: clamp(4px, 1vh, 10px); font-size: 12px; color: var(--ink-3); }
-.legal a { text-decoration: none; } .legal a:hover { color: var(--black); }
+.legal a { text-decoration: none; display: inline-block; padding: 4px 0; } .legal a:hover { color: var(--black); }
 
 .vert { position: absolute; writing-mode: vertical-rl; font: 700 10.5px var(--f-body); letter-spacing: .22em; text-transform: uppercase; }
 .vert.r { right: 22px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, .8); }

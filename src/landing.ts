@@ -15,6 +15,8 @@ function fail(msg: string) {
 async function openInReader(f: File | undefined) {
   if (!f) return;
   err.hidden = true;
+  if (f.size > 20 * 1024 * 1024) { fail('“' + f.name + '” is too large. Guitar Pro and MusicXML files up to 20 MB are supported.'); return; }
+  if (!f.size) { fail('“' + f.name + '” is empty.'); return; }
   try {
     const bytes = new Uint8Array(await f.arrayBuffer());
     await setPendingFile(f.name, bytes);

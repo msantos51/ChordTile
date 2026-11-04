@@ -1051,8 +1051,12 @@ $('vTab').addEventListener('click', () => setView('tab'));
 setView('chart');
 
 // ---------- Ficheiros ----------
+/** Maior ficheiro aceite (igual ao limite do armazenamento na nuvem). Um Guitar Pro tem quase sempre menos de 2 MB. */
+const MAX_FILE_BYTES = 20 * 1024 * 1024;
 function readFile(f: File | undefined) {
   if (!f) return;
+  if (f.size > MAX_FILE_BYTES) { showErr('“' + f.name + '” is too large (' + (f.size / 1048576).toFixed(0) + ' MB). Guitar Pro and MusicXML files up to 20 MB are supported.'); return; }
+  if (!f.size) { showErr('“' + f.name + '” is empty.'); return; }
   const r = new FileReader();
   r.onload = () => openImported(new Uint8Array(r.result as ArrayBuffer), f.name);
   r.readAsArrayBuffer(f);
@@ -1413,18 +1417,19 @@ function placeTour(target: HTMLElement | null) {
   const cw = card.offsetWidth, ch = card.offsetHeight, m = 12;
   if (!target) {
     spot.className = 'tour-spot none'; spot.removeAttribute('style');
-    card.style.left = (innerWidth - cw) / 2 + 'px'; card.style.top = Math.max(m, (innerHeight - ch) / 2) + 'px';
+    card.style.transform = `translate(${(innerWidth - cw) / 2}px, ${Math.max(m, (innerHeight - ch) / 2)}px)`;
     return;
   }
   const r = target.getBoundingClientRect(), pad = 6;
   spot.className = 'tour-spot';
-  Object.assign(spot.style, { left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + 2 * pad + 'px', height: r.height + 2 * pad + 'px' });
+  // Posição por transform (e não left/top): mexer no destaque não conta como "salto" do layout (CLS)
+  Object.assign(spot.style, { transform: `translate(${r.left - pad}px, ${r.top - pad}px)`, width: r.width + 2 * pad + 'px', height: r.height + 2 * pad + 'px' });
   const below = r.bottom + pad + m, above = r.top - pad - m - ch;
   let top = below + ch <= innerHeight - m ? below : above >= m ? above : Math.max(m, innerHeight - ch - m);
   // Destinos muito altos (o esquema, o leitor): cartão por cima do centro do destino
   if (r.height > innerHeight * 0.6) top = Math.max(m, Math.min(innerHeight - ch - m, r.top + 40));
   const left = Math.max(m, Math.min(innerWidth - cw - m, r.left + r.width / 2 - cw / 2));
-  card.style.left = left + 'px'; card.style.top = top + 'px';
+  card.style.transform = `translate(${left}px, ${top}px)`;
 }
 $('tourNext').addEventListener('click', () => {
   if (tour.i === TOUR_STEPS.length - 1) { endTour(); return; }

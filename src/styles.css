@@ -1,3 +1,8 @@
+/* Fontes de recurso com as medidas da Roboto: enquanto a Roboto carrega, o texto já ocupa o mesmo
+   espaço, por isso a troca não faz saltar o layout (CLS). */
+@font-face { font-family: "Roboto Fallback"; src: local("Arial"), local("Helvetica"), local("Liberation Sans"); size-adjust: 100.3%; ascent-override: 92.4%; descent-override: 24.3%; line-gap-override: 0%; }
+@font-face { font-family: "Roboto Mono Fallback"; src: local("Courier New"), local("Liberation Mono"); size-adjust: 99.9%; ascent-override: 104.9%; descent-override: 27.5%; line-gap-override: 0%; }
+
 /* Mapa de Compassos — estilos (design "Vermelho, branco e preto", igual à página inicial: escuro por defeito, com tema claro)
    Layout: barra de topo com a música; o esquema (quadrados com a cor da nota) ao lado da tablatura;
    em baixo o leitor, com uma barra de progresso neutra. */
@@ -22,7 +27,7 @@
   --tint: 100%;             /* cor da nota cheia (viva) nos quadrados, na legenda e no compasso aberto */
   /* As cores das notas são iguais nos dois temas */
   --note-base: #2a2b31;
-  --note-ink: #121212;
+  --note-ink: #000;
   --rep-bg: rgba(255, 255, 255, .12);
   --overlay: rgba(31, 32, 36, .85);
   --scrim: rgba(0, 0, 0, .6);
@@ -35,10 +40,10 @@
   /* Cores das notas (convenção Boomwhackers): Dó vermelho → Si rosa */
   --n0: #ff4d4d; --n1: #ff6d3a; --n2: #ff9a2e; --n3: #ffbe1f; --n4: #f2d40a; --n5: #9bd13b;
   --n6: #3ccf6e; --n7: #1cc2b0; --n8: #3b9cff; --n9: #7c5cff; --n10: #c056f0; --n11: #ff5fa8;
-  --f-body: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-head: "Roboto", system-ui, sans-serif;
-  --f-display: "Roboto", system-ui, sans-serif;
-  --f-mono: "Roboto Mono", ui-monospace, Menlo, Consolas, monospace;
+  --f-body: "Roboto", "Roboto Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-head: "Roboto", "Roboto Fallback", system-ui, sans-serif;
+  --f-display: "Roboto", "Roboto Fallback", system-ui, sans-serif;
+  --f-mono: "Roboto Mono", "Roboto Mono Fallback", ui-monospace, Menlo, Consolas, monospace;
   --r-lg: 16px; --r-md: 12px; --r-sm: 10px;
   /* Sistema de formas: controlos sempre em pílula (ou círculo); cartões 16 px por fora e 12 px por dentro */
   --r-pill: 999px; --r-card: 16px; --r-item: 12px; --r-tile: 10px;
@@ -99,7 +104,7 @@ svg.f { fill: currentColor; stroke: none; }
 .top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px;
   padding: 12px max(24px, env(safe-area-inset-right, 0px)) 12px max(24px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--line); }
 .top-left { display: flex; align-items: center; gap: 14px; min-width: 0; flex-wrap: wrap; }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; color: inherit; text-decoration: none; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; color: inherit; text-decoration: none; min-height: 32px; min-width: 32px; }
 .logo { display: block; flex: none; width: 22px; height: 22px; fill: #c8102e; }
 .vsep { width: 1px; height: 24px; background: var(--line-2); }
 .song { min-width: 0; }
@@ -487,9 +492,9 @@ a.btn { color: inherit; text-decoration: none; }
 
 /* ---------- Tutorial ---------- */
 .tour { position: fixed; inset: 0; z-index: 40; }
-.tour-spot { position: fixed; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, .7), 0 0 0 2px var(--accent-text); transition: all .25s ease; pointer-events: none; }
-.tour-spot.none { left: 50%; top: 50%; width: 0; height: 0; box-shadow: 0 0 0 9999px rgba(0, 0, 0, .7); }
-.tour-card { position: fixed; width: min(380px, calc(100% - 32px)); padding: 18px 18px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line-2); box-shadow: var(--shadow); transition: left .25s ease, top .25s ease; }
+.tour-spot { position: fixed; left: 0; top: 0; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, .7), 0 0 0 2px var(--accent-text); transition: transform .25s ease, width .25s ease, height .25s ease; pointer-events: none; }
+.tour-spot.none { transform: translate(50vw, 50vh); width: 0; height: 0; box-shadow: 0 0 0 9999px rgba(0, 0, 0, .7); }
+.tour-card { position: fixed; width: min(380px, calc(100% - 32px)); padding: 18px 18px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line-2); box-shadow: var(--shadow); left: 0; top: 0; transition: transform .25s ease; }
 .tour-step { font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-text); }
 .tour-card h2 { margin: 6px 0 6px; font-size: 18px; font-weight: 600; text-wrap: balance; }
 .tour-card p { margin: 0; font-size: 14px; color: var(--ink); line-height: 1.55; }
@@ -641,6 +646,7 @@ body.doc .top { position: sticky; top: 0; z-index: 5; border-bottom: 1px solid v
 .auth-eye { position: absolute; right: 4px; top: 4px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: none; color: var(--ink-soft); display: grid; place-items: center; cursor: pointer; }
 .auth-eye svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
 .auth-link { border: 0; background: none; padding: 0; color: var(--accent-text); font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.auth-forgot { min-height: 24px; }
 .auth-forgot { justify-self: start; font-size: 13px; }
 .auth-err, .auth-ok { margin: 0; padding: 10px 14px; border-radius: var(--r-item); font-size: 13.5px; }
 .auth-err { background: var(--err-bg); color: var(--err-ink); }
@@ -824,3 +830,10 @@ body.learning .sbtn[aria-label^="Practise"], body.learning .learn-btn { display:
   .learn-actions .btn.primary { margin-left: 0; flex-basis: 100%; }
   .learn-btn span { display: none; }
 }
+
+/* Texto só para leitores de ecrã */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Reserva o espaço antes de a música aparecer (sem saltos do layout ao carregar: CLS) */
+.chart:empty { min-height: 100vh; }
+#songMeta:empty::before { content: '\00a0'; }

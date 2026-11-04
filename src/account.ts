@@ -1,5 +1,6 @@
 // Página da conta: entrar/criar conta, perfil, plano, segurança e apagar conta.
 import './fonts';
+import './app/input-mode';
 import './styles.css';
 import { mountAuth } from './app/auth-ui';
 import { authErrorMessage, passwordProblem } from './app/auth-errors';

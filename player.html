@@ -99,43 +99,6 @@
           <div class="panel-head">
             <h2>Tab · <span id="tabTrackName"></span></h2>
             <span class="now-chip" id="nowChip"></span>
-            <button class="btn sm video-btn" id="videoBtn" type="button" aria-pressed="false" aria-controls="videoPanel" title="Play the original recording from YouTube in sync with the tab">
-              <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/></svg><span>Original audio</span>
-            </button>
-          </div>
-          <div class="video-panel" id="videoPanel" hidden>
-            <form class="video-add" id="videoAdd" hidden novalidate>
-              <label for="videoUrl">YouTube link of the original recording</label>
-              <div class="video-add-row">
-                <input id="videoUrl" type="text" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off" spellcheck="false">
-                <button class="btn primary sm" type="submit">Add</button>
-              </div>
-              <p class="video-err" id="videoErr" role="alert" hidden></p>
-              <p class="hint">The video is played by YouTube, in your browser. Once you mark where the bars start, the tab follows the recording.</p>
-            </form>
-            <div class="video-main" id="videoMain" hidden>
-              <div class="video-frame" id="videoFrame"><div id="ytPlayer"></div></div>
-              <div class="video-bar">
-                <button class="btn sm" id="videoSyncBtn" type="button" aria-expanded="true" aria-controls="videoSync">Sync</button>
-                <button class="btn sm" id="videoChange" type="button">Change video</button>
-                <button class="btn sm" id="videoRemove" type="button">Remove</button>
-              </div>
-              <div class="video-sync" id="videoSync">
-                <p class="video-help" id="videoHelp"></p>
-                <div class="video-nudge" role="group" aria-label="Fine tune the video position">
-                  <button class="btn sm" id="videoBack" type="button" aria-label="0.1 seconds back">− 0.1 s</button>
-                  <output id="videoTime" aria-live="off">0:00.000</output>
-                  <button class="btn sm" id="videoFwd" type="button" aria-label="0.1 seconds forward">+ 0.1 s</button>
-                </div>
-                <div class="video-nudge" role="group" aria-label="Bar to mark">
-                  <button class="btn sm" id="videoBarPrev" type="button" aria-label="Previous bar">−</button>
-                  <span class="video-barnum">Bar <output id="videoBarNum">1</output></span>
-                  <button class="btn sm" id="videoBarNext" type="button" aria-label="Next bar">+</button>
-                </div>
-                <button class="btn primary" id="videoMark" type="button">Mark bar 1 here</button>
-                <ul class="video-points" id="videoPoints"></ul>
-              </div>
-            </div>
           </div>
           <div class="tabwrap">
             <div id="tabScroll">

@@ -63,7 +63,6 @@ src/
     metronome.ts           Sons do metrónomo e da contagem (clique, voz, woodblock…) e a sua geração em amostras
     metro-grid.ts          Grelha das batidas, calculada como o sintetizador do alphaTab a calcula (puro, testado)
     metro-inject.ts        Mistura o metrónomo e a contagem no fluxo de áudio da música, na amostra exata
-    video.ts               Áudio original: endereço do YouTube, pontos de sincronização e carregamento da IFrame Player API (testado)
     plan.ts                Planos (sem conta / Free / Premium) e o que cada um desbloqueia
     practice.ts            Progresso por secção (tempo, melhor velocidade, "Mastered")
     billing.ts             Preços e links de pagamento (Stripe)
@@ -97,18 +96,6 @@ públicos do alphaTab (se não os encontrar, volta ao método antigo). O som "Cl
 
 Para confirmar, compara-se, no mesmo fluxo, o clique do alphaTab (volume 1) com o som do site: coincidem na mesma
 amostra em todas as batidas (a velocidades diferentes, com contagem, a meio da música, depois de pausar e em loop).
-
-### Áudio original (YouTube)
-
-Em vez do sintetizador, o áudio pode ser o de um vídeo do YouTube (IFrame Player API, em `youtube-nocookie.com`),
-como no Songsterr. O alphaTab passa ao modo de **média externa** (`PlayerMode.EnabledExternalMedia`): o `main.ts`
-dá-lhe um `handler` (tocar, pausar, saltar, velocidade) que manda no vídeo e, 25 vezes por segundo, diz-lhe em que
-ponto está o vídeo (`output.updatePosition`). Os **pontos de sincronização** (compasso → tempo do vídeo, marcados
-pela pessoa) vão para a partitura com `Score.applyFlatSyncPoints`; entre dois pontos o tempo é interpolado e, para o
-resto da música não ser esticado até ao fim do vídeo, junta-se um ponto no último compasso com o andamento da partitura.
-Os pontos ficam em `localStorage` (`mapa:video:<música>`); o YouTube só é contactado se a pessoa ligar o "Original audio".
-Sem sintetizador não há metrónomo, contagem, "tocar por cima" nem "só o meu instrumento". O YouTube não é acessível a
-partir do ambiente de desenvolvimento deste projeto, por isso os testes usam uma simulação da API.
 
 ### alphaTab
 

@@ -8,7 +8,6 @@ import { exportPdf } from './app/pdf';
 import { barView, type BarView } from './analysis/bar';
 import { Clicker, METRO_SOUNDS, isMetroSound, nextTickTime, type MetroSound } from './app/metronome';
 import { MetroInjector, type GridSource } from './app/metro-inject';
-import { cleanPoints, formatMs, loadYouTubeApi, nearestRate, parseYouTubeId, toFlat, withPoint, type SavedVideo, type VideoPoint, type YtNamespace, type YtPlayer } from './app/video';
 import type { GridEvent } from './app/metro-grid';
 import { autoSub, beatInfo, countLabels, slotOf, type Sub } from './app/count';
 import { VisualDelay } from './app/sync';
@@ -78,16 +77,6 @@ const st: State = {
 const score = () => st.score as Score;
 const api = () => st.api as AlphaTab.AlphaTabApi;
 /** Correções do instrumento selecionado. */
-/** 'synth': o alphaTab sintetiza a música. 'video': o áudio é o de um vídeo do YouTube e o alphaTab só o acompanha. */
-type ApiMode = 'synth' | 'video';
-let apiMode: ApiMode = 'synth';
-const video = {
-  id: '', points: [] as VideoPoint[], on: false,
-  yt: null as YtPlayer | null, states: null as YtNamespace['PlayerState'] | null,
-  ready: false, loading: false, adding: false, timer: 0, pendingSeek: -1, removeArmed: 0,
-  /** Compasso que o botão "Mark" vai marcar (0 = primeiro). */
-  markBar: 0,
-};
 const ov = () => (st.overridesByTrack[st.viewTrack] ??= {});
 
 // ---------- Utilidades ----------
@@ -159,7 +148,6 @@ function loadBytes(bytes: Uint8Array, name: string, isSample: boolean): boolean 
   const bassIdx = pitched.find(i => isBassTrack(s.tracks[i]));
   st.loopSection = -1; st.loopBar = -1; st.tabSel = -1; st.selBar = -1; st.playingBar = -1;
   $('tabSel').hidden = true; closeBarModal();
-  loadVideoState();
 
   const saved = storage.get<SavedSong>('mapa:' + st.fileKey);
   // Instrumento: o último escolhido para esta música; senão o baixo; senão o primeiro com notas.
@@ -367,7 +355,6 @@ function selectBar(i: number) {
   updateTextBtn();
   $('barbar').hidden = false;
   showTabSel(i, false);
-  updateVideoUi();
 }
 $('bbText').addEventListener('click', () => { if (st.selBar >= 0) editText(st.selBar); });
 $('bbExpand').addEventListener('click', () => { if (st.selBar >= 0) { $('barbar').hidden = true; openBarModal(st.selBar); } });
@@ -702,8 +689,6 @@ for (const ev of ['pointerdown', 'keydown'] as const) {
 
 // ---------- Leitor (alphaTab) ----------
 function initApi() {
-  apiMode = wantedMode();
-  const external = apiMode === 'video';
   const a = new at.AlphaTabApi($('tab'), {
     core: { fontDirectory: vendor + 'font/', scriptFile: vendor + 'alphaTab.min.js', engine: 'svg' },
     display: {
@@ -712,15 +697,11 @@ function initApi() {
       resources: TAB_COLORS[currentTheme()],
     },
     player: {
-      // Com o áudio original (YouTube) o alphaTab não sintetiza: só segue o tempo do vídeo, pelos pontos de sincronização
-      ...(external
-        ? { playerMode: at.PlayerMode.EnabledExternalMedia }
-        : { playerMode: 'EnabledSynthesizer', outputMode: 'WebAudioScriptProcessor', soundFont: vendor + 'soundfont/sonivox.sf3' }),
+      playerMode: 'EnabledSynthesizer', outputMode: 'WebAudioScriptProcessor', soundFont: vendor + 'soundfont/sonivox.sf3',
       scrollElement: $('tabScroll'), enableCursor: true, enableAnimatedBeatCursor: true, enableUserInteraction: true, scrollOffsetY: -40,
     },
   });
   st.api = a;
-  if (external) (a as unknown as { player: { output: { handler: unknown } } }).player.output.handler = videoHandler();
   // Todos os textos da tablatura (títulos, marcações, andamento, números) em Roboto, como o resto do site
   const fonts = a.settings.display.resources.elementFonts;
   for (const [el, f] of fonts) fonts.set(el, new at.model.Font('Roboto', f.size, f.style, f.weight));
@@ -732,8 +713,6 @@ function initApi() {
     ['playBtn', 'stopBtn', 'prevBtn', 'nextBtn', 'loopBtn', 'metroBtn', 'countBtn', 'muteBtn', 'soloBtn'].forEach(id => ($<HTMLButtonElement>(id).disabled = false));
     $('status').textContent = 'Ready to play';
     a.playbackSpeed = +select('speed').value / 100;
-    applyVideoLocks();
-    if (apiMode === 'video') { applyMetronome(); return; }
     setupInjector(a);
     applyMetronome(); if (metro.sound !== 'click') void clicker.load(metro.sound);
     applyMute();
@@ -794,10 +773,7 @@ function setStatus(txt: string) {
 }
 
 function renderTab() {
-  if (st.api && apiMode !== wantedMode()) destroyApi();
   if (!st.api) initApi();
-  // Pontos de sincronização com o vídeo (têm de estar na partitura antes de o alphaTab a carregar)
-  score().applyFlatSyncPoints(apiMode === 'video' ? toFlat(effectivePoints()) : []);
   const t = score().tracks[st.viewTrack];
   $('tabTrackName').textContent = trackLabel(t, st.viewTrack);
   const allTab = t.staves.every(s => s.showTablature !== false && s.tuning && s.tuning.length);
@@ -816,7 +792,7 @@ function syncModalToggles() {
 /** "Tocar por cima" silencia o instrumento selecionado; "Só o meu instrumento" deixa só esse a tocar. */
 function applyMute() {
   syncModalToggles();
-  if (!st.api || !st.score || apiMode === 'video') return;
+  if (!st.api || !st.score) return;
   const all = st.score.tracks, mine = [all[st.viewTrack]];
   const mute = $('muteBtn').getAttribute('aria-pressed') === 'true';
   const solo = $('soloBtn').getAttribute('aria-pressed') === 'true';
@@ -845,7 +821,6 @@ function setMetroSound(v: MetroSound) {
 function applyMetronome() {
   syncModalToggles();
   if (!st.api) return;
-  if (apiMode === 'video') { st.api.metronomeVolume = 0; st.api.countInVolume = 0; return; }
   const metroOn = $('metroBtn').getAttribute('aria-pressed') === 'true';
   const countOn = $('countBtn').getAttribute('aria-pressed') === 'true';
   st.api.metronomeVolume = metroOn && metro.sound === 'click' ? 1 : 0;
@@ -856,242 +831,6 @@ const curNumerator = () => {
   const i = Math.max(0, st.playingBar);
   return st.score?.masterBars[i]?.timeSignatureNumerator ?? 4;
 };
-
-// ---------- Áudio original (YouTube) ----------
-// O vídeo do YouTube dá o áudio e o alphaTab, em modo de média externa, só mostra o compasso certo a cada
-// instante. A correspondência compasso ↔ tempo do vídeo são os pontos de sincronização, marcados pela pessoa
-// (uma vez por música) e guardados neste browser.
-const wantedMode = (): ApiMode => (video.on ? 'video' : 'synth');
-const videoKey = () => 'mapa:video:' + st.fileKey;
-
-/** O alphaTab manda no vídeo através disto (tocar, pausar, saltar, velocidade). */
-function videoHandler() {
-  const ready = () => (video.ready ? video.yt : null);
-  return {
-    get backingTrackDuration() { return (ready()?.getDuration() ?? 0) * 1000; },
-    get playbackRate() { return ready()?.getPlaybackRate() ?? 1; },
-    set playbackRate(v: number) { const y = ready(); if (y) y.setPlaybackRate(nearestRate(y.getAvailablePlaybackRates(), v)); },
-    get masterVolume() { return 1; },
-    set masterVolume(_v: number) { /* o volume é o dos controlos do YouTube */ },
-    seekTo(ms: number) { const y = ready(); if (y) y.seekTo(ms / 1000, true); else video.pendingSeek = ms; },
-    play() { ready()?.playVideo(); },
-    pause() { ready()?.pauseVideo(); },
-  };
-}
-
-/** Diz ao alphaTab em que ponto está o vídeo (várias vezes por segundo, só a tocar). */
-function pushVideoTime(force = false) {
-  const y = video.yt, a = st.api;
-  if (!y || !video.ready || !a || apiMode !== 'video') return;
-  const ms = y.getCurrentTime() * 1000;
-  $('videoTime').textContent = formatMs(ms);
-  if (!force && y.getPlayerState() !== video.states?.PLAYING) return;
-  (a as unknown as { player: { output: { updatePosition(t: number): void } } }).player.output.updatePosition(ms);
-}
-
-/** O início de cada compasso (ms, à velocidade da partitura), para estimar o tempo por falta de mais pontos. */
-function barStartsMs(): number[] {
-  const out: number[] = []; let t = 0, bpm = score().tempo || 120;
-  for (const mb of score().masterBars) {
-    out.push(t);
-    bpm = mb.tempoAutomation?.value || bpm;
-    t += mb.calculateDuration() * (6e4 / (bpm * 960));
-  }
-  return out;
-}
-
-/**
- * Os pontos que se dão ao alphaTab: os marcados e, se o último não for o último compasso, mais um no fim,
- * com o andamento da partitura. Sem ele o alphaTab esticava o resto da música até ao fim do vídeo
- * (e um vídeo com silêncio ou aplausos no fim estragava a sincronização).
- */
-function effectivePoints(): VideoPoint[] {
-  const total = score().masterBars.length;
-  const pts = cleanPoints(video.points).filter(p => p.bar < total);
-  const tail = pts[pts.length - 1];
-  if (!tail || tail.bar >= total - 1) return pts;
-  const starts = barStartsMs();
-  return [...pts, { bar: total - 1, ms: tail.ms + (starts[total - 1] - starts[tail.bar]) }];
-}
-
-/** Guarda os pontos na partitura e avisa o alphaTab, sem deixar o vídeo saltar do sítio onde a pessoa o pôs. */
-function applyVideoPoints() {
-  score().applyFlatSyncPoints(apiMode === 'video' ? toFlat(effectivePoints()) : []);
-  const a = st.api, y = video.yt;
-  if (apiMode !== 'video' || !a || !st.ready || !y || !video.ready) return;
-  const keep = y.getCurrentTime();
-  a.updateSyncPoints();
-  y.seekTo(keep, true);
-  pushVideoTime(true);
-}
-function saveVideo() { storage.set(videoKey(), { id: video.id, points: video.points } satisfies SavedVideo); }
-
-/** Ao abrir uma música: o vídeo que se lhe juntou (fica desligado até a pessoa o ligar: nada é pedido ao YouTube sem ela querer). */
-function loadVideoState() {
-  if (video.on) stopVideoPlayer();
-  video.on = false; video.adding = false; video.removeArmed = 0;
-  const saved = storage.get<SavedVideo>(videoKey());
-  video.id = saved?.id ?? ''; video.points = cleanPoints(saved?.points ?? []);
-  video.markBar = 0; suggestMarkBar();
-  updateVideoUi();
-}
-
-function stopVideoPlayer() {
-  clearInterval(video.timer); video.timer = 0;
-  try { video.yt?.destroy(); } catch { /* já não existe */ }
-  video.yt = null; video.ready = false; video.pendingSeek = -1;
-  $('videoFrame').innerHTML = '<div id="ytPlayer"></div>';
-}
-
-/** Deita fora o leitor do alphaTab (para o recriar noutro modo). */
-function destroyApi() {
-  try { st.api?.destroy(); } catch { /* já não existe */ }
-  st.api = null; st.ready = false; injector = null; gridCache = null;
-  st.loopSection = -1; st.loopBar = -1; st.playingBar = -1; delay.clear(); setPressed('loopBtn', false);
-  ['playBtn', 'stopBtn', 'prevBtn', 'nextBtn', 'loopBtn'].forEach(id => ($<HTMLButtonElement>(id).disabled = true));
-  $('tab').innerHTML = '';
-  $('playIcon').innerHTML = '<path d="M8 5v14l11-7z"/>';
-}
-
-/** Sem o sintetizador não há metrónomo, contagem, "tocar por cima" nem "só o meu instrumento". */
-function applyVideoLocks() {
-  const lock = apiMode === 'video';
-  for (const id of ['metroBtn', 'countBtn', 'muteBtn', 'soloBtn']) {
-    const b = $<HTMLButtonElement>(id);
-    if (lock) { setPressed(id, false); b.disabled = true; b.dataset.title ??= b.title; b.title = 'Not available with the original audio'; }
-    else if (b.dataset.title !== undefined) { b.title = b.dataset.title; delete b.dataset.title; }
-  }
-  for (const id of ['bmCountIn', 'bmMetro', 'bmMute', 'bmSolo']) input(id).disabled = lock;
-  select('bmSound').disabled = lock;
-  syncModalToggles();
-}
-
-async function startVideo(id: string) {
-  if (video.loading) return;
-  video.loading = true; showVideoErr('');
-  let YT: YtNamespace;
-  try { YT = await loadYouTubeApi(); }
-  catch (e) { video.loading = false; video.adding = true; showVideoErr((e as Error).message + ' Check your connection and try again.'); updateVideoUi(); return; }
-  video.states = YT.PlayerState;
-  if (id !== video.id) video.points = [];
-  video.id = id; saveVideo();
-  stopVideoPlayer();
-  video.on = true; video.adding = false; video.loading = false;
-  // Com a sincronização já feita (2 ou mais marcas) o painel começa recolhido
-  $('videoSync').hidden = video.points.length >= 2; $('videoSyncBtn').setAttribute('aria-expanded', String(!$('videoSync').hidden));
-  renderTab();                                  // recria o alphaTab em modo "áudio original"
-  video.yt = new YT.Player('ytPlayer', {
-    host: 'https://www.youtube-nocookie.com', videoId: id,
-    playerVars: { playsinline: 1, rel: 0, modestbranding: 1, iv_load_policy: 3, origin: location.origin },
-    events: {
-      onReady: () => {
-        video.ready = true;
-        const a = st.api, y = video.yt!;
-        if (a) y.setPlaybackRate(nearestRate(y.getAvailablePlaybackRates(), a.playbackSpeed));
-        if (video.pendingSeek >= 0) { y.seekTo(video.pendingSeek / 1000, true); video.pendingSeek = -1; }
-        if (a && a.playerState === PLAYING) y.playVideo();
-        video.timer = window.setInterval(pushVideoTime, 40);
-        applyVideoPoints(); updateVideoUi();
-      },
-      // Os botões do próprio YouTube também mandam no leitor
-      onStateChange: (e: { data: number }) => {
-        const a = st.api, S = video.states;
-        if (!a || !S || apiMode !== 'video') return;
-        if (e.data === S.PLAYING && a.playerState !== PLAYING) a.play();
-        else if ((e.data === S.PAUSED || e.data === S.ENDED) && a.playerState === PLAYING) a.pause();
-        pushVideoTime(true);
-      },
-      onError: (e: { data: number }) => {
-        const blocked = e.data === 101 || e.data === 150 || e.data === 100 || e.data === 5 || e.data === 2;
-        stopVideo(); video.adding = true;
-        showVideoErr(blocked ? 'This video can’t be played here (it may be private, removed or not allowed to be embedded). Try another one.' : 'The video couldn’t be loaded. Try again.');
-        updateVideoUi();
-      },
-    },
-  });
-  updateVideoUi();
-}
-
-function stopVideo() {
-  stopVideoPlayer();
-  video.on = false;
-  renderTab();                                  // volta ao sintetizador
-  applyVideoLocks(); updateVideoUi();
-}
-
-function showVideoErr(msg: string) { const e = $('videoErr'); e.textContent = msg; e.hidden = !msg; }
-const markBar = () => Math.max(0, Math.min(video.markBar, score().masterBars.length - 1));
-/** Depois de marcar um compasso sugere o seguinte que falta: o último (para acertar o andamento) e depois o do meio. */
-function suggestMarkBar() {
-  const total = score().masterBars.length, have = new Set(video.points.map(p => p.bar));
-  const wish = [0, total - 1, Math.floor((total - 1) / 2), Math.floor((total - 1) / 4), Math.floor(((total - 1) * 3) / 4)];
-  video.markBar = wish.find(b => !have.has(b)) ?? markBar();
-}
-
-function updateVideoUi() {
-  const btn = $('videoBtn');
-  btn.setAttribute('aria-pressed', String(video.on));
-  btn.querySelector('span')!.textContent = video.on ? 'Original audio: on' : 'Original audio';
-  $('videoPanel').hidden = !(video.on || video.adding);
-  $('videoAdd').hidden = !video.adding;
-  $('videoMain').hidden = !video.on;
-  if (!video.on) return;
-  const n = markBar(), have = video.points.length;
-  $('videoBarNum').textContent = String(n + 1);
-  $('videoMark').textContent = 'Mark bar ' + (n + 1) + ' here';
-  $('videoHelp').innerHTML = have === 0
-    ? '<strong>1.</strong> Play the video and pause it exactly where <strong>bar 1</strong> starts (the ± 0.1 s buttons help). <strong>2.</strong> Check the bar number below (− / +). <strong>3.</strong> Press <strong>Mark</strong>.'
-    : have === 1
-      ? 'Good. If the recording is faster or slower than the tab, do the same for a bar near the <strong>end</strong> of the song.'
-      : 'Done. If the tab drifts from the music in some part, mark a bar there too.';
-  const ul = $('videoPoints'); ul.innerHTML = '';
-  for (const p of video.points) {
-    const li = document.createElement('li');
-    li.innerHTML = '<span class="vp-label"></span><span class="vp-time"></span><button type="button" class="vp-go" title="Go to this point"><svg class="i f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button><button type="button" class="vp-del" aria-label="Remove this mark" title="Remove this mark">✕</button>';
-    li.querySelector('.vp-label')!.textContent = 'Bar ' + (p.bar + 1);
-    li.querySelector('.vp-time')!.textContent = formatMs(p.ms);
-    li.querySelector('.vp-go')!.addEventListener('click', () => { video.yt?.seekTo(p.ms / 1000, true); pushVideoTime(true); });
-    li.querySelector('.vp-del')!.addEventListener('click', () => { video.points = video.points.filter(q => q.bar !== p.bar); saveVideo(); applyVideoPoints(); updateVideoUi(); });
-    ul.append(li);
-  }
-}
-
-$('videoBtn').addEventListener('click', () => {
-  if (video.on) { stopVideo(); return; }
-  if (video.id && !video.adding) { void startVideo(video.id); return; }
-  video.adding = !video.adding; showVideoErr(''); updateVideoUi();
-  if (video.adding) input('videoUrl').focus();
-});
-$('videoAdd').addEventListener('submit', e => {
-  e.preventDefault();
-  const id = parseYouTubeId(input('videoUrl').value);
-  if (!id) { showVideoErr('That doesn’t look like a YouTube link. Paste the address of the video (for example https://www.youtube.com/watch?v=…).'); return; }
-  void startVideo(id);
-});
-$('videoChange').addEventListener('click', () => { video.adding = true; showVideoErr(''); input('videoUrl').value = ''; updateVideoUi(); input('videoUrl').focus(); });
-$('videoRemove').addEventListener('click', () => {
-  const b = $('videoRemove');
-  if (!video.removeArmed) { video.removeArmed = window.setTimeout(() => { video.removeArmed = 0; b.textContent = 'Remove'; }, 3000); b.textContent = 'Sure? Press again'; return; }
-  clearTimeout(video.removeArmed); video.removeArmed = 0; b.textContent = 'Remove';
-  video.id = ''; video.points = []; saveVideo(); stopVideo();
-  toast('Video removed.');
-});
-$('videoSyncBtn').addEventListener('click', () => {
-  const open = $('videoSync').hidden; $('videoSync').hidden = !open; $('videoSyncBtn').setAttribute('aria-expanded', String(open));
-});
-for (const [id, delta] of [['videoBack', -0.1], ['videoFwd', 0.1]] as const) {
-  $(id).addEventListener('click', () => { const y = video.yt; if (!y || !video.ready) return; y.seekTo(Math.max(0, y.getCurrentTime() + delta), true); setTimeout(() => pushVideoTime(true), 120); });
-}
-for (const [id, d] of [['videoBarPrev', -1], ['videoBarNext', 1]] as const) {
-  $(id).addEventListener('click', () => { video.markBar = Math.max(0, Math.min(score().masterBars.length - 1, markBar() + d)); updateVideoUi(); });
-}
-$('videoMark').addEventListener('click', () => {
-  const y = video.yt; if (!y || !video.ready) { toast('The video is still loading.'); return; }
-  const bar = Math.min(markBar(), score().masterBars.length - 1), ms = Math.round(y.getCurrentTime() * 1000);
-  video.points = withPoint(video.points, bar, ms); saveVideo(); applyVideoPoints(); suggestMarkBar(); updateVideoUi();
-  toast('Bar ' + (bar + 1) + ' marked at ' + formatMs(ms) + '.');
-});
-
 /**
  * Metrónomo e contagem exatos: o som é misturado no próprio fluxo de áudio da música, na amostra certa
  * (ver app/metro-inject.ts). O som "Click" é o do próprio alphaTab, que já vem dentro do sintetizador.
@@ -1121,7 +860,7 @@ function gridSource(): GridSource | null {
   return source;
 }
 function setupInjector(a: AlphaTab.AlphaTabApi) {
-  if (injector || apiMode === 'video') return;
+  if (injector) return;
   const inj = new MetroInjector({
     player: (a as unknown as { player: unknown }).player,
     source: gridSource,

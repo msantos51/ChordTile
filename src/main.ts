@@ -149,6 +149,7 @@ function loadBytes(bytes: Uint8Array, name: string, isSample: boolean): boolean 
   const bassIdx = pitched.find(i => isBassTrack(s.tracks[i]));
   st.loopSection = -1; st.loopBar = -1; st.tabSel = -1; st.selBar = -1; st.playingBar = -1;
   $('tabSel').hidden = true; closeBarModal();
+  if (learn.on) exitLearn();
 
   const saved = storage.get<SavedSong>('mapa:' + st.fileKey);
   // Instrumento: o último escolhido para esta música; senão o baixo; senão o primeiro com notas.
@@ -715,6 +716,7 @@ function initApi() {
     $('status').textContent = 'Ready to play';
     a.playbackSpeed = +select('speed').value / 100;
     setupInjector(a);
+    if (learn.on) showLearnStep();
     applyMetronome(); if (metro.sound !== 'click') void clicker.load(metro.sound);
     applyMute();
   });
@@ -733,7 +735,7 @@ function initApi() {
     $('playIcon').innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
     $('playBtn').setAttribute('aria-label', playing ? 'Pause' : 'Play');
     setStatus(playing ? 'Playing' : 'Paused');
-    syncModalPlay();
+    syncModalPlay(); syncLearnPlay();
     if (!playing && modal.open) clearModalHighlight();
   });
   a.midiEventsPlayedFilter = [at.midi.MidiEventType.AlphaTabMetronome];
@@ -1432,6 +1434,137 @@ $('tourPrev').addEventListener('click', () => { if (tour.i > 0) { tour.i--; show
 $('tourSkip').addEventListener('click', endTour);
 addEventListener('resize', () => { if (tour.open) placeTour(visibleTarget(TOUR_STEPS[tour.i])); });
 
+
+// ---------- Tile by Tile: aprender a música de cor, secção a secção ----------
+// Para cada secção: primeiro aprende-se com a tab (só a dessa secção, em loop); depois a tab esconde-se e toca-se
+// só com os quadrados (onde se podem escrever notas). No fim, a música toda só com os quadrados.
+// A etapa em que se está fica guardada por música, para continuar mais tarde.
+const LEARN_NAME = 'Tile by Tile';
+type LearnStep = { kind: 'tab' | 'tiles'; sec: number } | { kind: 'song' };
+const learn = { on: false, step: 0 };
+const learnKey = () => 'mapa:learn:' + st.fileKey;
+function learnSteps(): LearnStep[] {
+  const steps: LearnStep[] = [];
+  st.sections.forEach((_, k) => { steps.push({ kind: 'tab', sec: k }, { kind: 'tiles', sec: k }); });
+  steps.push({ kind: 'song' });
+  return steps;
+}
+function setLearnStyle(css: string) {
+  let el = document.getElementById('learnStyle');
+  if (!el) { el = document.createElement('style'); el.id = 'learnStyle'; document.head.append(el); }
+  el.textContent = css;
+}
+/** A tablatura só com os compassos da secção (null = a música toda). */
+function setTabRange(sec: number | null) {
+  const a = st.api; if (!a) return;
+  const d = a.settings.display;
+  const start = sec === null ? 1 : st.sections[sec].start + 1;
+  const count = sec === null ? -1 : secEnd(sec) - st.sections[sec].start;
+  if (d.startBar === start && d.barCount === count) return;
+  d.startBar = start; d.barCount = count;
+  a.updateSettings(); a.render();
+}
+/** Loop da secção, pronto a tocar (sem começar sozinho). */
+function setSectionLoop(k: number) {
+  if (!st.ready) return;
+  if (api().playerState === PLAYING) api().pause();
+  st.loopSection = k; st.loopBar = -1; practice.lastTick = -1;
+  const s = st.sections[k], end = secEnd(k);
+  api().playbackRange = { startTick: barTick(s.start), endTick: barEndTick(end - 1) } as AlphaTab.synth.PlaybackRange;
+  api().isLooping = true; setPressed('loopBtn', true);
+  renderChart();
+  delay.clear();
+  api().tickPosition = barTick(s.start);
+  st.playingBar = s.start; markPlaying(s.start, false); updateNow(s.start, 0);
+}
+
+function enterLearn() {
+  if (!st.score || !gateOk('tools')) return;
+  learn.on = true;
+  const saved = storage.get<{ step: number }>(learnKey());
+  learn.step = Math.max(0, Math.min(saved?.step ?? 0, learnSteps().length - 1));
+  closeBarModal(); openLibrary(false); openSettings(false, false); $('barbar').hidden = true;
+  history.replaceState(null, '', location.pathname + '?learn' + location.hash);
+  showLearnStep();
+  scrollTo({ top: 0 });
+}
+function exitLearn() {
+  if (!learn.on) return;
+  learn.on = false;
+  document.body.classList.remove('learning', 'learn-tab', 'learn-tiles', 'learn-song');
+  $('learnPanel').hidden = true; setLearnStyle('');
+  if (st.api && api().playerState === PLAYING) api().pause();
+  setTabRange(null); clearLoop(); renderChart();
+  history.replaceState(null, '', location.pathname + location.hash);
+}
+
+function showLearnStep() {
+  const steps = learnSteps();
+  const i = (learn.step = Math.max(0, Math.min(learn.step, steps.length - 1)));
+  const step = steps[i];
+  storage.set(learnKey(), { step: i });
+  const b = document.body;
+  b.classList.add('learning');
+  b.classList.toggle('learn-tab', step.kind === 'tab');
+  b.classList.toggle('learn-tiles', step.kind === 'tiles');
+  b.classList.toggle('learn-song', step.kind === 'song');
+  $('learnPanel').hidden = false;
+  $('learnName').textContent = LEARN_NAME;
+  $('learnCount').textContent = 'Step ' + (i + 1) + ' of ' + steps.length;
+  const track = $('learnTrack'); track.innerHTML = '';
+  steps.forEach((s, j) => {
+    const li = document.createElement('li');
+    li.className = j < i ? 'done' : j === i ? 'now' : '';
+    li.title = s.kind === 'song' ? 'The whole song' : st.sections[s.sec].name + (s.kind === 'tab' ? ' · from the tab' : ' · from the tiles');
+    track.append(li);
+  });
+  $<HTMLButtonElement>('learnBack').disabled = i === 0;
+  const esc = (t: string) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!));
+  if (step.kind === 'song') {
+    $('learnTitle').textContent = 'The whole song';
+    $('learnText').innerHTML = 'Now play the <strong>whole song from the tiles</strong>, without the tab. Tap a tile to add a note where you still hesitate. If a section isn’t there yet, go back to it.';
+    $('learnNext').textContent = 'Finish';
+    setLearnStyle(''); setTabRange(null);
+    if (st.ready) { if (api().playerState === PLAYING) api().pause(); clearLoop(); renderChart(); goBar(0); }
+  } else {
+    const sec = st.sections[step.sec], name = esc(sec.name), next = st.sections[step.sec + 1];
+    if (step.kind === 'tab') {
+      $('learnTitle').textContent = sec.name + ' · learn it from the tab';
+      $('learnText').innerHTML = 'Learn <strong>' + name + '</strong> with the tab. It plays on loop: follow it, slow it down with the speed menu if you need to, and repeat until you can play it. Then hide the tab.';
+      $('learnNext').textContent = 'Hide the tab';
+      setLearnStyle(''); setTabRange(step.sec);
+    } else {
+      $('learnTitle').textContent = sec.name + ' · play it from the tiles';
+      $('learnText').innerHTML = 'The tab is gone: play <strong>' + name + '</strong> from the tiles only. Tap a tile to add a note (a reminder like “slide” or “x2”). If you get stuck, go back to the tab.';
+      $('learnNext').textContent = next ? 'Next section: ' + next.name : 'Play the whole song';
+      setLearnStyle('.chart .section:not([data-sec="' + step.sec + '"]) { display: none; }');
+    }
+    setSectionLoop(step.sec);
+  }
+  syncLearnPlay();
+}
+function syncLearnPlay() {
+  if (!learn.on) return;
+  const playing = !!st.api && st.ready && api().playerState === PLAYING;
+  const song = learnSteps()[learn.step]?.kind === 'song';
+  $('learnPlay').querySelector('span')!.textContent = playing ? 'Pause' : song ? 'Play the whole song' : 'Play on loop';
+  $('learnPlay').querySelector('svg')!.innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
+}
+$('learnBtn').addEventListener('click', enterLearn);
+$('learnExit').addEventListener('click', exitLearn);
+$('learnBack').addEventListener('click', () => { learn.step--; showLearnStep(); });
+$('learnNext').addEventListener('click', () => {
+  if (learn.step >= learnSteps().length - 1) { toast('You can play “' + ($('songTitle').textContent || 'the song') + '” by heart. Well done!'); exitLearn(); return; }
+  learn.step++; showLearnStep(); scrollTo({ top: 0, behavior: 'smooth' });
+});
+$('learnPlay').addEventListener('click', () => {
+  if (!st.ready) { toast('The sounds are still loading.'); return; }
+  if (api().playerState === PLAYING) { api().pause(); return; }
+  const step = learnSteps()[learn.step];
+  if (step && step.kind !== 'song' && st.loopSection !== step.sec) setSectionLoop(step.sec);
+  api().play();
+});
+
 // Ao abrir: o ficheiro escolhido na página inicial (?open); ou a música de exemplo (?sample);
 // ou a última música aberta neste browser; se não houver, a música de exemplo.
 const params = new URLSearchParams(location.search);
@@ -1458,5 +1591,6 @@ boot()
     if (q.has('premium') || q.has('signup')) history.replaceState(null, '', location.pathname + location.hash);
   })
   .then(() => { if (location.hash === '#songs' || location.hash === '#musicas') openLibrary(true); })
+  .then(() => { if (params.has('learn')) enterLearn(); })
   // Primeira visita: tutorial (depois de a música aparecer, para os destaques ficarem no sítio certo)
   .finally(() => { if (!tourSeen()) setTimeout(startTour, 600); });

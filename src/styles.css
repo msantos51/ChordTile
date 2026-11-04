@@ -791,3 +791,36 @@ label.set-item { cursor: pointer; }
   .set-inline select { width: 130px; }
   .set-item:has(.set-inline) .set-label small { display: none; }
 }
+
+/* ---------- Tile by Tile (aprender de cor, secção a secção) ---------- */
+.learn-btn { border-color: color-mix(in srgb, var(--accent) 55%, var(--line-2)); }
+.learn-btn .i { width: 15px; height: 15px; }
+.learn-panel { max-width: 1440px; margin: 0 auto 18px; padding: 16px 18px; border-radius: var(--r-card); background: var(--panel); border: 1px solid var(--line-2); display: grid; gap: 12px; }
+.learn-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.learn-heading { min-width: 0; }
+.learn-kicker { margin: 0 0 2px; font: 600 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-text); }
+.learn-panel h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+.learn-text { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-soft); max-width: 70ch; }
+.learn-text strong { color: var(--ink); }
+.learn-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.learn-actions .btn.primary { margin-left: auto; }
+.learn-track { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; flex-wrap: wrap; }
+.learn-track li { flex: 1 1 0; min-width: 22px; height: 6px; border-radius: var(--r-pill); background: var(--line-2); }
+.learn-track li.done { background: color-mix(in srgb, var(--accent) 55%, var(--line-2)); }
+.learn-track li.now { background: var(--accent); }
+/* Etapa "tab": só a tablatura, numa coluna */
+body.learning .viewswitch { display: none !important; }
+body.learn-tab .chartcol { display: none !important; }
+body.learn-tab .tabcol { display: block !important; }
+body.learn-tab .cols, body.learn-tiles .cols, body.learn-song .cols { grid-template-columns: minmax(0, 1fr); }
+/* Etapas "quadrados" e "música toda": só o esquema, sem a tablatura */
+body.learn-tiles .tabcol, body.learn-song .tabcol { display: none !important; }
+body.learn-tiles .chartcol, body.learn-song .chartcol { display: block !important; max-width: 900px; width: 100%; margin: 0 auto; }
+body.learning .sbtn[aria-label^="Practise"], body.learning .learn-btn { display: none; }
+@media (max-width: 600px) {
+  .learn-panel { padding: 14px; margin-bottom: 12px; }
+  .learn-panel h2 { font-size: 18px; }
+  .learn-actions .btn { flex: 1 1 auto; justify-content: center; }
+  .learn-actions .btn.primary { margin-left: 0; flex-basis: 100%; }
+  .learn-btn span { display: none; }
+}

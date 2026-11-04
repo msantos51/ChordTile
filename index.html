@@ -10,7 +10,7 @@
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#c8102e">
 <title>ChordTile · Learn songs bar by bar</title>
-<meta name="description" content="Load a Guitar Pro file and learn the song by sections and bars, with colours per note, synced tablature, looping, a speed trainer and a close-up of every bar.">
+<meta name="description" content="Load a Guitar Pro file and learn the song by sections and bars, with colours per note, synced tablature, looping, adjustable speed and a close-up of every bar.">
 </head>
 <body>
 <div class="page">
@@ -30,18 +30,6 @@
       </div>
       <p class="err" id="landingErr" role="alert" hidden></p>
     </div>
-
-    <section class="how" id="how" aria-labelledby="howTitle">
-      <p class="eyebrow caps" id="howTitle">How it works</p>
-      <ol class="steps" id="steps">
-        <li><button type="button" data-step="0"><b>01</b><span><strong>Import your tab</strong><em class="d">Guitar Pro 3–8 or MusicXML, read right in your browser.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
-        <li><button type="button" data-step="1"><b>02</b><span><strong>See the sections</strong><em class="d">Every bar in the colour of its chord, with your own notes.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
-        <li><button type="button" data-step="2"><b>03</b><span><strong>Practise with the tab</strong><em class="d">Loop a section: the tab follows and the trainer takes the tempo up.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
-        <li><button type="button" data-step="3"><b>04</b><span><strong>Open any bar</strong><em class="d">Expand a bar to see its notes and how to count them.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
-      </ol>
-    </section>
-
-    <footer class="legal"><span>© 2026 ChordTile</span><a href="./help.html">Help</a><a href="./licenses.html">Terms &amp; privacy</a></footer>
   </section>
 
   <section class="right">
@@ -79,7 +67,7 @@
                 <i class="mp-cursor" id="mpCursor"></i>
               </div>
             </div>
-            <div class="mp-dock"><span class="mp-play">▶</span><span id="mpWhere">Ready to play</span><span class="mp-pill" id="mpSpeed">100%</span><span class="mp-pill" id="mpLoop">⟲ Loop</span><span class="mp-pill" id="mpTrainer">↗ Trainer</span></div>
+            <div class="mp-dock"><span class="mp-play">▶</span><span id="mpWhere">Ready to play</span><span class="mp-pill" id="mpSpeed">100%</span><span class="mp-pill" id="mpLoop">⟲ Loop</span></div>
           </div>
         </div>
 
@@ -98,6 +86,18 @@
     </figure>
     <span class="vert r">Guitar · Bass</span>
   </section>
+  <footer class="bottom">
+    <section class="how" id="how" aria-labelledby="howTitle">
+      <p class="eyebrow caps" id="howTitle">How it works</p>
+      <ol class="steps" id="steps">
+        <li><button type="button" data-step="0"><b>01</b><span><strong>Import your tab</strong><em class="d">Guitar Pro 3–8 or MusicXML, read right in your browser.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="1"><b>02</b><span><strong>See the sections</strong><em class="d">Every bar in the colour of its chord, with your own notes.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="2"><b>03</b><span><strong>Practise with the tab</strong><em class="d">Loop a section and slow it down: the tab follows along.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="3"><b>04</b><span><strong>Open any bar</strong><em class="d">Expand a bar to see its notes and how to count them.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+      </ol>
+    </section>
+    <div class="legal"><span>© 2026 ChordTile</span><a href="./help.html">Help</a><a href="./licenses.html">Terms &amp; privacy</a></div>
+  </footer>
 </div>
 
 <input type="file" id="landingFile" class="sr-only" tabindex="-1" aria-hidden="true">

@@ -1,6 +1,7 @@
 /* Página inicial — design "Vermelho, branco e preto", num só ecrã (sem scroll no computador):
-   à esquerda a mensagem e o "How it works"; à direita, no painel vermelho, a animação em 4 cenas
-   (importar → secções → loop → compasso aberto), sincronizada com os passos.
+   à esquerda a mensagem; à direita, no painel vermelho, a animação em 4 cenas
+   (importar → secções → loop → compasso aberto); em baixo, na largura toda, os 4 passos (sincronizados
+   com a animação) e as ligações legais.
    Só esta página usa estes estilos; o leitor e as páginas de texto usam src/styles.css. */
 :root {
   --white: #ffffff; --off: #f4f2f0; --black: #121212; --ink-2: #555; --ink-3: #8c8c8c; --line: #e6e3df;
@@ -23,8 +24,8 @@ a { color: inherit; }
 .right :focus-visible { outline-color: #fff; }
 
 /* Um só ecrã: branco à esquerda, vermelho à direita */
-.page { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); height: 100vh; height: 100svh; min-height: 640px; }
-.left { display: flex; flex-direction: column; padding: clamp(18px, 3.2vh, 34px) clamp(24px, 5vw, 80px) clamp(14px, 2.4vh, 24px); min-height: 0; }
+.page { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); grid-template-rows: minmax(0, 1fr) auto; height: 100vh; height: 100svh; min-height: 640px; }
+.left { display: flex; flex-direction: column; padding: clamp(18px, 3.2vh, 34px) clamp(24px, 5vw, 80px) clamp(10px, 1.6vh, 18px); min-height: 0; }
 .right { position: relative; background: var(--red); background-image: radial-gradient(120% 80% at 80% 10%, var(--red-3), var(--red) 55%, var(--red-2)); color: #fff;
   padding: clamp(18px, 3.2vh, 34px) clamp(24px, 4vw, 64px); display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
 
@@ -55,10 +56,11 @@ h1 em { font-style: normal; color: var(--red); }
 .link { font: 700 12.5px var(--f-body); letter-spacing: .14em; text-transform: uppercase; text-decoration: none; border-bottom: 2px solid var(--black); padding-bottom: 3px; white-space: nowrap; }
 .err { margin: 16px 0 0; padding: 12px 16px; border-radius: 4px; background: #fde8eb; color: #8a0b20; font-size: 14px; max-width: 34em; }
 
-/* How it works: 4 passos que acendem com a animação */
-.how { border-top: 2px solid var(--black); padding-top: clamp(10px, 1.8vh, 16px); }
-.eyebrow { margin: 0 0 clamp(6px, 1.2vh, 10px); color: var(--red); }
-.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 22px; }
+/* Rodapé da página: "How it works" (4 passos que acendem com a animação) e ligações legais, na largura toda */
+.bottom { grid-column: 1 / -1; background: var(--white); border-top: 2px solid var(--black); padding: clamp(10px, 1.8vh, 16px) clamp(24px, 5vw, 80px) clamp(8px, 1.4vh, 14px); }
+.how { margin: 0; }
+.eyebrow { margin: 0 0 clamp(4px, 1vh, 8px); color: var(--red); }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px 28px; }
 .steps button { all: unset; position: relative; display: grid; grid-template-columns: 30px 1fr; gap: 8px; padding: clamp(6px, 1.1vh, 10px) 0 clamp(8px, 1.3vh, 12px); cursor: pointer; width: 100%; }
 .steps b { font: 900 22px/1.1 var(--f-display); color: var(--ink-3); transition: color .2s; }
 .steps strong { display: block; font: 700 14px/1.3 var(--f-body); color: var(--ink-3); transition: color .2s; }
@@ -71,7 +73,7 @@ h1 em { font-style: normal; color: var(--red); }
 .steps li.on span { color: var(--ink-2); }
 .steps li.done .prog i { transform: scaleX(1); background: var(--black); }
 .steps button:hover strong { color: var(--black); }
-.legal { display: flex; gap: 18px; margin-top: clamp(8px, 1.6vh, 14px); font-size: 12px; color: var(--ink-3); }
+.legal { display: flex; gap: 18px; margin-top: clamp(4px, 1vh, 10px); font-size: 12px; color: var(--ink-3); }
 .legal a { text-decoration: none; } .legal a:hover { color: var(--black); }
 
 .vert { position: absolute; writing-mode: vertical-rl; font: 700 10.5px var(--f-body); letter-spacing: .22em; text-transform: uppercase; }
@@ -219,11 +221,10 @@ h1 em { font-style: normal; color: var(--red); }
 @media (max-width: 980px) {
   .page { display: flex; flex-direction: column; height: auto; min-height: 100svh; }
   .left { display: contents; }
+  .bottom { order: 4; padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px)); }
   .top { order: 1; padding: 14px 16px 0; }
   .copy { order: 2; margin: 0; padding: 14px 16px 16px; }
   .right { order: 3; padding: 14px 16px 16px; }
-  .how { order: 4; margin: 0 16px; }
-  .legal { display: none; }
   .right-top, .vert { display: none; }
   .mob-player { display: inline-flex; }
   h1 { font-size: clamp(30px, 8.6vw, 48px); }
@@ -233,7 +234,7 @@ h1 em { font-style: normal; color: var(--red); }
   .copy { padding-bottom: 12px; }
   .btn { height: 46px; padding: 0 20px; font-size: 12px; }
   .stage { height: 300px; flex: none; }
-  .steps { gap: 0 14px; }
+  .steps { grid-template-columns: 1fr 1fr; gap: 0 14px; }
   .steps .d { display: none; }
   .steps b { font-size: 18px; }
   .steps strong { font-size: 13px; }

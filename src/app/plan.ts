@@ -43,10 +43,10 @@ export function canSaveSong(plan: PlanState, savedIds: string[], id: string): bo
  * Funções com cadeado:
  * - tools: loop, velocidade, metrónomo, contagem, play along, solo, praticar secção (precisa de conta)
  * - notes: escrever notas nos quadrados (precisa de conta)
- * - expand, pdf, trainer, progress, sync: Premium
+ * - expand, pdf, progress, sync: Premium
  */
-export type Feature = 'tools' | 'notes' | 'expand' | 'pdf' | 'trainer' | 'progress' | 'sync';
-const PREMIUM_ONLY: Feature[] = ['expand', 'pdf', 'trainer', 'progress', 'sync'];
+export type Feature = 'tools' | 'notes' | 'expand' | 'pdf' | 'progress' | 'sync';
+const PREMIUM_ONLY: Feature[] = ['expand', 'pdf', 'progress', 'sync'];
 /** 'ok' = pode usar; 'account' = precisa de criar conta; 'premium' = precisa do Premium. */
 export function access(plan: PlanState, f: Feature): 'ok' | 'account' | 'premium' {
   if (plan.premium) return 'ok';

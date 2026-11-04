@@ -60,9 +60,11 @@ src/
     audio-unlock.ts        Som no iPhone mesmo com o interruptor de silêncio ligado
     library.ts             "My songs": ficheiros importados guardados no browser (IndexedDB)
     tour.ts                Tutorial da primeira visita (passos e destaques)
-    metronome.ts           Sons do metrónomo e da contagem (clique, voz, woodblock…)
+    metronome.ts           Sons do metrónomo e da contagem (clique, voz, woodblock…) e a sua geração em amostras
+    metro-grid.ts          Grelha das batidas, calculada como o sintetizador do alphaTab a calcula (puro, testado)
+    metro-inject.ts        Mistura o metrónomo e a contagem no fluxo de áudio da música, na amostra exata
     plan.ts                Planos (sem conta / Free / Premium) e o que cada um desbloqueia
-    practice.ts            Treino de velocidade e progresso por secção
+    practice.ts            Progresso por secção (tempo, melhor velocidade, "Mastered")
     billing.ts             Preços e links de pagamento (Stripe)
     cloud.ts, cloud-plan.ts   Conta e sincronização de "My songs" (Supabase)
     auth-ui.ts, auth-errors.ts   Janela de entrar / criar conta / nova palavra-passe
@@ -76,12 +78,24 @@ scripts/
 
 ### Como funciona a deteção
 
-O tom é detetado **só a partir do instrumento selecionado** (menu na barra de topo ou em Settings → My instrument).
+O tom é detetado **só a partir do instrumento selecionado** (menu do instrumento na barra de topo).
 Por defeito é o baixo, se a música tiver um; a escolha fica guardada por música.
 
 Para cada compasso soma a duração de cada nota desse instrumento por classe de nota, dá mais peso à nota
 mais grave de cada tempo e ao início do compasso, e compara com modelos de acorde maior, menor e power chord.
 Se o ficheiro tiver acordes escritos nesse instrumento, usa esses.
+
+### Metrónomo exato
+
+O metrónomo e a contagem **não** são tocados a partir dos avisos do alphaTab: esses chegam depois de o som já ter
+tocado, em blocos e com alguns ms de irregularidade, e noutro `AudioContext` (com outro relógio). Em vez disso,
+`metro-inject.ts` soma o som aos blocos de áudio que o sintetizador envia (`output.addSamples`), antes de eles
+tocarem, na amostra que `metro-grid.ts` calcula com a mesma regra do alphaTab (grelha de batidas do MIDI e
+micro-janelas de 64 amostras). Fica sempre alinhado com a música, mesmo que o áudio engasgue, e só usa nomes
+públicos do alphaTab (se não os encontrar, volta ao método antigo). O som "Click" é o do próprio sintetizador.
+
+Para confirmar, compara-se, no mesmo fluxo, o clique do alphaTab (volume 1) com o som do site: coincidem na mesma
+amostra em todas as batidas (a 60 %, 100 % e 150 %, com contagem, a meio da música, depois de pausar e em loop).
 
 ### alphaTab
 
@@ -147,14 +161,13 @@ Praticar é sempre grátis. O Premium é para quem quer guardar e acompanhar o q
 |---|---|---|
 | Abrir qualquer ficheiro, esquema, tablatura, tocar e pausar | Tudo o de sem conta | Tudo o da conta grátis |
 | Guardar **1 música** em "My songs" | Guardar até **3 músicas** | Músicas ilimitadas |
-| — | Loop, praticar secção, velocidade, metrónomo, contagem, play along, solo, notas nos compassos | **Expandir um compasso** (e "Rhythm only") e **PDF do esquema** |
+| — | Loop, praticar secção, velocidade, metrónomo, contagem, play along, solo, notas nos compassos | **Expandir um compasso** e **PDF do esquema** |
 | — | — | **Sincronização** entre dispositivos (também imposta no servidor, nas regras RLS) |
-| — | — | **Treino de velocidade**: começa devagar e sobe a cada volta do loop (Settings → Speed trainer) |
 | — | Progresso registado, mas escondido | **Progresso por secção**: tempo, melhor velocidade, "Mastered" (3 voltas a 100 %) |
 
 - **Experiência ("reverse trial")**: cada conta nova tem 14 dias de Premium, sem cartão (gatilho em `auth.users`, ver `supabase/migrations/002_entitlements.sql`). Depois passa para Free e mantém tudo o que já tinha.
 - **Preços** (em `src/app/billing.ts`): 3,99 €/mês, 29 €/ano, 49 € vitalício (preço de fundador).
-- **Código**: regras do plano em `src/app/plan.ts`; treino e progresso em `src/app/practice.ts` (ambos testados); pagamentos em `src/app/billing.ts`; função do servidor em `supabase/functions/stripe-webhook`.
+- **Código**: regras do plano em `src/app/plan.ts`; progresso em `src/app/practice.ts` (testado); pagamentos em `src/app/billing.ts`; função do servidor em `supabase/functions/stripe-webhook`.
 
 ### Estado atual (Stripe, conta ChordTile)
 

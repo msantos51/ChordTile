@@ -169,7 +169,7 @@ function resetAll() {
   mpTiles.get(NOTE_BAR)!.querySelector('small')!.textContent = '';
   $('file').classList.remove('held');
   $('mpChorus').classList.remove('loop');
-  ['mpLoop', 'mpTrainer'].forEach(id => $(id).classList.remove('on'));
+  $('mpLoop').classList.remove('on');
   $('mpSpeed').textContent = '100%'; $('mpWhere').textContent = 'Ready to play';
   $('mpCursor').classList.remove('on'); $('mpSel').classList.remove('on'); $('mpExpand').classList.remove('press');
   const z = $('zoom'); z.style.opacity = '0'; z.style.transform = '';
@@ -262,12 +262,12 @@ async function scenePlayer() {
   const pr = center($('mpPractise'));
   await moveTo(pr.x - 4, pr.y - 2, 750);
   await click();
-  $('mpChorus').classList.add('loop'); $('mpLoop').classList.add('on'); $('mpTrainer').classList.add('on');
+  $('mpChorus').classList.add('loop'); $('mpLoop').classList.add('on');
   await wait(250);
   await moveTo(pr.x + 60, pr.y + 140, 500);
   ptr.classList.remove('on');
   const cur = $('mpCursor'); cur.classList.add('on');
-  for (const [loop, speed] of [[1, 80], [2, 100]] as const) {
+  for (const [loop, speed] of [[1, 100], [2, 100]] as const) {
     $('mpSpeed').textContent = speed + '%';
     for (let bar = 13; bar <= 16; bar++) {
       const g = barGeom(bar), ms = 560 * (100 / speed);
@@ -282,7 +282,7 @@ async function scenePlayer() {
   await wait(250);
 }
 
-function playerReady() { $('mpChorus').classList.add('loop'); $('mpLoop').classList.add('on'); $('mpTrainer').classList.add('on'); $('mpWhere').textContent = 'Paused'; }
+function playerReady() { $('mpChorus').classList.add('loop'); $('mpLoop').classList.add('on'); $('mpWhere').textContent = 'Paused'; }
 
 async function sceneExpand() {
   canvas.dataset.scene = 'player'; noteInPlayer();

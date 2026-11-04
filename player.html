@@ -43,7 +43,7 @@
     <button class="btn" id="libraryBtn" type="button" aria-expanded="false" aria-controls="library" title="My songs">
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M3 5h3M3 9h3"/></svg><span>Songs</span>
     </button>
-    <label class="btn track-pick" for="trackQuick" title="Instrument used to detect the chords">
+    <label class="btn track-pick" for="trackQuick" title="My instrument: the chords are detected from it, and it is the one shown in the tab, muted by Play along and heard alone with Solo">
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15V9a8 8 0 0 1 16 0v6"/><path d="M4 15h3v5H4zM17 15h3v5h-3z"/></svg>
       <span class="sr">Instrument</span>
       <select id="trackQuick"></select>
@@ -148,8 +148,7 @@
       <button class="tbtn" id="metroBtn" data-gate="tools" aria-pressed="false" disabled title="Metronome"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l3.5 18h-13z"/><path d="M12 16l6-8"/></svg><span>Metronome</span></button>
       <button class="tbtn" id="countBtn" data-gate="tools" aria-pressed="false" disabled title="Count-in"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg><span>Count-in</span></button>
       <button class="tbtn" id="muteBtn" data-gate="tools" aria-pressed="false" disabled title="Mute my instrument and play along"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg><span>Play along</span></button>
-      <button class="tbtn" id="trainerBtn" data-gate="trainer" aria-pressed="false" disabled title="Speed trainer: speeds up a little each time the loop repeats"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg><span>Trainer</span></button>
-      <button class="tbtn" id="soloBtn" data-gate="tools" aria-pressed="false" disabled title="Only my instrument: mutes the rest of the band" aria-label="Only my instrument"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><span>Solo</span></button>
+            <button class="tbtn" id="soloBtn" data-gate="tools" aria-pressed="false" disabled title="Only my instrument: mutes the rest of the band" aria-label="Only my instrument"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><span>Solo</span></button>
     </div>
   </div>
 </div>
@@ -198,9 +197,10 @@
     <button type="button" class="bm-play" id="bmPlay"><svg class="i f" viewBox="0 0 24 24" id="bmPlayIcon"><path d="M8 5v14l11-7z"/></svg><span id="bmPlayText">Play on loop</span></button>
     <label class="bm-opt"><input type="checkbox" id="bmCountIn" checked> 1-bar count-in</label>
     <label class="bm-opt"><input type="checkbox" id="bmMetro" checked> Metronome</label>
+    <label class="bm-opt" title="Mute my instrument and play along"><input type="checkbox" id="bmMute"> Play along</label>
+    <label class="bm-opt" title="Only my instrument: mutes the rest of the band"><input type="checkbox" id="bmSolo"> Solo</label>
     <select class="bm-sound" id="bmSound" aria-label="Metronome sound"></select>
-    <label class="bm-opt bm-rhythm" title="Hear just the rhythm: the same short sound on every note you have to play, without the notes. Learn the rhythm first, then play it with the notes."><input type="checkbox" id="bmRhythm"> Rhythm only</label>
-    <label class="bm-opt">Speed <input type="range" id="bmSpeed" min="25" max="150" step="5" value="100" aria-label="Speed"><output id="bmSpeedOut">100%</output></label>
+        <label class="bm-opt">Speed <input type="range" id="bmSpeed" min="25" max="150" step="5" value="100" aria-label="Speed"><output id="bmSpeedOut">100%</output></label>
     <span class="bm-reps">Repeat <strong id="bmReps">0</strong></span>
   </footer>
 </section>
@@ -227,34 +227,10 @@
       <p>The songs you load stay here, ready to open.</p>
     </div>
     <button class="btn lib-sample" id="libSample" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Open the sample song</span></button>
-    <section class="account set-group" id="account" hidden aria-labelledby="accountTitle">
-      <h3 class="set-title" id="accountTitle">Your account</h3>
-      <div class="set-card">
-        <div class="account-in" id="signInForm">
-          <p class="hint">Without an account you can keep 1 song. A free account keeps 3 and unlocks all practice tools, with 14 days of Premium included.</p>
-          <div class="account-row">
-            <button class="btn primary" type="button" id="libSignup">Create free account</button>
-            <button class="btn" type="button" id="libSignin">Sign in</button>
-          </div>
-        </div>
-        <div class="account-on" id="accountOn" hidden>
-          <div class="account-who">
-            <span class="account-avatar" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
-            <div class="account-id">
-              <span class="hint">Signed in as</span>
-              <strong id="accountEmail"></strong>
-            </div>
-          </div>
-          <div class="account-plan"><span class="plan-badge" id="planBadge">Free</span> <button class="linkbtn" type="button" id="planAction">Go Premium</button></div>
-          <p class="hint" id="syncStatus"></p>
-          <div class="account-row">
-            <button class="btn sm" type="button" id="syncBtn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2"/><path d="M21 4v5h-5M3 20v-5h5"/></svg>Sync now</button>
-            <a class="btn sm" href="./account.html">Account</a>
-            <button class="btn sm" type="button" id="signOutBtn">Sign out</button>
-          </div>
-        </div>
-      </div>
-    </section>
+    <div class="lib-sync" id="libSync" hidden>
+      <p class="hint" id="syncStatus"></p>
+      <button class="btn sm" type="button" id="syncBtn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2"/><path d="M21 4v5h-5M3 20v-5h5"/></svg>Sync now</button>
+    </div>
     <p class="lib-local hint"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="libLocalHint">Songs are saved only in this browser on this device. They are never sent to a server.</span></p>
   </div>
 </aside>
@@ -269,29 +245,26 @@
   <div class="sheet-body">
     <button class="set-premium" type="button" id="setPremium">
       <span class="set-premium-icon" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg></span>
-      <span class="set-premium-text"><strong id="setPremiumText">Go Premium</strong><span id="setPremiumSub">Try 14 days free: sync, more songs and the speed trainer</span></span>
+      <span class="set-premium-text"><strong id="setPremiumText">Go Premium</strong><span id="setPremiumSub">Try 14 days free: sync, more songs and every bar up close</span></span>
       <svg class="i set-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
     </button>
-
-    <section class="set-group" aria-labelledby="sgInstrument">
-      <h3 class="set-title" id="sgInstrument">My instrument</h3>
-      <div class="set-card">
-        <div class="set-item stack">
-          <select id="viewTrack" aria-label="My instrument"></select>
-          <p class="set-desc">The chord of each bar is detected from this instrument only. It is also the one shown in the tab, the one muted by “Play along” and the only one you hear with “Solo”.</p>
-        </div>
-      </div>
-    </section>
 
     <section class="set-group" aria-labelledby="sgChart">
       <h3 class="set-title" id="sgChart">Chart</h3>
       <div class="set-card">
-        <label class="set-item" for="perRow"><span class="set-label">Bars per row</span><select id="perRow"><option value="2">2</option><option value="4" selected>4</option><option value="8">8</option></select></label>
+        <label class="set-item" for="perRow"><span class="set-label">Squares per row<small>How many bars the chart shows on each line</small></span><select id="perRow"><option value="2">2</option><option value="4" selected>4</option><option value="8">8</option></select></label>
         <label class="set-item" for="optColors"><span class="set-label">Colours per note</span><input type="checkbox" id="optColors" checked></label>
         <label class="set-item" for="optMinor"><span class="set-label">Show minor chords<small>Am, Em…</small></span><input type="checkbox" id="optMinor"></label>
         <label class="set-item" for="optSplit"><span class="set-label">Two chords per bar<small>When the chord changes mid-bar</small></span><input type="checkbox" id="optSplit"></label>
         <label class="set-item" for="optFileChords"><span class="set-label">Use chords written in the file</span><input type="checkbox" id="optFileChords" checked></label>
         <div class="set-item"><span class="set-label">Reset detected chart<small>Put the sections back as in the file</small></span><button class="btn sm" id="resetBtn" type="button">Reset</button></div>
+      </div>
+    </section>
+
+    <section class="set-group" aria-labelledby="sgTab">
+      <h3 class="set-title" id="sgTab">Tab</h3>
+      <div class="set-card">
+        <label class="set-item" for="tabPerRow"><span class="set-label">Bars per row<small>How many bars the tab shows on each line</small></span><select id="tabPerRow"><option value="0">Auto</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></label>
       </div>
     </section>
 
@@ -325,16 +298,6 @@
       </div>
     </section>
 
-    <section class="set-group" aria-labelledby="sgTrainer">
-      <h3 class="set-title" id="sgTrainer">Speed trainer <span class="pill">Premium</span></h3>
-      <div class="set-card">
-        <label class="set-item" for="trStart"><span class="set-label">Start at</span><select id="trStart"></select></label>
-        <label class="set-item" for="trStep"><span class="set-label">Speed up each loop by</span><select id="trStep"><option value="5">5%</option><option value="10">10%</option><option value="15">15%</option><option value="20">20%</option></select></label>
-        <label class="set-item" for="trTarget"><span class="set-label">Up to</span><select id="trTarget"></select></label>
-      </div>
-      <p class="set-foot">Turn on “Trainer” in the player and practise a section or a bar on loop: it starts slow and speeds up every time the loop repeats.</p>
-    </section>
-
     <section class="set-group" aria-labelledby="sgApp">
       <h3 class="set-title" id="sgApp">App</h3>
       <div class="set-card">
@@ -354,9 +317,8 @@
   <p class="pw-lead" id="pwLead">Practising is always free. Premium is for the songs you keep coming back to.</p>
   <ul class="pw-feats">
     <li><b>Unlimited “My songs”</b> <span>Free account keeps 3</span></li>
-    <li><b>Expand any bar</b> <span>Notes up close, how to count them, rhythm-only mode</span></li>
+    <li><b>Expand any bar</b> <span>Notes up close and how to count them</span></li>
     <li><b>PDF charts</b> <span>Take the song map to rehearsal</span></li>
-    <li><b>Speed trainer</b> <span>Starts slow, speeds up every loop</span></li>
     <li><b>Progress per section</b> <span>Time practised, best speed, mastered</span></li>
     <li><b>Sync across devices</b> <span>Phone, tablet and computer</span></li>
   </ul>

@@ -26,23 +26,6 @@ export interface BarView {
 }
 
 /** Extrai as notas do compasso `barIndex` da pista `trackIndex` (todas as vozes da primeira pauta). */
-/**
- * Momentos (ticks desde o início do compasso) em que o instrumento ataca uma nota: sem pausas e sem
- * notas que só continuam uma ligadura. É o ritmo a tocar no modo "só o ritmo".
- */
-export function rhythmOnsets(score: model.Score, barIndex: number, trackIndex: number): number[] {
-  const bar = score.tracks[trackIndex]?.staves[0]?.bars[barIndex];
-  const set = new Set<number>();
-  for (const voice of bar?.voices ?? []) {
-    for (const beat of voice.beats) {
-      if (beat.isRest || !beat.notes.length) continue;
-      if (beat.notes.every(n => n.isTieDestination)) continue;
-      set.add(beat.playbackStart);
-    }
-  }
-  return [...set].sort((a, b) => a - b);
-}
-
 export function barView(score: model.Score, barIndex: number, trackIndex: number): BarView {
   const mb = score.masterBars[barIndex];
   const staff = score.tracks[trackIndex]?.staves[0];

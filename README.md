@@ -177,7 +177,7 @@ Praticar é sempre grátis. O Premium é para quem quer guardar e acompanhar o q
 
 ### Estado atual (Stripe, conta ChordTile)
 
-Já criado em **modo de teste**: produto *ChordTile Premium* (`prod_VYmkdXicLzFWxf`), os 3 preços (`lookup_key`: `premium_monthly`, `premium_yearly`, `premium_lifetime`, IVA incluído), os 3 Payment Links (em `.env.production`), o portal do cliente e o webhook para a função `stripe-webhook`. Falta criar no Supabase os segredos `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`. Para passar a live, repetir estes objetos com a conta ativada e trocar os links.
+Já criado em **modo live** (pagamentos reais): produto *ChordTile Premium* (`prod_VZH1CnBUMOkyDZ`), os 3 preços (`lookup_key`: `premium_monthly` 3,99 €, `premium_yearly` 29 €, `premium_lifetime` 49 €, IVA incluído), os 3 Payment Links (em `.env.production`, com regresso a `https://msantos51.github.io/ChordTile/player.html?checkout=success`), o portal do cliente e o webhook para a função `stripe-webhook`. Os mesmos objetos existem em **modo de teste** para experimentar. No Supabase (**Edge Functions → Secrets**) os segredos `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` têm de ser os de **live**.
 
 ### Ativar os pagamentos (Stripe)
 

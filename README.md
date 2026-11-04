@@ -85,6 +85,12 @@ Para cada compasso soma a duração de cada nota desse instrumento por classe de
 mais grave de cada tempo e ao início do compasso, e compara com modelos de acorde maior, menor e power chord.
 Se o ficheiro tiver acordes escritos nesse instrumento, usa esses.
 
+### Tile by Tile (aprender de cor)
+
+Método guiado no leitor (`player.html?learn`, atalho `learn.html`): para cada secção, primeiro só a tab dessa secção
+em loop (`display.startBar`/`barCount` do alphaTab), depois a tab esconde-se e ficam só os quadrados dessa secção
+(com notas); no fim, a música toda só com os quadrados. O passo fica em `localStorage` (`mapa:learn:<música>`).
+
 ### Metrónomo exato
 
 O metrónomo e a contagem **não** são tocados a partir dos avisos do alphaTab: esses chegam depois de o som já ter

@@ -74,6 +74,22 @@
 <div class="app">
   <main class="content">
     <div id="err" hidden class="error"></div>
+    <section class="learn-panel" id="learnPanel" hidden aria-labelledby="learnTitle">
+      <div class="learn-head">
+        <div class="learn-heading">
+          <p class="learn-kicker"><span id="learnName">Tile by Tile</span> · <span id="learnCount">Step 1 of 9</span></p>
+          <h2 id="learnTitle">Intro</h2>
+        </div>
+        <button class="btn sm" id="learnExit" type="button">Exit</button>
+      </div>
+      <ol class="learn-track" id="learnTrack" aria-label="Your progress"></ol>
+      <p class="learn-text" id="learnText"></p>
+      <div class="learn-actions">
+        <button class="btn" id="learnBack" type="button">Back</button>
+        <button class="btn" id="learnPlay" type="button"><svg class="i f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Play on loop</span></button>
+        <button class="btn primary" id="learnNext" type="button">Next</button>
+      </div>
+    </section>
     <div class="viewswitch" role="tablist">
       <button role="tab" id="vChart" aria-selected="true">Chart</button>
       <button role="tab" id="vTab" aria-selected="false">Tab</button>
@@ -83,6 +99,7 @@
         <div class="panel-head">
           <h2>Chart</h2>
           <div class="actions">
+            <button class="btn sm learn-btn" id="learnBtn" data-gate="tools" type="button" title="Learn the song by heart, section by section"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M14 17.5l2.5 2.5 4.5-5"/></svg><span>Tile by Tile</span></button>
             <button class="btn sm" id="pdfBtn" data-gate="pdf" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15l3 3 3-3"/></svg>Export PDF</button>
           </div>
         </div>

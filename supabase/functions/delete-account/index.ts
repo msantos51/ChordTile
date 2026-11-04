@@ -26,10 +26,13 @@ Deno.serve(async req => {
       if (!r.ok && r.status !== 404) console.error('stripe cancel', r.status, await r.text());
     }
     // 2) Ficheiros das músicas (pasta <user_id>/ do bucket songs)
-    for (;;) {
-      const { data: files } = await admin.storage.from('songs').list(user.id, { limit: 100 });
+    // (no máximo 50 voltas: se a remoção falhar, a lista não encolhe e o ciclo nunca acabaria)
+    for (let round = 0; round < 50; round++) {
+      const { data: files, error: listErr } = await admin.storage.from('songs').list(user.id, { limit: 100 });
+      if (listErr) throw listErr;
       if (!files?.length) break;
-      await admin.storage.from('songs').remove(files.map(f => user.id + '/' + f.name));
+      const { error: rmErr } = await admin.storage.from('songs').remove(files.map(f => user.id + '/' + f.name));
+      if (rmErr) throw rmErr;
       if (files.length < 100) break;
     }
     // 3) O utilizador (e, em cascata, as linhas de songs e entitlements)

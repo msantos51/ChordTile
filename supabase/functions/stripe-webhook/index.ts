@@ -21,7 +21,9 @@ async function verify(body: string, header: string | null): Promise<boolean> {
   if (!t || !sigs.length || Math.abs(Date.now() / 1000 - Number(t)) > 300) return false;
   const key = await crypto.subtle.importKey('raw', enc.encode(WEBHOOK_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const expected = hex(await crypto.subtle.sign('HMAC', key, enc.encode(t + '.' + body)));
-  return sigs.some(s => s.length === expected.length && [...s].every((c, i) => c === expected[i]));
+  // Comparação em tempo constante (não revela quantos caracteres coincidem)
+  const same = (a: string) => { if (a.length !== expected.length) return false; let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ expected.charCodeAt(i); return d === 0; };
+  return sigs.some(same);
 }
 
 async function stripe(path: string): Promise<Record<string, unknown>> {

@@ -27,7 +27,7 @@
 
 <main class="wrap doc-body">
   <h1>Terms, privacy and licenses</h1>
-  <p class="lead">Last updated: 3 November 2026.</p>
+  <p class="lead">Last updated: 4 November 2026.</p>
 
   <nav class="toc" aria-label="On this page">
     <a href="#terms">Terms of use</a>
@@ -43,6 +43,7 @@
       <li><strong>The files are yours.</strong> Only load files you have the right to use, for example your own transcriptions, files you bought or files the author shares for study. Many songs and transcriptions are protected by copyright.</li>
       <li><strong>Files never leave your device.</strong> They are read and processed only in your browser, and stored there so you can open them again. They are not uploaded, stored on a server or shared with anyone, unless you are signed in with Premium, which syncs “My songs” across your devices (see Privacy).</li>
       <li><strong>Accounts and Premium.</strong> An account is optional and personal; keep your password to yourself. Premium is sold as a monthly or yearly subscription, which renews automatically until you cancel it in “Manage subscription”, or as a single lifetime payment. Prices include VAT. If you cancel, Premium stays on until the end of the period you paid for.</li>
+      <li><strong>Original audio (YouTube).</strong> If you choose to add a link to a YouTube video, the video is played by YouTube’s own player and is subject to the <a href="https://www.youtube.com/t/terms">YouTube Terms of Service</a>. ChordTile does not download, copy or change the video or its audio: it only follows the player’s time to show the right bar. Only add videos you are allowed to watch.</li>
       <li><strong>The chart is an estimate.</strong> The chord of each bar is detected automatically and may be wrong. You can fix any bar.</li>
       <li>The tool is provided as is, without warranties. We are not responsible for how you use the files you load.</li>
     </ul>
@@ -54,8 +55,9 @@
       <li><strong>We collect as little as possible.</strong> You can use ChordTile without an account, and then we don’t collect any personal data. There are no advertising cookies, trackers or visitor statistics. Accounts are optional (see below).</li>
       <li><strong>What is stored in your browser:</strong> the songs you load (in “My songs”, so you don’t have to load them again), your changes to each song (section names and splits, notes on the bars, chosen instrument), your practice progress, your preferences (chart options, note names, theme, sync delay, metronome sound) and whether you have seen the tour. If you sign in, your session is kept there too. Everything is in the browser’s local storage (<code>IndexedDB</code> and <code>localStorage</code>), on your device, and is not sent to a server, except the songs synced with Premium. You can delete each song in “My songs”, or everything by clearing this site’s data in your browser settings.</li>
       <li><strong>If you create an account (optional):</strong> we store your email address, your name (if you give it) and your password, which is kept only as a secure hash by our provider and never visible to us. With Premium, to keep “My songs” on all your devices, we also store the files of the songs you load and their details (title, artist, number of bars, when you added and last opened them) in your account. They are hosted by <a href="https://supabase.com/privacy">Supabase</a>, are private to you and are never shared. When you delete a song it is deleted from your account too. Signing out keeps the songs in that browser. You can delete your account and everything in it at any time on your account page.</li>
+      <li><strong>Original audio (optional):</strong> nothing is requested from YouTube unless you turn “Original audio” on. Then the YouTube player script is loaded from <code>youtube.com</code> and the video from <code>youtube-nocookie.com</code> (YouTube’s privacy-enhanced mode), so Google receives your IP address and may store or read data on your device as described in the <a href="https://policies.google.com/privacy">Google Privacy Policy</a>. We only keep, in your browser, the link of the video and the points where you marked the bars (they are not sent to your account).</li>
       <li><strong>Premium and payments:</strong> creating an account starts a free 14-day Premium trial; no card is needed. If you buy Premium, the payment is handled by <a href="https://stripe.com/privacy">Stripe</a>: we never see or store your card details, only whether your plan is active and until when. You can cancel a subscription at any time; Premium stays on until the end of the period you paid for. Your practice progress (time per section, best speed) is stored only in your browser.</li>
-      <li><strong>No third-party requests:</strong> the fonts, the player and the sounds are served by the site itself (the only exceptions are Supabase, only if you sign in, and Stripe, only when you pay). The site is hosted on GitHub Pages, which, like any server, receives the IP address of visitors in order to deliver the pages; see the <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub privacy statement</a>.</li>
+      <li><strong>No third-party requests:</strong> the fonts, the player and the sounds are served by the site itself (the only exceptions are Supabase, only if you sign in, Stripe, only when you pay, and YouTube, only if you turn on “Original audio”). The site is hosted on GitHub Pages, which, like any server, receives the IP address of visitors in order to deliver the pages; see the <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub privacy statement</a>.</li>
     </ul>
   </section>
 
@@ -71,6 +73,7 @@
           <tr><td>Kokoro-82M · © hexgrad</td><td>Voice that counts the beats (“one, two…”), generated in advance as audio files</td><td><a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></td></tr>
           <tr><td>Bravura font · © Steinberg Media Technologies</td><td>Music symbols in the tab</td><td><a href="https://openfontlicense.org">SIL Open Font License 1.1</a>. <a href="./vendor/alphatab/font/Bravura-OFL.txt">License text</a></td></tr>
           <tr><td><a href="https://github.com/parallax/jsPDF">jsPDF</a> · © James Hall, yWorks GmbH and contributors</td><td>Exporting the chart to PDF</td><td><a href="https://opensource.org/license/mit">MIT License</a></td></tr>
+          <tr><td><a href="https://developers.google.com/youtube/iframe_api_reference">YouTube IFrame Player API</a> · © Google</td><td>Original audio (only if you turn it on)</td><td><a href="https://developers.google.com/youtube/terms/api-services-terms-of-service">YouTube API Services Terms of Service</a></td></tr>
           <tr><td><a href="https://github.com/supabase/supabase-js">supabase-js</a> · © Supabase</td><td>Accounts and sync (only used if you sign in)</td><td><a href="https://opensource.org/license/mit">MIT License</a></td></tr>
           <tr><td>Roboto · © Google</td><td>All text, headings and chords, on the site and in the PDF</td><td><a href="https://openfontlicense.org">SIL Open Font License 1.1</a></td></tr>
           <tr><td>Roboto Mono · © Google</td><td>Bar numbers and labels</td><td><a href="https://openfontlicense.org">SIL Open Font License 1.1</a></td></tr>
@@ -82,7 +85,7 @@
 
   <section id="trademarks">
     <h2>Trademarks</h2>
-    <p>Guitar Pro is a trademark of Arobas Music. ChordTile reads files in this format but is not affiliated with, sponsored or endorsed by Arobas Music. The note colours follow the convention popularised by Boomwhackers tuned tubes, a trademark of Rhythm Band Instruments, with no affiliation.</p>
+    <p>YouTube is a trademark of Google LLC; ChordTile is not affiliated with or endorsed by YouTube. Guitar Pro is a trademark of Arobas Music. ChordTile reads files in this format but is not affiliated with, sponsored or endorsed by Arobas Music. The note colours follow the convention popularised by Boomwhackers tuned tubes, a trademark of Rhythm Band Instruments, with no affiliation.</p>
   </section>
 </main>
 

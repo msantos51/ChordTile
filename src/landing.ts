@@ -3,10 +3,16 @@
 import './fonts';
 import './landing.css';
 import { setPendingFile } from './app/library';
+import { accountsEnabled, storedAccount } from './app/session-hint';
 
 const input = document.getElementById('landingFile') as HTMLInputElement;
 const drop = document.getElementById('landingDrop') as HTMLElement;
 const err = document.getElementById('landingErr') as HTMLElement;
+
+// Menu de cima: com sessão iniciada, "Your account" em vez de "Sign in"; sem contas (cópia local), nada
+const navAccount = document.getElementById('navAccount') as HTMLAnchorElement;
+if (!accountsEnabled) navAccount.hidden = true;
+else if (storedAccount()) navAccount.textContent = 'Your account';
 
 function fail(msg: string) {
   err.textContent = msg; err.hidden = false;

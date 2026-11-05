@@ -1199,9 +1199,14 @@ function showAccount(a: Account | null) {
   $('libLocalHint').textContent = a
     ? 'Songs are kept in this browser (and in your account with Premium).'
     : 'Songs are saved only in this browser on this device.';
-  $('accountBtnText').textContent = a ? (a.name.split(' ')[0] || 'Account') : 'Sign in';
+  // Com sessão: a inicial num círculo e o primeiro nome (no telemóvel só a inicial); sem sessão: "Sign in"
+  const first = a ? (a.name.split(/\s+/)[0] || a.email.split('@')[0]) : '';
+  $('accountBtnText').textContent = a ? first : 'Sign in';
+  $('accountAvatar').textContent = first.charAt(0).toUpperCase();
+  $('accountAvatar').hidden = !a;
   $('accountBtn').classList.toggle('signed', !!a);
-  $('accountBtn').setAttribute('aria-label', a ? 'Your account' : 'Sign in or create an account');
+  $('accountBtn').setAttribute('aria-label', a ? 'Your account (' + a.email + ')' : 'Sign in or create an account');
+  $('accountBtn').title = a ? 'Your account · ' + a.email : 'Sign in or create an account';
   if (a && a.id !== was) refreshPlan().then(() => runSync(true));
   $('pwTrial').hidden = !!a;
   updateSyncRow(); applyLocks();

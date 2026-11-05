@@ -38,7 +38,7 @@ const CAPTURE = () => {
   await test('Landing → import valid .gp5 → opens in player', async () => {
     await p.goto(BASE + 'index.html');
     await p.setInputFiles('#landingFile', FIX + 'exemplo.gp5');
-    await p.waitForURL(/player\.html\?open/, { timeout: 10000 }); await waitReady();
+    await p.waitForURL(/player(\.html)?\?open/, { timeout: 10000 }); await waitReady();
     return `${await bars()} bars, title "${await p.textContent('#songTitle')}"`;
   });
   await test('Landing rejects empty file with a message', async () => {
@@ -161,7 +161,7 @@ const CAPTURE = () => {
     return 'account shows: "' + (await p.locator('main').innerText()).slice(0, 90).replace(/\s+/g, ' ') + '"';
   });
   await test('Legacy URLs redirect (ajuda, leitor, licencas, learn)', async () => {
-    for (const [a, to] of [['ajuda.html', /help/], ['leitor.html', /player/], ['licencas.html', /licenses/], ['learn.html', /player\.html\?learn/]]) { await p.goto(BASE + a); await p.waitForTimeout(700); ok(to.test(p.url()), a + ' → ' + p.url()); }
+    for (const [a, to] of [['ajuda.html', /help/], ['leitor.html', /player/], ['licencas.html', /licenses/], ['learn.html', /player(\.html)?\?learn/]]) { await p.goto(BASE + a); await p.waitForTimeout(700); ok(to.test(p.url()), a + ' → ' + p.url()); }
   });
   await test('404 page exists in build', async () => { const r = await p.goto(BASE + '404.html'); ok(r.status() === 200 && (await p.textContent('h1')).includes('not found'), 'missing'); });
   results.push([errors.length ? 'FAIL' : 'PASS', 'No uncaught JS errors during journeys', errors.slice(0, 5).join(' | ')]);

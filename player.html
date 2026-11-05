@@ -13,10 +13,6 @@
 <meta name="apple-mobile-web-app-title" content="ChordTile">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#1f2024">
-<script>
-  // Apply the saved theme before the page paints (avoids a flash)
-  try { if (localStorage.getItem('mapa:theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
-</script>
 <title>Player · ChordTile</title>
 <meta name="description" content="Load a Guitar Pro file and learn the song by sections and bars, with colours per note and synced tablature.">
 <link rel="canonical" href="https://www.chordtile.com/player">
@@ -157,7 +153,7 @@
       </section>
     </div>
     <footer class="site-foot">
-      <p>Files are opened right here in your browser. With the free plan they stay on this device; with Premium they are also kept, privately, in your account. Only load files you have the right to use.</p>
+      <p>Files are opened right here in your browser and kept, privately, in your account, so you can use them on any device you sign in to. Only load files you have the right to use.</p>
       <p>© 2026 ChordTile · <a href="/help">How it works</a> · <a href="/licenses">Terms, privacy and licenses</a> · Guitar Pro is a trademark of Arobas Music; this site is not affiliated.</p>
     </footer>
   </main>
@@ -278,14 +274,14 @@
     <button class="btn lib-sample" id="libSample" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Open the sample song</span></button>
     <!-- Premium: estado da cópia na conta (a sincronização é automática, sem botão) -->
     <p class="lib-sync hint" id="libSync" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a5 5 0 0 1-.6-9.96A6 6 0 0 1 18 9a4.5 4.5 0 0 1 0 9z"/><path d="M9.5 13.5l2 2 3.5-3.5"/></svg><span id="syncStatus">Saved in your account, on every device you sign in to</span></p>
-    <p class="lib-local hint"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="libLocalHint">Songs are saved on this device only.</span></p>
+    <p class="lib-local hint"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="libLocalHint">Without an account you can try the sample song. Create a free account to load your own.</span></p>
   </div>
 </aside>
 <aside class="sheet" id="settings" hidden aria-label="Settings">
   <div class="sheet-head">
     <div class="sheet-title">
       <h2>Settings</h2>
-      <p>Saved on this device</p>
+      <p>Saved in your account</p>
     </div>
     <button class="ibtn sheet-close" id="closeSettings" type="button" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
@@ -363,11 +359,11 @@
   <h2 id="pwTitle">Keep everything you’ve built</h2>
   <p class="pw-lead" id="pwLead">Practising is always free. Premium is for the songs you keep coming back to.</p>
   <ul class="pw-feats">
+    <li><b>Tile by Tile, loop, play along and solo</b> <span>Every practice tool unlocked</span></li>
     <li><b>Unlimited “My songs”</b> <span>Free account keeps 3</span></li>
     <li><b>Expand any bar</b> <span>Notes up close and how to count them</span></li>
     <li><b>PDF charts</b> <span>Take the song map to rehearsal</span></li>
     <li><b>Progress per section</b> <span>Time practised, best speed, mastered</span></li>
-    <li><b>Songs in your account</b> <span>On your phone, tablet and computer</span></li>
   </ul>
   <div class="pw-trial" id="pwTrial">
     <p><b>Try everything free for 7 days.</b> Create a free account: no card needed.</p>

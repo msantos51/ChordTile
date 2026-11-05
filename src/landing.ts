@@ -1,45 +1,17 @@
-// Página inicial: apresentação do site. O ficheiro escolhido aqui fica guardado neste browser
-// (IndexedDB) e o leitor abre-o logo (/player?open). Nada é enviado para um servidor.
+// Página inicial: apresentação do site. Não guarda nada no browser: "Load a Guitar Pro file" leva ao leitor,
+// onde a música é carregada e guardada na conta (sem conta, pede primeiro para criar uma grátis).
 import './fonts';
 import './landing.css';
-import { setPendingFile } from './app/library';
 import { accountsEnabled, storedAccount } from './app/session-hint';
-
-const input = document.getElementById('landingFile') as HTMLInputElement;
-const drop = document.getElementById('landingDrop') as HTMLElement;
-const err = document.getElementById('landingErr') as HTMLElement;
 
 // Menu de cima: com sessão iniciada, "Your account" em vez de "Sign in"; sem contas (cópia local), nada
 const navAccount = document.getElementById('navAccount') as HTMLAnchorElement;
 if (!accountsEnabled) navAccount.hidden = true;
 else if (storedAccount()) navAccount.textContent = 'Your account';
 
-function fail(msg: string) {
-  err.textContent = msg; err.hidden = false;
-}
-
-async function openInReader(f: File | undefined) {
-  if (!f) return;
-  err.hidden = true;
-  if (f.size > 20 * 1024 * 1024) { fail('“' + f.name + '” is too large. Guitar Pro and MusicXML files up to 20 MB are supported.'); return; }
-  if (!f.size) { fail('“' + f.name + '” is empty.'); return; }
-  try {
-    const bytes = new Uint8Array(await f.arrayBuffer());
-    await setPendingFile(f.name, bytes);
-    location.href = '/player?open';
-  } catch {
-    fail('Couldn’t hand the file to the player on this device (private browsing?). Open the player and load it there.');
-  }
-}
-
-document.querySelectorAll<HTMLButtonElement>('[data-pick]').forEach(b => b.addEventListener('click', () => input.click()));
-input.addEventListener('change', () => { void openInReader(input.files?.[0]); input.value = ''; });
-
-let dragN = 0;
-addEventListener('dragenter', e => { if ([...(e.dataTransfer?.types ?? [])].includes('Files')) { dragN++; drop.hidden = false; } });
-addEventListener('dragleave', () => { dragN = Math.max(0, dragN - 1); if (!dragN) drop.hidden = true; });
-addEventListener('dragover', e => e.preventDefault());
-addEventListener('drop', e => { e.preventDefault(); dragN = 0; drop.hidden = true; void openInReader(e.dataTransfer?.files[0]); });
+/** Para onde vai quem quer carregar uma música: o leitor ("My songs"), ou criar conta primeiro. */
+const loadUrl = () => (accountsEnabled && !storedAccount() ? '/player?signup' : '/player?load');
+document.querySelectorAll<HTMLButtonElement>('[data-pick]').forEach(b => b.addEventListener('click', () => { location.href = loadUrl(); }));
 
 // ---------- Animação: como funciona, em 4 cenas ----------
 // 1. Importar: o ficheiro é arrastado para a zona e lido.  2. Secções: os compassos aparecem

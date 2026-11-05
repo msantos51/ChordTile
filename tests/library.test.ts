@@ -1,46 +1,55 @@
 import { IDBFactory } from 'fake-indexeddb';
 import { describe, expect, it } from 'vitest';
-import { deleteSong, getSong, listSongs, relativeDay, saveSong, touchSong } from '../src/app/library';
+import { readLegacyData, readLegacySongs, relativeDay, wipeLegacy } from '../src/app/library';
 
-const meta = (id: string, title: string) => ({ id, fileName: title + '.gp5', title, artist: 'Banda', bars: 52 });
-const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
+/** Cria a base que as versões antigas do site deixavam no browser. */
+function legacyDb(idb: IDBFactory, songs: object[]): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const req = idb.open('mapa-de-compassos', 2);
+    req.onupgradeneeded = () => { req.result.createObjectStore('songs', { keyPath: 'id' }); req.result.createObjectStore('pending'); };
+    req.onsuccess = () => {
+      const t = req.result.transaction('songs', 'readwrite');
+      for (const s of songs) t.objectStore('songs').put(s);
+      t.oncomplete = () => { req.result.close(); resolve(); };
+      t.onerror = () => reject(t.error);
+    };
+  });
+}
+class MemStorage implements Storage {
+  private m = new Map<string, string>();
+  get length() { return this.m.size; }
+  clear() { this.m.clear(); }
+  getItem(k: string) { return this.m.get(k) ?? null; }
+  key(i: number) { return [...this.m.keys()][i] ?? null; }
+  removeItem(k: string) { this.m.delete(k); }
+  setItem(k: string, v: string) { this.m.set(k, v); }
+}
+const song = (id: string, openedAt: number) => ({ id, fileName: id + '.gp5', title: id, artist: '', bars: 10, addedAt: 1, openedAt, bytes: new Uint8Array([1, 2]).buffer });
 
-describe('biblioteca de músicas', () => {
-  it('guarda, lista, abre e apaga', async () => {
+describe('dados antigos deixados no browser (passam para a conta uma vez)', () => {
+  it('lê as músicas antigas, da mais recente para a mais antiga', async () => {
     const idb = new IDBFactory();
-    await saveSong(meta('a', 'Primeira'), new Uint8Array([1, 2, 3]), idb);
-    await wait(5);
-    await saveSong(meta('b', 'Segunda'), new Uint8Array([4, 5]), idb);
-
-    const list = await listSongs(idb);
-    expect(list.map(s => s.title)).toEqual(['Segunda', 'Primeira']); // a mais recente primeiro
-    expect(list[0]).not.toHaveProperty('bytes');
-
-    const song = await getSong('a', idb);
-    expect(Array.from(song!.bytes)).toEqual([1, 2, 3]);
-
-    await deleteSong('b', idb);
-    expect((await listSongs(idb)).map(s => s.id)).toEqual(['a']);
-    expect(await getSong('b', idb)).toBeNull();
+    await legacyDb(idb, [song('a', 5), song('b', 9)]);
+    const list = await readLegacySongs(idb);
+    expect(list.map(s => s.id)).toEqual(['b', 'a']);
+    expect(Array.from(list[0].bytes)).toEqual([1, 2]);
   });
 
-  it('abrir uma música põe-na no topo e voltar a importá-la não a duplica', async () => {
+  it('sem dados antigos não cria nada no browser', async () => {
     const idb = new IDBFactory();
-    await saveSong(meta('a', 'Primeira'), new Uint8Array([1]), idb);
-    await wait(5);
-    await saveSong(meta('b', 'Segunda'), new Uint8Array([2]), idb);
-    await wait(5);
-    await touchSong('a', idb);
-    expect((await listSongs(idb))[0].id).toBe('a');
+    expect(await readLegacySongs(idb)).toEqual([]);
+    expect((await idb.databases()).length).toBe(0);
+  });
 
-    const added = (await getSong('a', idb))!.addedAt;
-    await wait(5);
-    await saveSong(meta('a', 'Primeira'), new Uint8Array([9]), idb);
-    const list = await listSongs(idb);
-    expect(list).toHaveLength(2);
-    const again = await getSong('a', idb);
-    expect(again!.addedAt).toBe(added);
-    expect(Array.from(again!.bytes)).toEqual([9]);
+  it('lê as chaves "mapa:" do localStorage e depois apaga tudo', async () => {
+    const idb = new IDBFactory(), ls = new MemStorage();
+    await legacyDb(idb, [song('a', 5)]);
+    ls.setItem('mapa:theme', '"light"'); ls.setItem('mapa:x|y|3', '{"texts":{"1":"slide"}}'); ls.setItem('outra', '1');
+    expect(readLegacyData(ls)).toEqual({ 'mapa:theme': 'light', 'mapa:x|y|3': { texts: { 1: 'slide' } } });
+    await wipeLegacy(idb, ls);
+    expect(readLegacyData(ls)).toEqual({});
+    expect(ls.getItem('outra')).toBe('1'); // só apaga o que é do ChordTile
+    expect(await readLegacySongs(idb)).toEqual([]);
   });
 
   it('mostra datas relativas', () => {
@@ -49,19 +58,5 @@ describe('biblioteca de músicas', () => {
     expect(relativeDay(now - 86_400_000, now)).toBe('yesterday');
     expect(relativeDay(now - 5 * 86_400_000, now)).toBe('5 days ago');
     expect(relativeDay(now - 65 * 86_400_000, now)).toBe('2 months ago');
-  });
-});
-
-describe('ficheiro escolhido na página inicial', () => {
-  it('fica à espera até o leitor o abrir, uma só vez', async () => {
-    const { setPendingFile, takePendingFile } = await import('../src/app/library');
-    const idb = new IDBFactory();
-    expect(await takePendingFile(idb)).toBeNull();
-    await setPendingFile('musica.gp5', new Uint8Array([7, 8, 9]), idb);
-    const f = await takePendingFile(idb);
-    expect(f?.name).toBe('musica.gp5');
-    expect(Array.from(f!.bytes)).toEqual([7, 8, 9]);
-    expect(await takePendingFile(idb)).toBeNull();
-    expect(await listSongs(idb)).toEqual([]); // não aparece em "As minhas músicas" antes de abrir
   });
 });

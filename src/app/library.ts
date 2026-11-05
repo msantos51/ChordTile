@@ -1,5 +1,6 @@
-// Biblioteca de músicas importadas, guardada só neste browser (IndexedDB).
-// Os ficheiros nunca saem do dispositivo: isto é só para não ter de os voltar a carregar.
+// "My songs" vive na conta (ver cloud.ts). Este módulo só sabe ler o que versões antigas do site
+// deixaram NESTE browser (músicas em IndexedDB e dados em localStorage), para os passar para a conta
+// uma única vez e depois apagar tudo do browser.
 
 export interface SongMeta {
   /** Identificador estável da música (título | artista | nº de compassos). */
@@ -15,89 +16,70 @@ interface SongRecord extends SongMeta { bytes: ArrayBuffer }
 
 const DB = 'mapa-de-compassos';
 const STORE = 'songs';
-/** Ficheiro escolhido na página inicial, à espera de ser aberto no leitor. */
-const PENDING = 'pending';
+/** Prefixo das chaves que o site antigo guardava no localStorage. */
+const PREFIX = 'mapa:';
 
-function open(idb: IDBFactory = indexedDB): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = idb.open(DB, 2);
-    req.onupgradeneeded = () => {
+/** Abre a base antiga só se existir (nunca a cria). */
+function openExisting(idb: IDBFactory): Promise<IDBDatabase | null> {
+  return new Promise(resolve => {
+    let created = false;
+    const req = idb.open(DB);
+    req.onupgradeneeded = () => { created = true; };
+    req.onsuccess = () => {
       const db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' });
-      if (!db.objectStoreNames.contains(PENDING)) db.createObjectStore(PENDING);
+      if (created || !db.objectStoreNames.contains(STORE)) {
+        db.close();
+        if (!created) { resolve(null); return; }
+        // Abrir criou uma base vazia: apaga-a logo, para não deixar nada no browser
+        const del = idb.deleteDatabase(DB); del.onsuccess = del.onerror = del.onblocked = () => resolve(null);
+        return;
+      }
+      resolve(db);
     };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onerror = () => resolve(null);
   });
 }
 
-function tx<T>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest<T>, idb?: IDBFactory, store = STORE): Promise<T> {
-  return open(idb).then(db => new Promise<T>((resolve, reject) => {
-    const t = db.transaction(store, mode);
-    const req = run(t.objectStore(store));
-    t.oncomplete = () => { db.close(); resolve(req.result); };
-    t.onerror = () => { db.close(); reject(t.error ?? req.error); };
-    t.onabort = () => { db.close(); reject(t.error ?? new Error('Operation aborted')); };
-  }));
+/** Músicas que versões antigas guardaram neste browser (da aberta mais recentemente para a mais antiga). */
+export async function readLegacySongs(idb: IDBFactory | undefined = globalThis.indexedDB): Promise<(SongMeta & { bytes: Uint8Array })[]> {
+  if (!idb) return [];
+  const db = await openExisting(idb);
+  if (!db) return [];
+  const all = await new Promise<SongRecord[]>(resolve => {
+    try {
+      const req = db.transaction(STORE, 'readonly').objectStore(STORE).getAll() as IDBRequest<SongRecord[]>;
+      req.onsuccess = () => resolve(req.result ?? []);
+      req.onerror = () => resolve([]);
+    } catch { resolve([]); }
+  });
+  db.close();
+  return all.map(r => ({ ...r, bytes: new Uint8Array(r.bytes) })).sort((a, b) => b.openedAt - a.openedAt);
 }
 
-/** Guarda (ou atualiza) uma música. Mantém a data em que foi adicionada pela primeira vez. */
-export async function saveSong(meta: Omit<SongMeta, 'addedAt' | 'openedAt'>, bytes: Uint8Array, idb?: IDBFactory): Promise<void> {
-  const prev = await getSong(meta.id, idb).catch(() => null);
-  const now = Date.now();
-  const copy = bytes.slice().buffer as ArrayBuffer;
-  const rec: SongRecord = { ...meta, bytes: copy, addedAt: prev?.addedAt ?? now, openedAt: now };
-  await tx('readwrite', s => s.put(rec), idb);
+/** Dados que versões antigas guardaram no localStorage (notas, secções, progresso, preferências…). */
+export function readLegacyData(ls: Storage | undefined = globalThis.localStorage): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  try {
+    if (!ls) return out;
+    for (let i = 0; i < ls.length; i++) {
+      const k = ls.key(i);
+      if (!k || !k.startsWith(PREFIX)) continue;
+      const raw = ls.getItem(k);
+      try { out[k] = JSON.parse(raw ?? 'null'); } catch { out[k] = raw; }
+    }
+  } catch { /* sem acesso */ }
+  return out;
 }
 
-/** Lista as músicas (sem os ficheiros), da aberta mais recentemente para a mais antiga. */
-export async function listSongs(idb?: IDBFactory): Promise<SongMeta[]> {
-  const all = await tx<SongRecord[]>('readonly', s => s.getAll() as IDBRequest<SongRecord[]>, idb);
-  return all
-    .map(({ bytes: _bytes, ...meta }) => meta)
-    .sort((a, b) => b.openedAt - a.openedAt);
-}
-
-export async function getSong(id: string, idb?: IDBFactory): Promise<(SongMeta & { bytes: Uint8Array }) | null> {
-  const rec = await tx<SongRecord | undefined>('readonly', s => s.get(id) as IDBRequest<SongRecord | undefined>, idb);
-  return rec ? { ...rec, bytes: new Uint8Array(rec.bytes) } : null;
-}
-
-/** Marca a música como aberta agora (para aparecer em primeiro e abrir ao voltar ao site). */
-export async function touchSong(id: string, idb?: IDBFactory, at = Date.now()): Promise<void> {
-  const rec = await tx<SongRecord | undefined>('readonly', s => s.get(id) as IDBRequest<SongRecord | undefined>, idb);
-  if (rec) await tx('readwrite', s => s.put({ ...rec, openedAt: at }), idb);
-}
-
-/** Guarda uma música tal como veio da nuvem (mantém as datas de quando foi adicionada e aberta). */
-export async function putSong(meta: SongMeta, bytes: Uint8Array, idb?: IDBFactory): Promise<void> {
-  const copy = bytes.slice().buffer as ArrayBuffer;
-  await tx('readwrite', s => s.put({ ...meta, bytes: copy } satisfies SongRecord), idb);
-}
-
-export async function deleteSong(id: string, idb?: IDBFactory): Promise<void> {
-  await tx('readwrite', s => s.delete(id), idb);
-}
-
-/** Ficheiro escolhido na página inicial: fica guardado até o leitor o abrir (só um de cada vez). */
-export interface PendingFile { name: string; bytes: Uint8Array }
-
-export async function setPendingFile(name: string, bytes: Uint8Array, idb?: IDBFactory): Promise<void> {
-  const copy = bytes.slice().buffer as ArrayBuffer;
-  await tx('readwrite', s => s.put({ name, bytes: copy }, 'file'), idb, PENDING);
-}
-
-/** Devolve o ficheiro pendente (ou null) e apaga-o, para não voltar a abrir na visita seguinte. */
-export async function takePendingFile(idb?: IDBFactory): Promise<PendingFile | null> {
-  const rec = await tx<{ name: string; bytes: ArrayBuffer } | undefined>('readonly', s => s.get('file'), idb, PENDING);
-  if (!rec) return null;
-  await tx('readwrite', s => s.delete('file'), idb, PENDING);
-  return { name: rec.name, bytes: new Uint8Array(rec.bytes) };
-}
-
-/** Pede ao browser para não apagar estes dados quando falta espaço (sobretudo no Safari). */
-export function askPersistentStorage(): void {
-  try { void navigator.storage?.persist?.(); } catch { /* sem suporte */ }
+/** Apaga do browser tudo o que versões antigas lá deixaram. */
+export async function wipeLegacy(idb: IDBFactory | undefined = globalThis.indexedDB, ls: Storage | undefined = globalThis.localStorage): Promise<void> {
+  try {
+    if (ls) for (const k of Object.keys(readLegacyData(ls))) ls.removeItem(k);
+  } catch { /* sem acesso */ }
+  if (!idb) return;
+  await new Promise<void>(resolve => {
+    try { const r = idb.deleteDatabase(DB); r.onsuccess = r.onerror = r.onblocked = () => resolve(); } catch { resolve(); }
+  });
 }
 
 /** "há 3 dias", "hoje", … */

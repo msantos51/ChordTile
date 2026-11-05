@@ -3,10 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="color-scheme" content="dark">
-<script>
-  // Apply the saved theme before the page paints (avoids a flash)
-  try { if (localStorage.getItem('mapa:theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
-</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="./favicon.ico" sizes="32x32">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
@@ -88,7 +84,7 @@
 
     <section class="acc-card acc-danger" aria-labelledby="hDelete">
       <h2 id="hDelete">Delete account</h2>
-      <p>This permanently deletes your account, your songs saved in the account, your plan and any active subscription. Songs saved on this device stay on it until you delete them in “My songs”. This can’t be undone.</p>
+      <p>This permanently deletes your account and everything in it: your songs, your notes and progress, your settings, your plan and any active subscription. This can’t be undone.</p>
       <form class="acc-form" id="delForm">
         <label class="auth-field"><span>Type <strong>DELETE</strong> to confirm</span><input id="delConfirm" autocomplete="off" placeholder="DELETE"></label>
         <button class="btn acc-del" type="submit" id="delBtn" disabled>Delete my account</button>

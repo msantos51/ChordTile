@@ -329,7 +329,7 @@ axe-core 4.10.2 (rulesets wcag2a/aa, 21a/aa, 22aa and best-practice) at 1440 and
 | SEC-3 | LOW | `stripe-webhook` | Non-constant-time signature compare | — | Constant time | Early exit | XOR compare | **Fixed**, needs deploy |
 | SEC-7 | LOW | Hosting | No CSP or security headers | Response headers | CSP present | None | Meta CSP (careful testing) | Open |
 | SEC-8 | LOW | DB schema | No text-length or MIME limits | — | Limits | None | New migration | Open (needs approval) |
-| SEO-2 | LOW | Social | OG image is the 512 px icon | Share link | 1200×630 card | Small icon | Design an OG image | Open |
+| SEO-2 | LOW | Social | OG image is the 512 px icon | Share link | 1200×630 card | Small icon | 1200×630 `og-image.png` added | **Fixed** |
 | TECH-1 | LOW | `src/main.ts` | Very large single module | — | — | ~1,600 lines | Gradual extraction | Open |
 | TECH-2 | LOW | CI | E2E journeys not in CI | — | Run on each PR | Manual | Add `playwright` dev dependency and a job | Open |
 

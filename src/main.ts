@@ -6,7 +6,7 @@ import { analyzeBar, isBassTrack, label, sectionsFromScore, type LabelOptions, t
 import { parseScore } from './analysis/parse';
 import { pitchClassesOf } from './app/notes';
 import { exportPdf } from './app/pdf';
-import { barView, type BarView } from './analysis/bar';
+import { DYNAMIC_NAMES, TECH_NAMES, barView, techLegend, type BarView } from './analysis/bar';
 import { Clicker, METRO_SOUNDS, isMetroSound, nextTickTime, type MetroSound } from './app/metronome';
 import { MetroInjector, type GridSource } from './app/metro-inject';
 import type { GridEvent } from './app/metro-grid';
@@ -16,7 +16,7 @@ import { releaseAudio, unlockAudio } from './app/audio-unlock';
 import { TOUR_STEPS, markTourSeen, tourSeen, visibleTarget } from './app/tour';
 import { cloudEnabled, deleteRemoteSong, fetchEntitlement, syncLibrary, uploadSong, watchAccount, type Account } from './app/cloud';
 import { openAuthDialog } from './app/auth-ui';
-import { FREE_SONG_LIMIT, GUEST, GUEST_SONG_LIMIT, access, canSaveSong, planLabel, planState, songLimit, type Feature, type PlanState } from './app/plan';
+import { FREE_SONG_LIMIT, GUEST, access, canSaveSong, planLabel, planState, songLimit, type Feature, type PlanState } from './app/plan';
 import { OFFERS, checkoutUrl, paymentsEnabled } from './app/billing';
 import { addLoop, addTime, isMastered, progressText, type SongProgress } from './app/practice';
 import { askPersistentStorage, deleteSong, getSong, listSongs, relativeDay, saveSong, takePendingFile, touchSong } from './app/library';
@@ -273,7 +273,7 @@ function renderChart() {
     const loopB = document.createElement('button'); loopB.type = 'button'; loopB.className = 'sbtn' + (st.loopSection === k ? ' on' : '');
     loopB.innerHTML = ICON_LOOP + '<span>' + (st.loopSection === k ? 'Practising' : 'Practise') + '</span>';
     loopB.title = 'Loop this section'; loopB.setAttribute('aria-label', 'Practise ' + sec.name + ' on loop');
-    loopB.addEventListener('click', () => practiceSection(k)); loopB.dataset.gate = 'tools';
+    loopB.addEventListener('click', () => practiceSection(k)); loopB.dataset.gate = 'loop';
     loopB.setAttribute('aria-pressed', String(st.loopSection === k));
     acts.append(loopB);
     head.append(mark, meta, prog, acts); wrap.append(head);
@@ -603,12 +603,44 @@ function renderBarModal() {
   const hit = new Set<number>();
   for (const n of v.notes) {
     const slot = slotOf(n.start, beatTicks, sub, labels.length); hit.add(slot);
-    const e = document.createElement('span'); e.className = 'nt' + (n.dead ? ' dead' : '');
+    const e = document.createElement('span'); e.className = 'nt' + (n.dead ? ' dead' : '') + (n.ghost ? ' ghost' : '') + (n.tied ? ' tied' : '');
     e.dataset.beat = String(n.beatId); e.dataset.slot = String(slot);
-    e.textContent = n.dead ? 'x' : String(n.fret);
+    e.textContent = n.dead ? 'x' : n.ghost ? '(' + n.fret + ')' : String(n.fret);
+    // Técnicas da nota (H, P, bend, slide…): etiqueta pequena colada à nota
+    if (n.tech.length) {
+      const t = document.createElement('span'); t.className = 'tq';
+      t.textContent = n.tech.map(x => x.text).join(' ');
+      t.title = n.tech.map(x => TECH_NAMES[x.kind] + (x.kind === 'bend' || x.kind === 'prebend' ? ' ' + x.text.replace(/^(↑|PB) /, '') : '')).join(', ');
+      e.append(t);
+      e.setAttribute('aria-label', (n.dead ? 'dead note' : 'fret ' + n.fret) + ', ' + t.title);
+    }
     e.style.left = x(slot); e.style.top = lineY(n.line) + 'px';
     staff.append(e);
   }
+  // Técnicas de cada tempo (slap, pop, rasgado…) e dinâmicas, numa faixa por cima da pauta
+  const bt = $('bmBeatTech'); bt.innerHTML = '';
+  let anyBeat = false;
+  for (const b of v.beats) {
+    if (!b.tech.length && !b.dynamic) continue;
+    anyBeat = true;
+    const c = document.createElement('span'); c.className = 'btq';
+    c.style.left = x(slotOf(b.start, beatTicks, sub, labels.length));
+    if (b.dynamic) { const d = document.createElement('em'); d.className = 'dyn'; d.textContent = b.dynamic; d.title = 'Dynamics: ' + (DYNAMIC_NAMES[b.dynamic] ?? b.dynamic); c.append(d); }
+    if (b.tech.length) { const t = document.createElement('span'); t.textContent = b.tech.map(x => x.text).join(' '); t.title = b.tech.map(x => TECH_NAMES[x.kind]).join(', '); c.append(t); }
+    bt.append(c);
+  }
+  bt.classList.toggle('empty', !anyBeat); // fica na grelha (senão as colunas desencontram-se), só sem altura
+  // Legenda: o que quer dizer cada etiqueta deste compasso
+  const leg = techLegend(v), list = $('bmTechs'); list.innerHTML = '';
+  for (const t of leg.kinds) {
+    const li = document.createElement('li'); const k = document.createElement('b');
+    k.textContent = t.kind === 'bend' ? '↑' : t.kind === 'prebend' ? 'PB' : t.text; li.append(k, ' ' + TECH_NAMES[t.kind]); list.append(li);
+  }
+  for (const d of leg.dynamics) {
+    const li = document.createElement('li'); const k = document.createElement('em'); k.className = 'dyn'; k.textContent = d;
+    li.append(k, ' ' + (DYNAMIC_NAMES[d] ? DYNAMIC_NAMES[d].charAt(0).toUpperCase() + DYNAMIC_NAMES[d].slice(1) : 'Dynamics')); list.append(li);
+  }
+  $('bmLegend').hidden = !list.childElementCount;
 
   // Contagem por baixo e pulsos do metrónomo por cima
   const count = $('bmCount'); count.innerHTML = '';
@@ -1063,11 +1095,11 @@ function readFile(f: File | undefined) {
 }
 /** Abre um ficheiro importado (daqui ou da página inicial) e guarda-o em "As minhas músicas". */
 function openImported(bytes: Uint8Array, name: string): Promise<boolean> {
-  // Limite de músicas: sem conta 1, conta grátis 3, Premium sem limite (reabrir uma guardada é sempre possível)
+  // Limite de músicas: sem conta nenhuma (só a de exemplo), conta grátis 3, Premium sem limite (reabrir uma guardada é sempre possível)
   return listSongs().catch(() => []).then(saved => {
     let id = '';
     try { const sc = parseScore(at, bytes); id = (sc.title || name) + '|' + (sc.artist || '') + '|' + sc.masterBars.length; } catch { /* loadBytes mostra o erro */ }
-    if (id && !canSaveSong(plan, saved.map(x => x.id), id)) { songLimitReached(); return false; }
+    if (id && !canSaveSong(plan, saved.map(x => x.id), id)) { songLimitReached(() => void openImported(bytes, name)); return false; }
     st.api?.stop(); clearLoop();
     if (!loadBytes(bytes, name, false)) return false;
     saveImported(bytes, name);
@@ -1075,9 +1107,12 @@ function openImported(bytes: Uint8Array, name: string): Promise<boolean> {
     return true;
   });
 }
-function songLimitReached() {
+/** Ficheiro que um visitante tentou abrir: abre-se sozinho assim que entrar numa conta. */
+let afterSignIn: (() => void) | null = null;
+function songLimitReached(retry?: () => void) {
   if (plan.kind === 'guest') {
-    openAuthDialog('signup', 'Without an account you can keep ' + GUEST_SONG_LIMIT + ' song. Create a free account to keep ' + FREE_SONG_LIMIT + ' and unlock all practice tools.');
+    afterSignIn = retry ?? null;
+    openAuthDialog('signup', 'To load your own songs, create a free account: it keeps up to ' + FREE_SONG_LIMIT + ' songs, and you get 7 days of Premium with everything unlocked.');
   } else {
     toast('The free plan keeps ' + FREE_SONG_LIMIT + ' songs. Delete one in “My songs” or go Premium for unlimited songs.');
     openPaywall('library');
@@ -1198,7 +1233,7 @@ function showAccount(a: Account | null) {
   if (!a) setPlan(GUEST);
   $('libLocalHint').textContent = a
     ? 'Songs are kept in this browser (and in your account with Premium).'
-    : 'Songs are saved only in this browser on this device.';
+    : 'Without an account you can try the sample song. Create a free account to load your own.';
   // Com sessão: a inicial num círculo e o primeiro nome (no telemóvel só a inicial); sem sessão: "Sign in"
   const first = a ? (a.name.split(/\s+/)[0] || a.email.split('@')[0]) : '';
   $('accountBtnText').textContent = a ? first : 'Sign in';
@@ -1224,8 +1259,9 @@ $('syncBtn').addEventListener('click', () => (plan.premium ? runSync(false) : op
 
 // ---------- Cadeados (sem conta / conta grátis / Premium) ----------
 const GATE_NAMES: Record<Feature, string> = {
-  tools: 'Loop, speed, the metronome and the other practice tools', notes: 'Notes on the bars', expand: 'Expanding a bar',
-  pdf: 'The PDF chart', progress: 'Progress per section', sync: 'Sync across devices',
+  tools: 'Speed, the metronome and the count-in', notes: 'Notes on the bars', loop: 'Loop', playalong: 'Play along',
+  solo: 'Solo', learn: 'Tile by Tile', expand: 'Expanding a bar', pdf: 'The PDF chart', progress: 'Progress per section',
+  sync: 'Sync across devices',
 };
 /** Pode usar a função? Se não, pede conta (sem conta) ou mostra o Premium (conta grátis). */
 function gateOk(f: Feature): boolean {
@@ -1258,10 +1294,11 @@ function applyLocks() {
 let plan: PlanState = GUEST;
 function setPlan(p: PlanState) {
   const was = plan.premium; plan = p;
+  if (p.kind !== 'guest' && afterSignIn) { const go = afterSignIn; afterSignIn = null; queueMicrotask(go); }
   const btn = $('premiumBtn');
   btn.classList.toggle('on', p.premium);
   $('setPremiumText').textContent = p.premium ? planLabel(p) : 'Go Premium';
-  $('setPremiumSub').textContent = p.premium ? 'All features unlocked. Thank you!' : 'Try 7 days free: sync, more songs and every bar up close';
+  $('setPremiumSub').textContent = p.premium ? 'All features unlocked. Thank you!' : 'Try 7 days free: loop, Tile by Tile, every bar up close and more';
   $('premiumBtnText').textContent = p.kind === 'trial' ? planLabel(p).replace('Premium trial · ', 'Trial · ') : p.premium ? 'Premium' : 'Go Premium';
   if (was !== p.premium) { renderProgress(); renderLibrary(); }
   updateSyncRow(); applyLocks();
@@ -1274,8 +1311,9 @@ async function renderLibLimit(count: number) {
   const el = $('libLimit');
   if (plan.premium) { el.hidden = true; return; }
   el.hidden = false; el.textContent = '';
-  const lim = songLimit(plan), who = plan.kind === 'guest' ? 'Without an account' : 'Free plan';
-  el.append(who + ': ' + Math.min(count, lim) + ' of ' + lim + ' song' + (lim === 1 ? '' : 's') + (count >= lim ? '. Delete one to load another.' : '.'));
+  const lim = songLimit(plan);
+  if (plan.kind === 'guest') el.append('Without an account you can only try the sample song.');
+  else el.append('Free plan: ' + Math.min(count, lim) + ' of ' + lim + ' song' + (lim === 1 ? '' : 's') + (count >= lim ? '. Delete one to load another.' : '.'));
   const b = document.createElement('button'); b.type = 'button'; b.className = 'linkbtn';
   b.textContent = plan.kind === 'guest' ? 'Create free account' : 'Go Premium';
   b.addEventListener('click', () => (plan.kind === 'guest' ? openAuthDialog('signup', undefined, welcome) : openPaywall('library')));
@@ -1283,9 +1321,13 @@ async function renderLibLimit(count: number) {
 }
 
 // ---------- Janela do Premium ----------
-type PaywallReason = 'upgrade' | 'library' | 'sync' | 'progress' | 'expand' | 'pdf';
+type PaywallReason = 'upgrade' | 'library' | 'sync' | 'progress' | 'expand' | 'pdf' | 'loop' | 'playalong' | 'solo' | 'learn';
 const PAYWALL_COPY: Record<PaywallReason, [string, string]> = {
-  upgrade: ['Keep everything you’ve built', 'Practising is always free. Premium is for the songs you keep coming back to.'],
+  upgrade: ['Practise like you mean it', 'Premium unlocks loop, Tile by Tile, play along, solo, every bar up close, PDF charts and unlimited songs.'],
+  loop: ['Loop the hard part', 'Premium loops the whole song, a section or a single bar, as many times as you need.'],
+  learn: ['Learn songs by heart', 'Tile by Tile is Premium: learn each section from the tab, then from the tiles only, until you play the whole song without reading.'],
+  playalong: ['Play along with the band', 'Premium mutes your instrument so you play your part with the rest of the band.'],
+  solo: ['Hear only your part', 'Premium plays your instrument alone, so you can hear exactly what to play.'],
   library: ['Keep all your songs', 'The free plan keeps ' + FREE_SONG_LIMIT + ' songs in “My songs”. Premium keeps them all, on every device.'],
   expand: ['See every bar up close', 'Expand any bar to see its notes large, how to count them, and practise it on its own.'],
   pdf: ['Take the chart to rehearsal', 'Premium exports the song chart as a clean PDF, with your notes.'],
@@ -1489,7 +1531,7 @@ function setSectionLoop(k: number) {
 }
 
 function enterLearn() {
-  if (!st.score || !gateOk('tools')) return;
+  if (!st.score || !gateOk('learn')) return;
   learn.on = true;
   const saved = storage.get<{ step: number }>(learnKey());
   learn.step = Math.max(0, Math.min(saved?.step ?? 0, learnSteps().length - 1));

@@ -157,7 +157,7 @@
       </section>
     </div>
     <footer class="site-foot">
-      <p>The files you load are only read in your browser and are never sent to a server. Only load files you have the right to use.</p>
+      <p>Files are opened right here in your browser. With the free plan they stay on this device; with Premium they are also kept, privately, in your account. Only load files you have the right to use.</p>
       <p>© 2026 ChordTile · <a href="/help">How it works</a> · <a href="/licenses">Terms, privacy and licenses</a> · Guitar Pro is a trademark of Arobas Music; this site is not affiliated.</p>
     </footer>
   </main>
@@ -276,18 +276,16 @@
       <p>The songs you load stay here, ready to open.</p>
     </div>
     <button class="btn lib-sample" id="libSample" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Open the sample song</span></button>
-    <div class="lib-sync" id="libSync" hidden>
-      <p class="hint" id="syncStatus"></p>
-      <button class="btn sm" type="button" id="syncBtn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2"/><path d="M21 4v5h-5M3 20v-5h5"/></svg>Sync now</button>
-    </div>
-    <p class="lib-local hint"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="libLocalHint">Songs are saved only in this browser on this device. They are never sent to a server.</span></p>
+    <!-- Premium: estado da cópia na conta (a sincronização é automática, sem botão) -->
+    <p class="lib-sync hint" id="libSync" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a5 5 0 0 1-.6-9.96A6 6 0 0 1 18 9a4.5 4.5 0 0 1 0 9z"/><path d="M9.5 13.5l2 2 3.5-3.5"/></svg><span id="syncStatus">Saved in your account, on every device you sign in to</span></p>
+    <p class="lib-local hint"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="libLocalHint">Songs are saved on this device only.</span></p>
   </div>
 </aside>
 <aside class="sheet" id="settings" hidden aria-label="Settings">
   <div class="sheet-head">
     <div class="sheet-title">
       <h2>Settings</h2>
-      <p>Saved in this browser</p>
+      <p>Saved on this device</p>
     </div>
     <button class="ibtn sheet-close" id="closeSettings" type="button" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
@@ -326,7 +324,7 @@
     </section>
 
     <section class="set-group" aria-labelledby="sgAudio">
-      <h3 class="set-title" id="sgAudio">Audio &amp; sync</h3>
+      <h3 class="set-title" id="sgAudio">Audio &amp; timing</h3>
       <div class="set-card">
         <div class="set-item">
           <label class="set-label" for="metroSound">Metronome sound<small>Also used by the count-in</small></label>
@@ -369,7 +367,7 @@
     <li><b>Expand any bar</b> <span>Notes up close and how to count them</span></li>
     <li><b>PDF charts</b> <span>Take the song map to rehearsal</span></li>
     <li><b>Progress per section</b> <span>Time practised, best speed, mastered</span></li>
-    <li><b>Sync across devices</b> <span>Phone, tablet and computer</span></li>
+    <li><b>Songs in your account</b> <span>On your phone, tablet and computer</span></li>
   </ul>
   <div class="pw-trial" id="pwTrial">
     <p><b>Try everything free for 7 days.</b> Create a free account: no card needed.</p>

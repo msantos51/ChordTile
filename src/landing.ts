@@ -28,7 +28,7 @@ async function openInReader(f: File | undefined) {
     await setPendingFile(f.name, bytes);
     location.href = '/player?open';
   } catch {
-    fail('Couldn’t hand the file to the player in this browser (private mode?). Open the player and load it there.');
+    fail('Couldn’t hand the file to the player on this device (private browsing?). Open the player and load it there.');
   }
 }
 

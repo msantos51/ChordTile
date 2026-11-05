@@ -6,12 +6,12 @@ Plataforma para aprender músicas a partir de ficheiros Guitar Pro. Carregas o f
 - deteta o **tom de cada compasso** e mostra-o num quadrado com a **cor da nota** (convenção Boomwhackers: Dó vermelho … Si rosa);
 - mostra a **tablatura** sincronizada e toca a música, com **loop por secção**, velocidade (25, 50, 75, 100 e 125 %), metrónomo, contagem e "tocar por cima" (silencia a tua pista) ou "só o meu instrumento" (ouve-se só a tua pista);
 - deixa **mudar o nome e dividir as secções**, escrever **notas em cada compasso** e **exportar o esquema para PDF** (com o mesmo aspeto do site);
-- **guarda as músicas importadas** neste browser ("My songs") e abre a última ao voltar; com Premium sincroniza-as entre dispositivos;
+- **guarda as músicas importadas** em "My songs" e abre a última ao voltar: no plano Gratuito neste dispositivo; com Premium na conta, em todos os dispositivos (sincronização automática, sem botão);
 - tem um **tutorial** na primeira visita e uma página **How it works** (`help.html`).
 
 O site está em **inglês**; o código e esta documentação continuam em português.
 
-Os ficheiros são lidos só no browser. Só são enviados para um servidor se a pessoa **iniciar sessão com Premium**, para sincronizar "My songs" entre dispositivos (opcional, ver abaixo).
+Os ficheiros são abertos no browser. Só são enviados para um servidor com **Premium**, para guardar "My songs" na conta e os ter em todos os dispositivos (ver abaixo). Sem conta só se experimenta a música de exemplo.
 
 ## Começar
 
@@ -155,7 +155,7 @@ Quem cria conta (email e palavra-passe, com "Forgot your password?" por email) d
 A chave *anon* é pública por natureza; quem protege os dados são as regras RLS do ficheiro SQL (cada pessoa só lê e escreve as suas músicas).
 
 Como funciona a sincronização (`src/app/cloud.ts`, plano em `src/app/cloud-plan.ts`, testado):
-- ao iniciar sessão, ao voltar ao separador e em "Sync now", junta as duas bibliotecas: o que falta de cada lado passa para o outro;
+- automaticamente, ao iniciar sessão, ao carregar ou apagar uma música, ao voltar ao separador e quando a ligação volta (não há botão), junta as duas bibliotecas: o que falta de cada lado passa para o outro;
 - importar uma música envia-a logo; apagar marca-a como apagada na conta, e os outros dispositivos apagam-na também;
 - uma música reimportada depois de apagada volta para a conta.
 

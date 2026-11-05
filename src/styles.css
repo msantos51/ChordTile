@@ -792,12 +792,13 @@ label.set-item { cursor: pointer; }
 .lib-limit { margin: 0; padding: 12px 14px; border-radius: var(--r-md); background: var(--panel); border: 1px solid var(--line); font-size: 13px; line-height: 1.45; }
 .lib-limit .linkbtn { margin-left: 4px; }
 .lib-local { display: flex; align-items: flex-start; gap: 8px; padding: 0 4px; }
+.lib-local[hidden] { display: none; }
 .lib-local .i { width: 14px; height: 14px; flex: none; margin-top: 2px; }
 
 /* Sincronização das músicas (só com conta e Premium) */
-.lib-sync { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: var(--r-md); background: var(--panel); border: 1px solid var(--line); }
-.lib-sync .hint { flex: 1; min-width: 0; }
-.lib-sync .btn .i { width: 14px; height: 14px; }
+.lib-sync { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 12px; border-radius: var(--r-item); background: var(--panel); border: 1px solid var(--line); }
+.lib-sync[hidden] { display: none; }
+.lib-sync .i { width: 16px; height: 16px; flex: none; color: var(--accent-text); }
 .account-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .plan-badge { padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line-2); font-weight: 600; font-size: 12.5px; }
 .plan-badge.premium { border-color: var(--accent); color: var(--accent-text); }

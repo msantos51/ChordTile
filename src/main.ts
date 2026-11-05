@@ -1118,16 +1118,16 @@ function songLimitReached(retry?: () => void) {
     openPaywall('library');
   }
 }
-/** Guarda a música neste browser (e na conta, com Premium) para a próxima vez. */
+/** Guarda a música neste dispositivo (e na conta, com Premium) para a próxima vez. */
 function saveImported(bytes: Uint8Array, name: string) {
   const s = score(), id = st.fileKey;
   void (async () => {
     return saveSong({ id, fileName: name, title: $('songTitle').textContent || name, artist: s.artist || '', bars: s.masterBars.length }, bytes)
       .then(() => {
         askPersistentStorage(); renderLibrary(); toast('Saved to “My songs”.');
-        if (account && plan.premium) uploadSong(id).catch(() => setSyncStatus('Couldn’t upload the last song. Try “Sync now”.'));
+        if (account && plan.premium) uploadSong(id).then(() => setSyncStatus('Saved in your account, on every device you sign in to')).catch(syncFailed);
       })
-      .catch(() => toast('Couldn’t save the song in this browser (private mode?).'));
+      .catch(() => toast('Couldn’t save the song on this device (private browsing?).'));
   })();
 }
 
@@ -1174,8 +1174,8 @@ async function renderLibrary() {
       const no = document.createElement('button'); no.type = 'button'; no.textContent = 'Cancel';
       yes.addEventListener('click', async () => {
         await deleteSong(song.id).catch(() => {});
-        if (account) deleteRemoteSong(song.id).catch(() => setSyncStatus('Couldn’t delete it from your account. Try “Sync now”.'));
-        renderLibrary(); toast('“' + song.title + '” deleted' + (account ? '.' : ' from this browser.'));
+        if (account && plan.premium) deleteRemoteSong(song.id).catch(syncFailed);
+        renderLibrary(); toast('“' + song.title + '” deleted' + (account && plan.premium ? ' from your account.' : ' from this device.'));
       });
       no.addEventListener('click', () => renderLibrary());
       c.append(yes, no); del.replaceWith(c); no.focus();
@@ -1186,7 +1186,7 @@ async function renderLibrary() {
 }
 async function openSaved(id: string) {
   const song = await getSong(id).catch(() => null);
-  if (!song) { toast('That song isn’t in this browser any more.'); renderLibrary(); return; }
+  if (!song) { toast('That song isn’t on this device any more.'); renderLibrary(); return; }
   st.api?.stop(); clearLoop();
   if (loadBytes(song.bytes, song.fileName, false)) { touchSong(id).catch(() => {}); openLibrary(false); }
 }
@@ -1209,31 +1209,41 @@ addEventListener('drop', e => { e.preventDefault(); dragN = 0; $('drop').hidden 
 let account: Account | null = null;
 let syncing = false;
 function setSyncStatus(t: string) { $('syncStatus').textContent = t; }
-/** A linha de sincronização de "My songs" só aparece com conta e Premium. */
-function updateSyncRow() { $('libSync').hidden = !(account && plan.premium); }
+/** Sem rede: avisa e volta a tentar sozinho quando a ligação voltar ou se regressar ao separador. */
+function syncFailed() { setSyncStatus('Couldn’t reach your account. ChordTile will try again automatically.'); }
+/**
+ * Onde ficam as músicas, dito da mesma forma em todo o site:
+ * sem conta só a de exemplo; Gratuito neste dispositivo; Premium na conta (sincronização automática).
+ */
+function updateSyncRow() {
+  const inAccount = !!account && plan.premium;
+  $('libSync').hidden = !inAccount;
+  // Premium: só a linha do estado (na conta, em todos os dispositivos); os outros: onde ficam as músicas
+  $('libLocalHint').parentElement!.hidden = inAccount;
+  $('libLocalHint').textContent = !account
+    ? 'Without an account you can try the sample song. Create a free account to load your own.'
+    : 'On the free plan, songs are saved on this device only. With Premium they are kept in your account, on all your devices.';
+}
 function plural(n: number, w: string) { return n + ' ' + w + (n === 1 ? '' : 's'); }
 async function runSync(quiet: boolean) {
   if (!account || syncing) return;
-  if (!plan.premium) { setSyncStatus('Sync across devices is a Premium feature. Your songs stay in this browser.'); return; }
-  syncing = true; $<HTMLButtonElement>('syncBtn').disabled = true; setSyncStatus('Syncing…');
+  if (!plan.premium) return;
+  syncing = true; setSyncStatus('Updating from your account…');
   try {
     const r = await syncLibrary();
     const parts = [r.uploaded && plural(r.uploaded, 'song') + ' uploaded', r.downloaded && plural(r.downloaded, 'song') + ' downloaded', r.deleted && plural(r.deleted, 'song') + ' removed'].filter(Boolean);
-    setSyncStatus('Up to date' + (parts.length ? ': ' + parts.join(', ') : '') + '.');
+    setSyncStatus('Saved in your account, on every device you sign in to' + (parts.length ? ' · ' + parts.join(', ') : ''));
     if (parts.length) renderLibrary();
     if (!quiet && parts.length) toast('“My songs” synced.');
     // Primeira sincronização num dispositivo novo: abre a última música em vez do exemplo
     if (r.downloaded && st.isSample) { const songs = await listSongs(); if (songs[0]) openSaved(songs[0].id); }
   } catch {
-    setSyncStatus('Couldn’t sync. Check your connection and try again.');
-  } finally { syncing = false; $<HTMLButtonElement>('syncBtn').disabled = false; }
+    syncFailed();
+  } finally { syncing = false; }
 }
 function showAccount(a: Account | null) {
   const was = account?.id; account = a;
   if (!a) setPlan(GUEST);
-  $('libLocalHint').textContent = a
-    ? 'Songs are kept in this browser (and in your account with Premium).'
-    : 'Without an account you can try the sample song. Create a free account to load your own.';
   // Com sessão: a inicial num círculo e o primeiro nome (no telemóvel só a inicial); sem sessão: "Sign in"
   const first = a ? (a.name.split(/\s+/)[0] || a.email.split('@')[0]) : '';
   $('accountBtnText').textContent = a ? first : 'Sign in';
@@ -1255,13 +1265,14 @@ const welcome = () => toast('You’re signed in. Welcome!');
 $('accountBtn').addEventListener('click', () => { if (account) location.href = '/account'; else openAuthDialog('signin', undefined, welcome); });
 // Sem Supabase configurado (por exemplo em desenvolvimento) não há contas: tudo fica desbloqueado
 if (!cloudEnabled) { $('accountBtn').hidden = true; queueMicrotask(() => setPlan({ kind: 'lifetime', premium: true, until: null })); }
-$('syncBtn').addEventListener('click', () => (plan.premium ? runSync(false) : openPaywall('sync')));
+// Sem botão: sincroniza ao entrar, ao voltar ao separador e quando a ligação volta
+addEventListener('online', () => { if (account && plan.premium) runSync(true); });
 
 // ---------- Cadeados (sem conta / conta grátis / Premium) ----------
 const GATE_NAMES: Record<Feature, string> = {
   tools: 'Speed, the metronome and the count-in', notes: 'Notes on the bars', loop: 'Loop', playalong: 'Play along',
   solo: 'Solo', learn: 'Tile by Tile', expand: 'Expanding a bar', pdf: 'The PDF chart', progress: 'Progress per section',
-  sync: 'Sync across devices',
+  sync: 'Keeping songs in your account',
 };
 /** Pode usar a função? Se não, pede conta (sem conta) ou mostra o Premium (conta grátis). */
 function gateOk(f: Feature): boolean {
@@ -1328,10 +1339,10 @@ const PAYWALL_COPY: Record<PaywallReason, [string, string]> = {
   learn: ['Learn songs by heart', 'Tile by Tile is Premium: learn each section from the tab, then from the tiles only, until you play the whole song without reading.'],
   playalong: ['Play along with the band', 'Premium mutes your instrument so you play your part with the rest of the band.'],
   solo: ['Hear only your part', 'Premium plays your instrument alone, so you can hear exactly what to play.'],
-  library: ['Keep all your songs', 'The free plan keeps ' + FREE_SONG_LIMIT + ' songs in “My songs”. Premium keeps them all, on every device.'],
+  library: ['Keep all your songs', 'The free plan keeps ' + FREE_SONG_LIMIT + ' songs on this device. Premium keeps them all in your account, on every device.'],
   expand: ['See every bar up close', 'Expand any bar to see its notes large, how to count them, and practise it on its own.'],
   pdf: ['Take the chart to rehearsal', 'Premium exports the song chart as a clean PDF, with your notes.'],
-  sync: ['Your songs on every device', 'Premium keeps “My songs” in sync between your phone, tablet and computer.'],
+  sync: ['Your songs on every device', 'Premium keeps “My songs” in your account, so they are on your phone, tablet and computer automatically.'],
   progress: ['See how far you’ve come', 'Premium shows the time you’ve practised each section, your best speed and what you’ve mastered.'],
 };
 function openPaywall(reason: PaywallReason) {

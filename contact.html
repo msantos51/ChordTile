@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="./favicon.ico" sizes="32x32">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<title>Contact · ChordTile</title>
+<meta name="description" content="Contact ChordTile: help with the site, Premium and payments, privacy and your data, or ideas and feedback.">
+<link rel="canonical" href="https://www.chordtile.com/contact">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ChordTile">
+<meta property="og:title" content="Contact · ChordTile">
+<meta property="og:description" content="Contact ChordTile: help with the site, Premium and payments, privacy and your data, or ideas and feedback.">
+<meta property="og:url" content="https://www.chordtile.com/contact">
+<meta property="og:image" content="https://www.chordtile.com/icon-512.png">
+<meta name="twitter:card" content="summary">
+</head>
+<body class="doc">
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/">
+      <svg class="logo" viewBox="16 16 224 224" aria-hidden="true"><path fill-rule="evenodd" d="M76 16H180A60 60 0 0 1 240 76V180A60 60 0 0 1 180 240H76A60 60 0 0 1 16 180V76A60 60 0 0 1 76 16ZM199 104A43 43 0 0 0 156 61H108A43 43 0 0 0 65 104V152A43 43 0 0 0 108 195H156A43 43 0 0 0 199 152H169A13 13 0 0 1 156 165H108A13 13 0 0 1 95 152V104A13 13 0 0 1 108 91H156A13 13 0 0 1 169 104Z"/></svg>
+      ChordTile
+    </a>
+    <nav class="doc-nav" aria-label="Site">
+      <a class="btn" id="docAccount" href="/account">Sign in</a>
+      <a class="btn primary" href="/player">Open the player</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap doc-body contact">
+  <h1>Contact us</h1>
+  <p class="lead">Questions, a problem with a song, something about Premium or your data? Write to us and we will reply by email, usually within two working days.</p>
+  <p class="hint contact-first">Many answers are already in <a href="/help#faq">How it works</a>. To cancel Premium or delete your account, you don’t need to write: you can do it yourself on <a href="/account">your account page</a>.</p>
+
+  <form class="acc-card contact-form" id="contactForm" novalidate>
+    <div class="contact-row">
+      <label class="auth-field"><span>Name</span><input id="cName" name="name" maxlength="80" autocomplete="name" required></label>
+      <label class="auth-field"><span>Email</span><input id="cEmail" name="email" type="email" maxlength="254" autocomplete="email" required></label>
+    </div>
+    <label class="auth-field"><span>Topic</span>
+      <select id="cTopic" name="topic" required>
+        <option value="support">Help with the site</option>
+        <option value="billing">Premium and payments</option>
+        <option value="privacy">Privacy and my data</option>
+        <option value="feedback">Ideas and feedback</option>
+        <option value="other">Other</option>
+      </select>
+    </label>
+    <label class="auth-field"><span>Message</span><textarea id="cMessage" name="message" rows="7" minlength="10" maxlength="4000" required placeholder="Tell us what happened, which song or page, and on which device."></textarea></label>
+    <label class="contact-hp" aria-hidden="true">Website <input name="website" tabindex="-1" autocomplete="off"></label>
+    <p class="hint">We use your name and email only to answer you. See <a href="/licenses#privacy">privacy</a>.</p>
+    <div class="contact-send">
+      <button class="btn primary" type="submit" id="cSend">Send message</button>
+      <p class="contact-status" id="cStatus" role="status" aria-live="polite"></p>
+    </div>
+  </form>
+</main>
+
+<script type="module" src="/src/contact.ts"></script>
+</body>
+</html>

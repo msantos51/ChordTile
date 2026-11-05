@@ -168,9 +168,24 @@ const CAPTURE = () => {
     ok(t !== t2, 'next did nothing'); return `${t.trim()} → ${t2.trim()}`;
   });
   await test('Help, licenses and account pages load', async () => {
-    for (const pg of ['help.html', 'licenses.html', 'account.html']) { const r = await p.goto(BASE + pg); ok(r.status() === 200, pg + ' ' + r.status()); }
+    for (const pg of ['help.html', 'licenses.html', 'contact.html', 'account.html']) { const r = await p.goto(BASE + pg); ok(r.status() === 200, pg + ' ' + r.status()); }
     await p.waitForTimeout(4000); const loading = await p.locator('#accLoading').isVisible();
     return 'account shows: "' + (await p.locator('main').innerText()).slice(0, 90).replace(/\s+/g, ' ') + '"';
+  });
+  await test('Contact form: checks the fields and sends (server simulated)', async () => {
+    await p.goto(BASE + 'contact.html?topic=billing');
+    ok(await p.inputValue('#cTopic') === 'billing', 'topic from ?topic not picked');
+    await p.click('#cSend'); await p.waitForTimeout(200);
+    ok(/name/i.test(await p.textContent('#cStatus')), 'empty form not refused');
+    if (LABEL !== 'prod') return 'dev build has no server: checks only';
+    let sent = null;
+    await p.route(/functions\/v1\/contact/, r => { sent = JSON.parse(r.request().postData()); r.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '{"sent":true}' }); });
+    await p.fill('#cName', 'QA Tester'); await p.fill('#cEmail', 'qa@example.com'); await p.fill('#cMessage', 'The chord of bar 12 looks wrong.');
+    await p.click('#cSend'); await p.waitForFunction(() => document.getElementById('cStatus').classList.contains('ok'), null, { timeout: 5000 });
+    await p.unroute(/functions\/v1\/contact/);
+    ok(sent && sent.email === 'qa@example.com' && sent.topic === 'billing' && sent.website === '', 'payload ' + JSON.stringify(sent));
+    ok(await p.inputValue('#cMessage') === '', 'message not cleared');
+    return (await p.textContent('#cStatus')).trim();
   });
   await test('Legacy URLs redirect (ajuda, leitor, licencas, learn)', async () => {
     for (const [a, to] of [['ajuda.html', /help/], ['leitor.html', /player/], ['licencas.html', /licenses/], ['learn.html', /player(\.html)?\?learn/]]) { await p.goto(BASE + a); await p.waitForTimeout(700); ok(to.test(p.url()), a + ' → ' + p.url()); }

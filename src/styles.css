@@ -886,3 +886,27 @@ body.learning .learn-cta { display: none; }
   .learn-cta h2 { font-size: 16px; }
   .learn-cta .lc-btn { grid-column: 1 / -1; width: 100%; justify-content: center; }
 }
+
+/* ---------- Compasso expandido: técnicas e dinâmicas ---------- */
+/* Etiqueta da técnica colada à nota (H, P, ↑ full, /, PM…) */
+.bm-staff .nt .tq { position: absolute; left: 50%; bottom: calc(100% - 4px); transform: translateX(-50%); white-space: nowrap;
+  font: 700 10.5px/1 var(--f-mono); letter-spacing: .02em; padding: 2px 5px; border-radius: var(--r-pill);
+  background: var(--panel); color: var(--accent-text); border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line-2)); pointer-events: auto; }
+.bm-staff .nt.on .tq { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.bm-staff .nt.ghost { color: var(--ink-soft); font-weight: 500; }
+.bm-staff .nt.tied { opacity: .55; }
+/* Faixa por cima da pauta: slap, pop, rasgado e dinâmicas de cada tempo */
+.bm-beattech { position: relative; height: 22px; margin-bottom: 10px; }
+.bm-beattech.empty { height: 0; margin-bottom: 0; }
+.bm-beattech .btq { position: absolute; top: 0; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  font: 700 11px/22px var(--f-mono); color: var(--ink); }
+.dyn { font: italic 700 15px/1 Georgia, 'Times New Roman', serif; color: var(--accent-text); letter-spacing: .02em; }
+/* Legenda por baixo */
+.bm-legend { margin-top: 12px; align-items: baseline; }
+.bm-techs { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--ink-soft); }
+.bm-techs b { font: 700 11px var(--f-mono); color: var(--accent-text); margin-right: 2px; }
+.bm-techs .dyn { font-size: 14px; margin-right: 2px; }
+@media (max-width: 640px) {
+  .bm-staff .nt .tq { font-size: 9.5px; padding: 1px 4px; }
+  .bm-techs { font-size: 12px; gap: 4px 12px; }
+}

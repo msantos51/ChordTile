@@ -19,12 +19,12 @@ describe('planos', () => {
     expect(planState({ plan: 'lifetime', trialEndsAt: 0, premiumUntil: null }, now + 9999 * DAY).premium).toBe(true);
   });
 
-  it('sem conta 1 música, conta grátis 3, Premium sem limite; reabrir uma guardada é sempre possível', () => {
+  it('sem conta nenhuma música (só a de exemplo), conta grátis 3, Premium sem limite; reabrir uma guardada é sempre possível', () => {
     const FREE = { kind: 'free' as const, premium: false, until: null };
     const ids = Array.from({ length: FREE_SONG_LIMIT }, (_, i) => 's' + i);
-    expect([songLimit(GUEST), songLimit(FREE)]).toEqual([1, 3]);
-    expect(canSaveSong(GUEST, [], 'novo')).toBe(true);
-    expect(canSaveSong(GUEST, ['s0'], 'novo')).toBe(false);
+    expect([songLimit(GUEST), songLimit(FREE)]).toEqual([0, 3]);
+    expect(canSaveSong(GUEST, [], 'novo')).toBe(false);
+    expect(canSaveSong(GUEST, ['s0'], 's0')).toBe(true); // a que já estava guardada abre na mesma
     expect(canSaveSong(FREE, ids.slice(0, 2), 'novo')).toBe(true);
     expect(canSaveSong(FREE, ids, 'novo')).toBe(false);
     expect(canSaveSong(FREE, ids, 's1')).toBe(true);
@@ -33,12 +33,15 @@ describe('planos', () => {
 });
 
 describe('cadeados', () => {
-  it('sem conta: tudo pede conta; conta grátis: só Expand, PDF e extras pedem Premium', () => {
+  it('sem conta: tudo pede conta; conta grátis: velocidade, metrónomo e notas; o resto é Premium', () => {
     const FREE = { kind: 'free' as const, premium: false, until: null }, PRO = { kind: 'yearly' as const, premium: true, until: 1 };
     expect(access(GUEST, 'tools')).toBe('account');
     expect(access(GUEST, 'expand')).toBe('account');
     expect(access(FREE, 'tools')).toBe('ok');
     expect(access(FREE, 'notes')).toBe('ok');
+    // Gratuito: sem loop, play along, solo, Tile by Tile nem PDF
+    for (const f of ['loop', 'playalong', 'solo', 'learn', 'pdf'] as const) expect(access(FREE, f)).toBe('premium');
+    for (const f of ['loop', 'playalong', 'solo', 'learn'] as const) { expect(access(PRO, f)).toBe('ok'); expect(access(GUEST, f)).toBe('account'); }
     expect(access(FREE, 'expand')).toBe('premium');
     expect(access(FREE, 'pdf')).toBe('premium');
     expect(access(PRO, 'pdf')).toBe('ok');

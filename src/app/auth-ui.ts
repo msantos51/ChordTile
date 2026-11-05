@@ -13,7 +13,7 @@ export function mountAuth(box: HTMLElement, mode: AuthMode, opts: { message?: st
   const titles: Record<AuthMode, string> = { signin: 'Sign in', signup: 'Create your free account', reset: 'Reset your password' };
   const subs: Record<AuthMode, string> = {
     signin: 'Welcome back. Your songs and plan are waiting.',
-    signup: 'Keep up to 3 songs and unlock all practice tools. Includes 7 days of Premium, no card needed.',
+    signup: 'Keep up to 3 songs, with speed, metronome and notes. Includes 7 days of Premium with everything unlocked, no card needed.',
     reset: 'We’ll email you a link to choose a new password.',
   };
   box.innerHTML = `

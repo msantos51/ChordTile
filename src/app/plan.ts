@@ -2,10 +2,10 @@
 // A mesma regra está em supabase/migrations/002_entitlements.sql (private.is_premium), que é
 // quem manda de facto na sincronização; aqui decide só o que o site mostra.
 
-/** Músicas em "My songs": sem conta 1, conta grátis 3, Premium sem limite. */
-export const GUEST_SONG_LIMIT = 1;
+/** Músicas em "My songs": sem conta nenhuma (só se experimenta a música de exemplo), conta grátis 3, Premium sem limite. */
+export const GUEST_SONG_LIMIT = 0;
 export const FREE_SONG_LIMIT = 3;
-export const TRIAL_DAYS = 14;
+export const TRIAL_DAYS = 7;
 
 /** Linha da tabela `entitlements` (datas em milissegundos). */
 export interface Entitlement {
@@ -41,12 +41,14 @@ export function canSaveSong(plan: PlanState, savedIds: string[], id: string): bo
 
 /**
  * Funções com cadeado:
- * - tools: loop, velocidade, metrónomo, contagem, play along, solo, praticar secção (precisa de conta)
- * - notes: escrever notas nos quadrados (precisa de conta)
- * - expand, pdf, progress, sync: Premium
+ * - tools: velocidade, metrónomo e contagem (conta grátis)
+ * - notes: escrever notas nos quadrados (conta grátis)
+ * - loop (loop geral, praticar uma secção ou um compasso), playalong, solo, learn (Tile by Tile),
+ *   expand, pdf, progress, sync: Premium
+ * Sem conta só se toca a música de exemplo: tudo o resto pede uma conta.
  */
-export type Feature = 'tools' | 'notes' | 'expand' | 'pdf' | 'progress' | 'sync';
-const PREMIUM_ONLY: Feature[] = ['expand', 'pdf', 'progress', 'sync'];
+export type Feature = 'tools' | 'notes' | 'loop' | 'playalong' | 'solo' | 'learn' | 'expand' | 'pdf' | 'progress' | 'sync';
+export const PREMIUM_ONLY: Feature[] = ['loop', 'playalong', 'solo', 'learn', 'expand', 'pdf', 'progress', 'sync'];
 /** 'ok' = pode usar; 'account' = precisa de criar conta; 'premium' = precisa do Premium. */
 export function access(plan: PlanState, f: Feature): 'ok' | 'account' | 'premium' {
   if (plan.premium) return 'ok';

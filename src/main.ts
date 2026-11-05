@@ -14,13 +14,14 @@ import { autoSub, beatInfo, countLabels, slotOf, type Sub } from './app/count';
 import { VisualDelay } from './app/sync';
 import { releaseAudio, unlockAudio } from './app/audio-unlock';
 import { TOUR_STEPS, markTourSeen, tourSeen, visibleTarget } from './app/tour';
-import { cloudEnabled, deleteRemoteSong, fetchEntitlement, syncLibrary, uploadSong, watchAccount, type Account } from './app/cloud';
+import { SongLimitError, addAccountSong, cloudEnabled, deleteAccountSong, fetchEntitlement, getAccountSong, listAccountSongs, loadUserData, saveUserData, songDataKeys, touchAccountSong, watchAccount, type Account } from './app/cloud';
 import { openAuthDialog } from './app/auth-ui';
 import { FREE_SONG_LIMIT, GUEST, access, canSaveSong, planLabel, planState, songLimit, type Feature, type PlanState } from './app/plan';
 import { OFFERS, checkoutUrl, paymentsEnabled } from './app/billing';
 import { addLoop, addTime, isMastered, progressText, type SongProgress } from './app/practice';
-import { askPersistentStorage, deleteSong, getSong, listSongs, relativeDay, saveSong, takePendingFile, touchSong } from './app/library';
-import { TAB_COLORS, applyTheme, currentTheme, type Theme } from './app/theme';
+import { readLegacyData, readLegacySongs, relativeDay, wipeLegacy, type SongMeta } from './app/library';
+import { TAB_COLORS, applyTheme, currentTheme, savedTheme, type Theme } from './app/theme';
+import { attachAccount, detachAccount, flush, store } from './app/user-store';
 
 type Score = AlphaTab.model.Score;
 type Track = AlphaTab.model.Track;
@@ -88,14 +89,8 @@ function toast(msg: string) {
 }
 function showErr(msg: string) { const e = $('err'); e.textContent = msg; e.hidden = !msg; }
 
-const storage = {
-  get<T>(key: string): T | null {
-    try { return JSON.parse(localStorage.getItem(key) || 'null') as T | null; } catch { return null; }
-  },
-  set(key: string, value: unknown) {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* sem armazenamento */ }
-  },
-};
+// Dados da pessoa (notas, secções, progresso, preferências): ficam na conta, nunca no browser (ver user-store.ts)
+const storage = store;
 interface SavedSong {
   sections: Section[];
   overridesByTrack?: Record<number, Record<number, string>>;
@@ -1093,10 +1088,29 @@ function readFile(f: File | undefined) {
   r.onload = () => openImported(new Uint8Array(r.result as ArrayBuffer), f.name);
   r.readAsArrayBuffer(f);
 }
-/** Abre um ficheiro importado (daqui ou da página inicial) e guarda-o em "As minhas músicas". */
+// ---------- "My songs" (na conta; sem Supabase configurado, como em desenvolvimento, só em memória) ----------
+const devSongs = new Map<string, SongMeta & { bytes: Uint8Array }>();
+const lib = {
+  list: (): Promise<SongMeta[]> => cloudEnabled
+    ? (account ? listAccountSongs() : Promise.resolve([]))
+    : Promise.resolve([...devSongs.values()].map(({ bytes: _b, ...m }) => m).sort((a, b) => b.openedAt - a.openedAt)),
+  get: (id: string) => (cloudEnabled ? getAccountSong(id) : Promise.resolve(devSongs.get(id) ?? null)),
+  add: (meta: Omit<SongMeta, 'addedAt' | 'openedAt'>, bytes: Uint8Array): Promise<void> => {
+    if (cloudEnabled) return addAccountSong(meta, bytes);
+    const now = Date.now(); devSongs.set(meta.id, { ...meta, bytes, addedAt: devSongs.get(meta.id)?.addedAt ?? now, openedAt: now });
+    return Promise.resolve();
+  },
+  touch: (id: string): Promise<void> => {
+    if (cloudEnabled) return touchAccountSong(id);
+    const x = devSongs.get(id); if (x) x.openedAt = Date.now(); return Promise.resolve();
+  },
+  remove: async (id: string) => { if (cloudEnabled) await deleteAccountSong(id); else devSongs.delete(id); storage.forget(songDataKeys(id)); },
+};
+
+/** Abre um ficheiro importado e guarda-o em "My songs", na conta. */
 function openImported(bytes: Uint8Array, name: string): Promise<boolean> {
-  // Limite de músicas: sem conta nenhuma (só a de exemplo), conta grátis 3, Premium sem limite (reabrir uma guardada é sempre possível)
-  return listSongs().catch(() => []).then(saved => {
+  // Limite de músicas (por conta): sem conta nenhuma (só a de exemplo), Gratuito 3, Premium sem limite. Reabrir uma guardada é sempre possível.
+  return lib.list().catch(() => [] as SongMeta[]).then(saved => {
     let id = '';
     try { const sc = parseScore(at, bytes); id = (sc.title || name) + '|' + (sc.artist || '') + '|' + sc.masterBars.length; } catch { /* loadBytes mostra o erro */ }
     if (id && !canSaveSong(plan, saved.map(x => x.id), id)) { songLimitReached(() => void openImported(bytes, name)); return false; }
@@ -1118,17 +1132,15 @@ function songLimitReached(retry?: () => void) {
     openPaywall('library');
   }
 }
-/** Guarda a música neste dispositivo (e na conta, com Premium) para a próxima vez. */
+/** Guarda a música na conta, para a abrir em qualquer dispositivo. */
 function saveImported(bytes: Uint8Array, name: string) {
   const s = score(), id = st.fileKey;
-  void (async () => {
-    return saveSong({ id, fileName: name, title: $('songTitle').textContent || name, artist: s.artist || '', bars: s.masterBars.length }, bytes)
-      .then(() => {
-        askPersistentStorage(); renderLibrary(); toast('Saved to “My songs”.');
-        if (account && plan.premium) uploadSong(id).then(() => setSyncStatus('Saved in your account, on every device you sign in to')).catch(syncFailed);
-      })
-      .catch(() => toast('Couldn’t save the song on this device (private browsing?).'));
-  })();
+  lib.add({ id, fileName: name, title: $('songTitle').textContent || name, artist: s.artist || '', bars: s.masterBars.length }, bytes)
+    .then(() => { renderLibrary(); toast('Saved to “My songs”, in your account.'); })
+    .catch(e => {
+      if (e instanceof SongLimitError) songLimitReached();
+      else toast('Couldn’t save the song in your account. Check your connection and load it again.');
+    });
 }
 
 // ---------- As minhas músicas ----------
@@ -1146,8 +1158,8 @@ const ICON_NOTE = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d
 const ICON_TRASH = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>';
 async function renderLibrary() {
   const list = $('libList');
-  let songs: Awaited<ReturnType<typeof listSongs>> = [];
-  try { songs = await listSongs(); } catch { /* sem IndexedDB */ }
+  let songs: SongMeta[] = [];
+  try { songs = await lib.list(); } catch { setSyncStatus('Couldn’t reach your account. Check your connection.'); }
   list.innerHTML = '';
   $('libEmpty').hidden = songs.length > 0;
   $('libCount').textContent = songs.length ? plural(songs.length, 'song') + ' saved' : 'Nothing saved yet';
@@ -1173,9 +1185,9 @@ async function renderLibrary() {
       const yes = document.createElement('button'); yes.type = 'button'; yes.className = 'danger'; yes.textContent = 'Delete';
       const no = document.createElement('button'); no.type = 'button'; no.textContent = 'Cancel';
       yes.addEventListener('click', async () => {
-        await deleteSong(song.id).catch(() => {});
-        if (account && plan.premium) deleteRemoteSong(song.id).catch(syncFailed);
-        renderLibrary(); toast('“' + song.title + '” deleted' + (account && plan.premium ? ' from your account.' : ' from this device.'));
+        try { await lib.remove(song.id); toast('“' + song.title + '” deleted from your account.'); }
+        catch { toast('Couldn’t delete it. Check your connection and try again.'); }
+        renderLibrary();
       });
       no.addEventListener('click', () => renderLibrary());
       c.append(yes, no); del.replaceWith(c); no.focus();
@@ -1185,10 +1197,11 @@ async function renderLibrary() {
   }
 }
 async function openSaved(id: string) {
-  const song = await getSong(id).catch(() => null);
-  if (!song) { toast('That song isn’t on this device any more.'); renderLibrary(); return; }
+  let song: Awaited<ReturnType<typeof lib.get>> = null;
+  try { song = await lib.get(id); } catch { toast('Couldn’t open the song. Check your connection and try again.'); return; }
+  if (!song) { toast('That song isn’t in your account any more.'); renderLibrary(); return; }
   st.api?.stop(); clearLoop();
-  if (loadBytes(song.bytes, song.fileName, false)) { touchSong(id).catch(() => {}); openLibrary(false); }
+  if (loadBytes(song.bytes, song.fileName, false)) { lib.touch(id).catch(() => {}); openLibrary(false); }
 }
 function openSample() {
   return fetch(base + 'sample.gp5')
@@ -1205,45 +1218,65 @@ addEventListener('dragleave', () => { dragN = Math.max(0, dragN - 1); if (!dragN
 addEventListener('dragover', e => e.preventDefault());
 addEventListener('drop', e => { e.preventDefault(); dragN = 0; $('drop').hidden = true; readFile(e.dataTransfer?.files[0]); });
 
-// ---------- Conta e sincronização ----------
+// ---------- Conta ----------
+// Tudo o que é da pessoa fica na conta: "My songs" e os dados (notas, secções, progresso, preferências).
+// O browser não guarda nada além da sessão de login.
 let account: Account | null = null;
-let syncing = false;
 function setSyncStatus(t: string) { $('syncStatus').textContent = t; }
-/** Sem rede: avisa e volta a tentar sozinho quando a ligação voltar ou se regressar ao separador. */
-function syncFailed() { setSyncStatus('Couldn’t reach your account. ChordTile will try again automatically.'); }
-/**
- * Onde ficam as músicas, dito da mesma forma em todo o site:
- * sem conta só a de exemplo; Gratuito neste dispositivo; Premium na conta (sincronização automática).
- */
+/** "My songs" diz sempre o mesmo: com conta, na conta; sem conta, só a música de exemplo. */
 function updateSyncRow() {
-  const inAccount = !!account && plan.premium;
-  $('libSync').hidden = !inAccount;
-  // Premium: só a linha do estado (na conta, em todos os dispositivos); os outros: onde ficam as músicas
-  $('libLocalHint').parentElement!.hidden = inAccount;
-  $('libLocalHint').textContent = !account
-    ? 'Without an account you can try the sample song. Create a free account to load your own.'
-    : 'On the free plan, songs are saved on this device only. With Premium they are kept in your account, on all your devices.';
+  $('libSync').hidden = !account;
+  $('libLocalHint').parentElement!.hidden = !!account;
+  $('libLocalHint').textContent = 'Without an account you can try the sample song. Create a free account to load your own.';
 }
 function plural(n: number, w: string) { return n + ' ' + w + (n === 1 ? '' : 's'); }
-async function runSync(quiet: boolean) {
-  if (!account || syncing) return;
-  if (!plan.premium) return;
-  syncing = true; setSyncStatus('Updating from your account…');
-  try {
-    const r = await syncLibrary();
-    const parts = [r.uploaded && plural(r.uploaded, 'song') + ' uploaded', r.downloaded && plural(r.downloaded, 'song') + ' downloaded', r.deleted && plural(r.deleted, 'song') + ' removed'].filter(Boolean);
-    setSyncStatus('Saved in your account, on every device you sign in to' + (parts.length ? ' · ' + parts.join(', ') : ''));
-    if (parts.length) renderLibrary();
-    if (!quiet && parts.length) toast('“My songs” synced.');
-    // Primeira sincronização num dispositivo novo: abre a última música em vez do exemplo
-    if (r.downloaded && st.isSample) { const songs = await listSongs(); if (songs[0]) openSaved(songs[0].id); }
-  } catch {
-    syncFailed();
-  } finally { syncing = false; }
+
+/** Preferências guardadas na conta: tema, atraso do áudio, compassos por linha na tab, som do metrónomo. */
+function applyPrefs() {
+  setTheme(savedTheme() ?? 'dark');
+  setSync(storage.get<number>('mapa:sync') ?? 0);
+  const rows = storage.get<number>('mapa:tabPerRow');
+  const next = typeof rows === 'number' && rows >= 0 && rows <= 6 ? Math.round(rows) : 0;
+  if (next !== tabPerRow) { tabPerRow = next; select('tabPerRow').value = String(next); if (st.score) renderTab(); }
+  const snd = storage.get<string>('mapa:metroSound');
+  if (isMetroSound(snd) && snd !== metro.sound) { select('metroSound').value = snd; select('metroSound').dispatchEvent(new Event('change')); }
 }
+
+/**
+ * Versões antigas guardavam as músicas e os dados neste browser: passam para a conta (uma vez) e
+ * apagam-se do browser. No plano Gratuito passam as 3 mais recentes.
+ */
+async function migrateLegacy() {
+  const [songs, data] = [await readLegacySongs().catch(() => []), readLegacyData()];
+  if (!songs.length && !Object.keys(data).length) return;
+  for (const [k, v] of Object.entries(data)) if (storage.get(k) === null) storage.set(k, v);
+  await flush();
+  let moved = 0, left = 0, failed = false;
+  for (const sg of songs) {
+    if (left) { left++; continue; }
+    try { await addAccountSong(sg, sg.bytes); moved++; }
+    catch (e) { if (e instanceof SongLimitError) left++; else { failed = true; break; } }
+  }
+  if (failed) return; // sem rede: fica tudo como estava e tenta-se na próxima vez
+  await wipeLegacy();
+  if (moved || left) toast((moved ? plural(moved, 'song') + ' moved to your account.' : '') + (left ? ' The free plan keeps ' + FREE_SONG_LIMIT + '; ' + plural(left, 'older song') + ' wasn’t moved.' : ''));
+}
+
+/** Liga a conta: carrega os dados dela, passa o que estava no browser e aplica as preferências. */
+async function connectAccount() {
+  let data: Record<string, unknown> = {};
+  try { data = await loadUserData(); } catch { setSyncStatus('Couldn’t reach your account. Check your connection.'); }
+  attachAccount(data, saveUserData, () => setSyncStatus('Couldn’t save your changes to your account yet. ChordTile will try again automatically.'));
+  await migrateLegacy().catch(() => {});
+  applyPrefs();
+}
+
+let firstAccount!: () => void;
+/** Fica pronta depois de se saber se há sessão (e, havendo, de carregar os dados da conta). */
+const accountReady = new Promise<void>(r => { firstAccount = r; });
+let connected = false;
 function showAccount(a: Account | null) {
   const was = account?.id; account = a;
-  if (!a) setPlan(GUEST);
   // Com sessão: a inicial num círculo e o primeiro nome (no telemóvel só a inicial); sem sessão: "Sign in"
   const first = a ? (a.name.split(/\s+/)[0] || a.email.split('@')[0]) : '';
   $('accountBtnText').textContent = a ? first : 'Sign in';
@@ -1252,21 +1285,37 @@ function showAccount(a: Account | null) {
   $('accountBtn').classList.toggle('signed', !!a);
   $('accountBtn').setAttribute('aria-label', a ? 'Your account (' + a.email + ')' : 'Sign in or create an account');
   $('accountBtn').title = a ? 'Your account · ' + a.email : 'Sign in or create an account';
-  if (a && a.id !== was) refreshPlan().then(() => runSync(true));
   $('pwTrial').hidden = !!a;
   updateSyncRow(); applyLocks();
+  if (!a) {
+    detachAccount(); setPlan(GUEST);
+    if (was) { renderLibrary(); if (!st.isSample) openSample(); } // saiu: nada fica no ecrã nem no browser
+    if (!connected) { connected = true; firstAccount(); }
+    return;
+  }
+  if (a.id === was) return;
+  const signingIn = connected; // entrou agora (e não ao abrir a página)
+  void connectAccount().then(() => refreshPlan()).then(async () => {
+    if (!connected) { connected = true; firstAccount(); return; }
+    renderLibrary();
+    // Entrou com a música de exemplo aberta: abre a última da conta
+    if (signingIn && st.isSample) { const songs = await lib.list().catch(() => [] as SongMeta[]); if (songs[0]) openSaved(songs[0].id); }
+  });
 }
 if (cloudEnabled) {
-  watchAccount(showAccount).catch(() => { /* sem sessão */ });
-  // Ao voltar ao separador, apanha o que mudou noutros dispositivos
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refreshPlan().then(() => runSync(true)); });
-}
+  watchAccount(showAccount).catch(() => { connected = true; firstAccount(); });
+  // Ao voltar ao separador: o plano pode ter mudado (pagamento) e as músicas podem ter mudado noutro dispositivo
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') { void flush(); return; }
+    if (account) { refreshPlan(); if (!$('library').hidden) renderLibrary(); }
+  });
+  addEventListener('pagehide', () => void flush());
+  addEventListener('online', () => void flush());
+} else queueMicrotask(() => { connected = true; firstAccount(); });
 const welcome = () => toast('You’re signed in. Welcome!');
 $('accountBtn').addEventListener('click', () => { if (account) location.href = '/account'; else openAuthDialog('signin', undefined, welcome); });
-// Sem Supabase configurado (por exemplo em desenvolvimento) não há contas: tudo fica desbloqueado
+// Sem Supabase configurado (por exemplo em desenvolvimento) não há contas: tudo fica desbloqueado (e nada se guarda)
 if (!cloudEnabled) { $('accountBtn').hidden = true; queueMicrotask(() => setPlan({ kind: 'lifetime', premium: true, until: null })); }
-// Sem botão: sincroniza ao entrar, ao voltar ao separador e quando a ligação volta
-addEventListener('online', () => { if (account && plan.premium) runSync(true); });
 
 // ---------- Cadeados (sem conta / conta grátis / Premium) ----------
 const GATE_NAMES: Record<Feature, string> = {
@@ -1339,10 +1388,10 @@ const PAYWALL_COPY: Record<PaywallReason, [string, string]> = {
   learn: ['Learn songs by heart', 'Tile by Tile is Premium: learn each section from the tab, then from the tiles only, until you play the whole song without reading.'],
   playalong: ['Play along with the band', 'Premium mutes your instrument so you play your part with the rest of the band.'],
   solo: ['Hear only your part', 'Premium plays your instrument alone, so you can hear exactly what to play.'],
-  library: ['Keep all your songs', 'The free plan keeps ' + FREE_SONG_LIMIT + ' songs on this device. Premium keeps them all in your account, on every device.'],
+  library: ['Keep all your songs', 'The free plan keeps ' + FREE_SONG_LIMIT + ' songs in your account. Premium keeps as many as you like.'],
   expand: ['See every bar up close', 'Expand any bar to see its notes large, how to count them, and practise it on its own.'],
   pdf: ['Take the chart to rehearsal', 'Premium exports the song chart as a clean PDF, with your notes.'],
-  sync: ['Your songs on every device', 'Premium keeps “My songs” in your account, so they are on your phone, tablet and computer automatically.'],
+  sync: ['Your songs on every device', 'Your songs are kept in your account, on your phone, tablet and computer.'],
   progress: ['See how far you’ve come', 'Premium shows the time you’ve practised each section, your best speed and what you’ve mastered.'],
 };
 function openPaywall(reason: PaywallReason) {
@@ -1386,7 +1435,7 @@ if (new URLSearchParams(location.search).has('checkout')) {
     await refreshPlan();
     if ((plan.premium && plan.kind !== 'trial') || ++tries > 10) {
       clearInterval(poll);
-      if (plan.premium && plan.kind !== 'trial') { toast('Premium is on. Enjoy!'); runSync(true); }
+      if (plan.premium && plan.kind !== 'trial') { toast('Premium is on. Enjoy!'); renderLibrary(); }
     }
   }, 3000);
 }
@@ -1636,20 +1685,17 @@ $('learnPlay').addEventListener('click', () => {
   api().play();
 });
 
-// Ao abrir: o ficheiro escolhido na página inicial (?open); ou a música de exemplo (?sample);
-// ou a última música aberta neste browser; se não houver, a música de exemplo.
+// Ao abrir: a música de exemplo (?sample); ou a última aberta na conta (em qualquer dispositivo);
+// sem conta ou sem músicas, a de exemplo. ?load (vindo da página inicial) abre "My songs" para carregar uma.
 const params = new URLSearchParams(location.search);
 // (Also accepts the old Portuguese names: ?exemplo, ?abrir, #musicas.)
 const wantSample = params.has('sample') || params.has('exemplo');
-const wantOpen = params.has('open') || params.has('abrir');
-if (wantSample || wantOpen) history.replaceState(null, '', location.pathname + location.hash);
+const wantLoad = params.has('load') || params.has('open') || params.has('abrir');
+if (wantSample || wantLoad) history.replaceState(null, '', location.pathname + location.hash);
 async function boot(): Promise<unknown> {
-  if (wantOpen) {
-    const f = await takePendingFile().catch(() => null);
-    if (f && await openImported(f.bytes, f.name)) return;
-  }
-  if (wantSample) return openSample();
-  const songs = await listSongs();
+  await accountReady;
+  if (wantSample || (cloudEnabled && !account)) return openSample();
+  const songs = await lib.list().catch(() => [] as SongMeta[]);
   return songs.length ? openSaved(songs[0].id) : openSample();
 }
 boot()
@@ -1662,6 +1708,12 @@ boot()
     if (q.has('premium') || q.has('signup')) history.replaceState(null, '', location.pathname + location.hash);
   })
   .then(() => { if (location.hash === '#songs' || location.hash === '#musicas') openLibrary(true); })
+  .then(() => {
+    if (!wantLoad) return;
+    if (cloudEnabled && !account) { songLimitReached(); return; }
+    openLibrary(true); toast('Choose the Guitar Pro file to load.'); $('libraryBtn').blur();
+  })
   .then(() => { if (params.has('learn')) enterLearn(); })
-  // Primeira visita: tutorial (depois de a música aparecer, para os destaques ficarem no sítio certo)
-  .finally(() => { if (!tourSeen()) setTimeout(startTour, 600); });
+  // Primeira vez numa conta: tutorial (depois de a música aparecer, para os destaques ficarem no sítio certo).
+  // Sem conta não abre sozinho (não se guarda nada, por isso abriria em todas as visitas): fica no "?".
+  .finally(() => { if (account && !tourSeen()) setTimeout(startTour, 600); });

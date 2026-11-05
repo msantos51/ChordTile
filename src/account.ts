@@ -5,7 +5,7 @@ import './styles.css';
 import { mountAuth } from './app/auth-ui';
 import { authErrorMessage, passwordProblem } from './app/auth-errors';
 import { portalUrl } from './app/billing';
-import { cloudEnabled, deleteAccount, fetchEntitlement, signOut, updateEmail, updateName, updatePassword, watchAccount, type Account } from './app/cloud';
+import { cloudEnabled, deleteAccount, fetchEntitlement, loadUserData, signOut, updateEmail, updateName, updatePassword, watchAccount, type Account } from './app/cloud';
 import { FREE_SONG_LIMIT, daysLeft, planLabel, planState } from './app/plan';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -38,8 +38,8 @@ async function render(a: Account | null, recovery = false) {
           : paid ? 'Renews or ends on ' + new Date(p.until!).toLocaleDateString() + '.'
             : 'Free plan.';
     $('accFeats').innerHTML = (p.premium
-      ? ['Unlimited songs', 'Tile by Tile: learn songs by heart', 'Loop, play along and solo', 'Expand any bar up close', 'PDF charts', 'Progress per section', 'Songs kept in your account, on every device']
-      : ['Up to ' + FREE_SONG_LIMIT + ' songs, saved on this device', 'Speed, metronome and count-in', 'Notes on the bars', '🔒 Tile by Tile, loop, play along, solo, expand, PDF, progress and songs in your account are Premium'])
+      ? ['Unlimited songs in your account', 'Tile by Tile: learn songs by heart', 'Loop, play along and solo', 'Expand any bar up close', 'PDF charts', 'Progress per section']
+      : ['Up to ' + FREE_SONG_LIMIT + ' songs in your account, on every device', 'Speed, metronome and count-in', 'Notes on the bars', '🔒 Tile by Tile, loop, play along, solo, expand, PDF and progress are Premium'])
       .map(t => '<li>' + t + '</li>').join('');
     show('accUpgrade', !paid);
     $('accUpgrade').textContent = p.kind === 'trial' ? 'Keep Premium' : 'Go Premium';
@@ -49,7 +49,12 @@ async function render(a: Account | null, recovery = false) {
 }
 
 if (!cloudEnabled) { show('accLoading', false); $('accLoading').hidden = false; $('accLoading').textContent = 'Accounts are not available on this copy of the site.'; }
-else watchAccount((a, recovery) => { void render(a, recovery); }).catch(() => { $('accLoading').textContent = 'Couldn’t reach the server. Check your connection and reload.'; });
+else watchAccount((a, recovery) => {
+  void render(a, recovery);
+  // Tema escolhido (guardado na conta)
+  if (a) loadUserData().then(d => { document.documentElement.dataset.theme = d['mapa:theme'] === 'light' ? 'light' : 'dark'; }).catch(() => {});
+  else delete document.documentElement.dataset.theme;
+}).catch(() => { $('accLoading').textContent = 'Couldn’t reach the server. Check your connection and reload.'; });
 
 async function run(btn: HTMLButtonElement | null, fn: () => Promise<void>, ok: string) {
   if (btn) btn.disabled = true;

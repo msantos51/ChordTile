@@ -10,3 +10,10 @@ if (docAccount) {
   if (!accountsEnabled) docAccount.hidden = true;
   else if (storedAccount()) docAccount.textContent = 'Your account';
 }
+
+// Tema escolhido (guardado na conta, não no browser): só se carrega a conta se houver sessão
+if (accountsEnabled && storedAccount()) {
+  void import('./app/cloud').then(c => c.loadUserData()).then(d => {
+    if (d['mapa:theme'] === 'light') document.documentElement.dataset.theme = 'light';
+  }).catch(() => { /* sem rede: fica o tema escuro */ });
+}

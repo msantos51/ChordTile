@@ -1,5 +1,5 @@
-// Tema claro/escuro. A escolha fica guardada no browser; por defeito o site é escuro.
-// (Um pequeno script no <head> aplica o tema antes de a página aparecer, para não piscar.)
+// Tema claro/escuro. A escolha fica guardada na conta (nada no browser); por defeito o site é escuro.
+import { store } from './user-store';
 
 export type Theme = 'dark' | 'light';
 export const THEME_KEY = 'mapa:theme';
@@ -24,5 +24,8 @@ export function applyTheme(theme: Theme): void {
   document.documentElement.dataset.theme = theme;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#f4f2f0' : '#1f2024');
   document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', theme);
-  try { localStorage.setItem(THEME_KEY, theme); } catch { /* sem armazenamento */ }
+  store.set(THEME_KEY, theme);
 }
+
+/** Tema guardado na conta (ou null se a pessoa nunca escolheu). */
+export const savedTheme = (): Theme | null => { const t = store.get<string>(THEME_KEY); return t === 'light' || t === 'dark' ? t : null; };

@@ -1,11 +1,12 @@
-// Conta e sincronização de "My songs" entre dispositivos (Supabase).
-// Só fica ativo se o site for compilado com VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY;
-// sem isso, tudo continua a funcionar só neste browser, como antes.
+// Conta (Supabase): sessão, "My songs" e os dados de cada pessoa.
+// Tudo fica na conta: as músicas (ficheiro no Storage + linha em `songs`) e os dados (tabela `user_data`:
+// notas, secções, progresso, Tile by Tile, preferências). O browser só guarda a sessão de login.
+// Só fica ativo se o site for compilado com VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
-import { planSync, storageKey, type RemoteSong } from './cloud-plan';
+import { storageKey } from './cloud-plan';
 import type { Entitlement } from './plan';
-import { deleteSong, getSong, listSongs, putSong, touchSong, type SongMeta } from './library';
+import type { SongMeta } from './library';
 
 const URL_ = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -99,13 +100,8 @@ interface Row {
 }
 const ms = (t: string) => new Date(t).getTime();
 const iso = (t: number) => new Date(t).toISOString();
-const fromRow = (r: Row): RemoteSong => ({
-  id: r.id, fileName: r.file_name, title: r.title, artist: r.artist, bars: r.bars,
-  addedAt: ms(r.added_at), openedAt: ms(r.opened_at), deletedAt: r.deleted_at ? ms(r.deleted_at) : null,
-});
-const toRow = (uid: string, s: SongMeta) => ({
-  user_id: uid, id: s.id, file_name: s.fileName, title: s.title, artist: s.artist, bars: s.bars,
-  added_at: iso(s.addedAt), opened_at: iso(s.openedAt), deleted_at: null,
+const fromRow = (r: Row): SongMeta => ({
+  id: r.id, fileName: r.file_name, title: r.title, artist: r.artist, bars: r.bars, addedAt: ms(r.added_at), openedAt: ms(r.opened_at),
 });
 
 async function uid(c: SupabaseClient): Promise<string> {
@@ -114,54 +110,98 @@ async function uid(c: SupabaseClient): Promise<string> {
   return data.session.user.id;
 }
 
-/** Envia uma música (ficheiro e dados) para a conta. */
-export async function uploadSong(id: string): Promise<void> {
+/** Erro "chegou ao limite de músicas do plano" (a regra está no servidor: Gratuito 3, Premium sem limite). */
+export class SongLimitError extends Error { constructor() { super('Song limit reached'); this.name = 'SongLimitError'; } }
+const isPolicyError = (e: { message?: string; statusCode?: string | number; code?: string } | null) =>
+  !!e && (/row-level security|violates|policy/i.test(e.message ?? '') || e.code === '42501' || String(e.statusCode) === '403');
+
+// Cópia em memória (só enquanto a página está aberta; nada fica no browser)
+const fileCache = new Map<string, Uint8Array>();
+
+/** "My songs" da conta, da aberta mais recentemente para a mais antiga. */
+export async function listAccountSongs(): Promise<SongMeta[]> {
   const c = await sb(); const u = await uid(c);
-  const song = await getSong(id);
-  if (!song) return;
-  const { bytes, ...meta } = song;
-  const path = u + '/' + await storageKey(id);
-  const up = await c.storage.from(BUCKET).upload(path, bytes, { upsert: true, contentType: 'application/octet-stream' });
-  if (up.error) throw up.error;
-  const { error } = await c.from('songs').upsert(toRow(u, meta));
+  const { data, error } = await c.from('songs').select('id,file_name,title,artist,bars,added_at,opened_at,deleted_at')
+    .eq('user_id', u).is('deleted_at', null).order('opened_at', { ascending: false });
   if (error) throw error;
+  return (data as Row[]).map(fromRow);
 }
 
-/** Marca a música como apagada na conta (os outros dispositivos apagam-na na próxima sincronização). */
-export async function deleteRemoteSong(id: string): Promise<void> {
+/** Uma música da conta, com o ficheiro. null se já não existir. */
+export async function getAccountSong(id: string): Promise<(SongMeta & { bytes: Uint8Array }) | null> {
+  const c = await sb(); const u = await uid(c);
+  const { data, error } = await c.from('songs').select('id,file_name,title,artist,bars,added_at,opened_at,deleted_at')
+    .eq('user_id', u).eq('id', id).is('deleted_at', null).maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  let bytes = fileCache.get(id);
+  if (!bytes) {
+    const dl = await c.storage.from(BUCKET).download(u + '/' + await storageKey(id));
+    if (dl.error || !dl.data) throw dl.error ?? new Error('File missing');
+    bytes = new Uint8Array(await dl.data.arrayBuffer());
+    fileCache.set(id, bytes);
+  }
+  return { ...fromRow(data as Row), bytes };
+}
+
+/**
+ * Guarda uma música na conta (ficheiro e dados). Voltar a guardar uma que já existe só atualiza a data.
+ * Lança SongLimitError se o plano já não deixar guardar mais.
+ */
+export async function addAccountSong(meta: Omit<SongMeta, 'addedAt' | 'openedAt'>, bytes: Uint8Array): Promise<void> {
   const c = await sb(); const u = await uid(c);
   const now = iso(Date.now());
-  const { error } = await c.from('songs').update({ deleted_at: now, opened_at: now }).eq('user_id', u).eq('id', id);
-  if (error) throw error;
-  await c.storage.from(BUCKET).remove([u + '/' + await storageKey(id)]);
+  const { data: existing } = await c.from('songs').select('id,deleted_at').eq('user_id', u).eq('id', meta.id).maybeSingle();
+  const path = u + '/' + await storageKey(meta.id);
+  const up = await c.storage.from(BUCKET).upload(path, bytes, { upsert: true, contentType: 'application/octet-stream' });
+  if (up.error) { if (isPolicyError(up.error as never)) throw new SongLimitError(); throw up.error; }
+  const row = { user_id: u, id: meta.id, file_name: meta.fileName, title: meta.title, artist: meta.artist, bars: meta.bars, opened_at: now, deleted_at: null };
+  const { error } = existing
+    ? await c.from('songs').update({ ...row, ...(existing.deleted_at ? { added_at: now } : {}) }).eq('user_id', u).eq('id', meta.id)
+    : await c.from('songs').insert({ ...row, added_at: now });
+  if (error) {
+    if (!existing) await c.storage.from(BUCKET).remove([path]); // não deixar o ficheiro sem a linha
+    if (isPolicyError(error)) throw new SongLimitError();
+    throw error;
+  }
+  fileCache.set(meta.id, bytes);
 }
 
-export interface SyncResult { uploaded: number; downloaded: number; deleted: number }
-
-/** Junta "My songs" deste browser com a conta: o que falta de cada lado passa para o outro. */
-export async function syncLibrary(): Promise<SyncResult> {
+/** Marca a música como aberta agora (para abrir a última da próxima vez, em qualquer dispositivo). */
+export async function touchAccountSong(id: string): Promise<void> {
   const c = await sb(); const u = await uid(c);
-  const { data, error } = await c.from('songs').select('id,file_name,title,artist,bars,added_at,opened_at,deleted_at').eq('user_id', u);
+  await c.from('songs').update({ opened_at: iso(Date.now()) }).eq('user_id', u).eq('id', id);
+}
+
+/** Apaga a música da conta: a linha, o ficheiro e os dados dela (notas, progresso, Tile by Tile). */
+export async function deleteAccountSong(id: string): Promise<void> {
+  const c = await sb(); const u = await uid(c);
+  const { error } = await c.from('songs').delete().eq('user_id', u).eq('id', id);
   if (error) throw error;
-  const remote = (data as Row[]).map(fromRow);
-  const plan = planSync(await listSongs(), remote);
+  await c.storage.from(BUCKET).remove([u + '/' + await storageKey(id)]);
+  await c.from('user_data').delete().eq('user_id', u).in('key', songDataKeys(id));
+  fileCache.delete(id);
+}
+/** Chaves de `user_data` que pertencem a uma música. */
+export const songDataKeys = (id: string) => ['mapa:' + id, 'mapa:progress:' + id, 'mapa:learn:' + id];
 
-  for (const id of plan.upload) await uploadSong(id);
-  for (const id of plan.download) {
-    const r = remote.find(s => s.id === id)!;
-    const dl = await c.storage.from(BUCKET).download(u + '/' + await storageKey(id));
-    if (dl.error || !dl.data) continue; // ficheiro em falta na nuvem: fica para a próxima
-    const { deletedAt: _d, ...meta } = r;
-    await putSong(meta, new Uint8Array(await dl.data.arrayBuffer()));
-  }
-  for (const id of plan.deleteLocal) await deleteSong(id);
-  for (const id of plan.pushOpened) {
-    const l = (await getSong(id))!;
-    await c.from('songs').update({ opened_at: iso(l.openedAt) }).eq('user_id', u).eq('id', id);
-  }
-  for (const p of plan.pullOpened) await touchSong(p.id, undefined, p.openedAt);
+// ---------- Dados da pessoa (tabela user_data) ----------
 
-  return { uploaded: plan.upload.length, downloaded: plan.download.length, deleted: plan.deleteLocal.length };
+/** Todos os dados da pessoa (chave → valor). */
+export async function loadUserData(): Promise<Record<string, unknown>> {
+  const c = await sb(); const u = await uid(c);
+  const { data, error } = await c.from('user_data').select('key,value').eq('user_id', u);
+  if (error) throw error;
+  return Object.fromEntries((data as { key: string; value: unknown }[]).map(r => [r.key, r.value]));
+}
+
+/** Guarda vários valores de uma vez (o site junta as alterações e envia-as a cada poucos segundos). */
+export async function saveUserData(entries: Record<string, unknown>): Promise<void> {
+  const keys = Object.keys(entries); if (!keys.length) return;
+  const c = await sb(); const u = await uid(c);
+  const now = iso(Date.now());
+  const { error } = await c.from('user_data').upsert(keys.map(key => ({ user_id: u, key, value: entries[key], updated_at: now })));
+  if (error) throw error;
 }
 
 /** Plano da conta (experiência, subscrição ou vitalícia). null se ainda não houver linha. */

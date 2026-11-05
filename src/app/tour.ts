@@ -1,3 +1,4 @@
+import { store } from './user-store';
 // Tutorial para quem abre o site pela primeira vez: alguns passos, cada um a destacar uma parte do ecrã.
 
 export interface TourStep {
@@ -21,7 +22,7 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     title: 'Your songs are saved',
-    text: 'Every song you load is kept in “My songs” with your edits: on this device, or in your account on all your devices with Premium. Next time the last one opens straight away.',
+    text: 'Every song you load is kept in “My songs”, in your account, with your edits: on any device you sign in to, the last one opens straight away.',
     targets: ['#libraryBtn'],
   },
   {
@@ -51,12 +52,9 @@ export const TOUR_STEPS: TourStep[] = [
   },
 ];
 
-export function tourSeen(): boolean {
-  try { return localStorage.getItem(TOUR_KEY) === '1'; } catch { return true; }
-}
-export function markTourSeen(): void {
-  try { localStorage.setItem(TOUR_KEY, '1'); } catch { /* sem armazenamento */ }
-}
+/** Já viu o tutorial? (guardado na conta; sem conta o tutorial não abre sozinho) */
+export function tourSeen(): boolean { return store.get(TOUR_KEY) === '1' || store.get(TOUR_KEY) === 1; }
+export function markTourSeen(): void { store.set(TOUR_KEY, '1'); }
 
 /** Primeiro destino visível no ecrã (ou null para um passo centrado). */
 export function visibleTarget(step: TourStep, doc: Document = document): HTMLElement | null {

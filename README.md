@@ -6,12 +6,12 @@ Plataforma para aprender músicas a partir de ficheiros Guitar Pro. Carregas o f
 - deteta o **tom de cada compasso** e mostra-o num quadrado com a **cor da nota** (convenção Boomwhackers: Dó vermelho … Si rosa);
 - mostra a **tablatura** sincronizada e toca a música, com **loop por secção**, velocidade (25, 50, 75, 100 e 125 %), metrónomo, contagem e "tocar por cima" (silencia a tua pista) ou "só o meu instrumento" (ouve-se só a tua pista);
 - deixa **mudar o nome e dividir as secções**, escrever **notas em cada compasso** e **exportar o esquema para PDF** (com o mesmo aspeto do site);
-- **guarda as músicas importadas** em "My songs" e abre a última ao voltar: no plano Gratuito neste dispositivo; com Premium na conta, em todos os dispositivos (sincronização automática, sem botão);
+- **guarda as músicas importadas na conta** ("My songs"): Gratuito até 3, Premium sem limite; em qualquer dispositivo abre a última. **Nada fica guardado no browser** além da sessão de login;
 - tem um **tutorial** na primeira visita e uma página **How it works** (`help.html`).
 
 O site está em **inglês**; o código e esta documentação continuam em português.
 
-Os ficheiros são abertos no browser. Só são enviados para um servidor com **Premium**, para guardar "My songs" na conta e os ter em todos os dispositivos (ver abaixo). Sem conta só se experimenta a música de exemplo.
+Os ficheiros são abertos no browser e guardados, em privado, na conta (Supabase). Sem conta só se experimenta a música de exemplo e nada do que se mude fica guardado.
 
 ## Começar
 
@@ -25,7 +25,7 @@ npm run dev        # servidor local em http://localhost:5173
 | Comando | O que faz |
 |---|---|
 | `npm run dev` | Servidor de desenvolvimento |
-| `npm test` | Testes (deteção dos acordes, notas, contagem, PDF, planos, sincronização, metrónomo) |
+| `npm test` | Testes (deteção dos acordes, notas, contagem, técnicas, PDF, planos, metrónomo, migração dos dados antigos) |
 | `npm run typecheck` | Verifica os tipos TypeScript |
 | `npm run build` | Gera o site em `dist/` |
 | `npm run preview` | Serve o `dist/` localmente |
@@ -56,9 +56,10 @@ src/
     count.ts               Contagem do compasso (1 & 2 &, 1 e & a) e escolha automática da subdivisão
     pdf.ts                 Exportar o esquema para PDF (jsPDF, carregado só quando se exporta), com as cores, o tema e a letra do site
     sync.ts                Atraso do cursor/esquema para compensar a latência do áudio
-    theme.ts               Tema claro/escuro (guardado no browser) e cores da tablatura
+    theme.ts               Tema claro/escuro (guardado na conta) e cores da tablatura
     audio-unlock.ts        Som no iPhone mesmo com o interruptor de silêncio ligado
-    library.ts             "My songs": ficheiros importados guardados no browser (IndexedDB)
+    library.ts             Leitura única dos dados que versões antigas deixaram no browser (para os passar para a conta)
+    user-store.ts          Dados da pessoa (notas, secções, progresso, preferências): em memória e guardados na conta
     tour.ts                Tutorial da primeira visita (passos e destaques)
     metronome.ts           Sons do metrónomo e da contagem (clique, voz, woodblock…) e a sua geração em amostras
     metro-grid.ts          Grelha das batidas, calculada como o sintetizador do alphaTab a calcula (puro, testado)
@@ -66,7 +67,7 @@ src/
     plan.ts                Planos (sem conta / Free / Premium) e o que cada um desbloqueia
     practice.ts            Progresso por secção (tempo, melhor velocidade, "Mastered")
     billing.ts             Preços e links de pagamento (Stripe)
-    cloud.ts, cloud-plan.ts   Conta e sincronização de "My songs" (Supabase)
+    cloud.ts, cloud-plan.ts   Conta, "My songs" e dados da pessoa (Supabase)
     auth-ui.ts, auth-errors.ts   Janela de entrar / criar conta / nova palavra-passe
 tests/                     Testes (Vitest) e ficheiro .gp5 de teste
 public/sample.gp5          Música de exemplo do site (gerada com `make-fixture.py --en`)
@@ -89,7 +90,7 @@ Se o ficheiro tiver acordes escritos nesse instrumento, usa esses.
 
 Método guiado no leitor (`player.html?learn`, atalho `learn.html`): para cada secção, primeiro só a tab dessa secção
 em loop (`display.startBar`/`barCount` do alphaTab), depois a tab esconde-se e ficam só os quadrados dessa secção
-(com notas); no fim, a música toda só com os quadrados. O passo fica em `localStorage` (`mapa:learn:<música>`).
+(com notas); no fim, a música toda só com os quadrados. O passo fica na conta (`user_data`, chave `mapa:learn:<música>`).
 
 ### Metrónomo exato
 
@@ -117,10 +118,13 @@ e são servidas pelo próprio site (`src/fonts.ts`, `src/landing.ts`). Para o PD
 
 ## Músicas guardadas e tutorial
 
-Cada ficheiro importado é guardado no IndexedDB do browser (base `mapa-de-compassos`, identificado por
-título | artista | nº de compassos), junto com as alterações (secções, notas, instrumento) que ficam no `localStorage`.
-Só vai para um servidor com Premium e sessão iniciada (ver "Contas e sincronização"). O tutorial aparece só na
-primeira visita (`mapa:tour-visto`) e pode ser revisto no menu "?" ou em Settings.
+Tudo fica na conta (Supabase): cada música é um ficheiro no bucket privado `songs` (pasta `<user_id>/`, nome = SHA-256 do
+id título | artista | nº de compassos) e uma linha na tabela `songs`; as alterações (secções, notas, instrumento), o progresso,
+o passo do Tile by Tile e as preferências ficam na tabela `user_data` (chave → valor). O site guarda tudo em memória enquanto a
+página está aberta e envia as alterações a cada 1,5 s (`src/app/user-store.ts`). **No browser só fica a sessão de login.**
+Na primeira vez que alguém entra num browser onde uma versão antiga deixou músicas (IndexedDB) ou dados (`localStorage`),
+o site passa-os para a conta e apaga-os do browser (`src/app/library.ts`). O tutorial abre sozinho na primeira vez numa
+conta (`mapa:tour-visto` em `user_data`) e pode ser revisto no menu "?" ou em Settings.
 
 ## Termos, privacidade e licenças
 
@@ -145,31 +149,29 @@ Cada PR corre os testes, a verificação de tipos e o build (`.github/workflows/
 
 ## Contas e sincronização (Supabase)
 
-Quem cria conta (email e palavra-passe, com "Forgot your password?" por email) desbloqueia as ferramentas de prática; com Premium tem "My songs" em todos os dispositivos. Sem configuração, o site funciona sem contas (tudo desbloqueado) e a secção de conta não aparece.
+Quem cria conta (email e palavra-passe, com "Forgot your password?" por email) pode carregar as suas músicas, que ficam na conta e aparecem em qualquer dispositivo. Sem configuração, o site funciona sem contas (tudo desbloqueado) e a secção de conta não aparece.
 
 1. Cria um projeto em [supabase.com](https://supabase.com) (o plano grátis chega para começar).
-2. No **SQL Editor**, corre `supabase/migrations/001_songs.sql` (tabela `songs`, bucket privado `songs` e regras de acesso por utilizador).
+2. No **SQL Editor**, corre por ordem os ficheiros de `supabase/migrations/` (001 a 004: músicas, bucket privado, planos, experiência de 7 dias, limite por conta e `user_data`).
 3. Em **Authentication → URL Configuration**, põe `https://www.chordtile.com/` em *Site URL* e acrescenta `https://www.chordtile.com/player` e `https://www.chordtile.com/account` e `http://localhost:5173/player.html` em *Redirect URLs*.
 4. Põe a *Project URL* e a chave pública (*publishable* ou *anon*) em `.env.production`. Esse ficheiro já tem o projeto do site e é usado no build (`npm run build` e o deploy). Para testar com outro projeto em `npm run dev`, cria um `.env.local` a partir de `.env.example`.
 
 A chave *anon* é pública por natureza; quem protege os dados são as regras RLS do ficheiro SQL (cada pessoa só lê e escreve as suas músicas).
 
-Como funciona a sincronização (`src/app/cloud.ts`, plano em `src/app/cloud-plan.ts`, testado):
-- automaticamente, ao iniciar sessão, ao carregar ou apagar uma música, ao voltar ao separador e quando a ligação volta (não há botão), junta as duas bibliotecas: o que falta de cada lado passa para o outro;
-- importar uma música envia-a logo; apagar marca-a como apagada na conta, e os outros dispositivos apagam-na também;
-- uma música reimportada depois de apagada volta para a conta.
+Como funciona "My songs" (`src/app/cloud.ts`):
+- carregar uma música envia logo o ficheiro e a linha; abrir uma atualiza a data (para abrir a última em qualquer dispositivo);
+- apagar apaga a linha, o ficheiro e os dados dela em `user_data`;
+- o limite de músicas é imposto no servidor (`supabase/migrations/004_account_only.sql`): Gratuito 3, Premium sem limite.
 
 ## Premium
 
-Praticar é sempre grátis. O Premium é para quem quer guardar e acompanhar o que pratica. As regras estão em `src/app/plan.ts`.
+As regras de cada plano estão em `src/app/plan.ts` (o limite de músicas também no servidor).
 
 | Sem conta | Conta grátis | Premium |
 |---|---|---|
-| Abrir qualquer ficheiro, esquema, tablatura, tocar e pausar | Tudo o de sem conta | Tudo o da conta grátis |
-| Guardar **1 música** em "My songs" | Guardar até **3 músicas** | Músicas ilimitadas |
-| — | Loop, praticar secção, velocidade, metrónomo, contagem, play along, solo, notas nos compassos | **Expandir um compasso** e **PDF do esquema** |
-| — | — | **Sincronização** entre dispositivos (também imposta no servidor, nas regras RLS) |
-| — | Progresso registado, mas escondido | **Progresso por secção**: tempo, melhor velocidade, "Mastered" (3 voltas a 100 %) |
+| Só a **música de exemplo** (nada fica guardado) | Até **3 músicas** na conta | Músicas ilimitadas na conta |
+| Tocar, esquema e tablatura | Velocidade, metrónomo, contagem, notas nos compassos | **Tile by Tile**, **loop** (música, secção, compasso), **play along**, **solo** |
+| — | — | **Expandir um compasso**, **PDF do esquema**, **progresso por secção** |
 
 - **Experiência ("reverse trial")**: cada conta nova tem 7 dias de Premium, sem cartão (gatilho em `auth.users`, ver `supabase/migrations/002_entitlements.sql` e `003_trial_7_days.sql`). Depois passa para Free e mantém tudo o que já tinha.
 - **Preços** (em `src/app/billing.ts`): 3,99 €/mês, 29 €/ano, 49 € vitalício (preço de fundador).

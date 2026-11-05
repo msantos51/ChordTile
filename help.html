@@ -3,10 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="color-scheme" content="dark">
-<script>
-  // Apply the saved theme before the page paints (avoids a flash)
-  try { if (localStorage.getItem('mapa:theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
-</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="./favicon.ico" sizes="32x32">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
@@ -99,7 +95,7 @@
       <li><strong>Repeat</strong> for every section of the song.</li>
       <li><strong>Play the whole song</strong> from the tiles only.</li>
     </ol>
-    <p class="hint">Use “Back” whenever you need the tab again. Your step is saved for each song on this device, so you can stop and continue later. Tile by Tile is a Premium feature (included in the 7-day trial).</p>
+    <p class="hint">Use “Back” whenever you need the tab again. Your step is saved for each song in your account, so you can stop and continue later, on any device. Tile by Tile is a Premium feature (included in the 7-day trial).</p>
   </section>
 
   <section id="the-tab">
@@ -153,11 +149,11 @@
       <table>
         <thead><tr><th><span class="sr-only">Feature</span></th><th>Without an account</th><th>Free account</th><th>Premium</th></tr></thead>
         <tbody>
-          <tr><td>Songs</td><td>Sample song only</td><td>Up to 3</td><td>Unlimited</td></tr>
+          <tr><td>Songs in your account</td><td>Sample song only</td><td>Up to 3</td><td>Unlimited</td></tr>
           <tr><td>Play and pause, chart and tab</td><td>✓</td><td>✓</td><td>✓</td></tr>
           <tr><td>Speed, metronome, count-in, notes on bars</td><td>🔒</td><td>✓</td><td>✓</td></tr>
           <tr><td>Tile by Tile, loop (song, section or bar), play along, solo</td><td>🔒</td><td>🔒</td><td>✓</td></tr>
-          <tr><td>Expand a bar, PDF chart, progress, songs kept in your account on every device</td><td>🔒</td><td>🔒</td><td>✓</td></tr>
+          <tr><td>Expand a bar, PDF chart, progress per section</td><td>🔒</td><td>🔒</td><td>✓</td></tr>
         </tbody>
       </table>
     </div>
@@ -171,12 +167,13 @@
 
   <section id="songs">
     <h2>My songs</h2>
-    <p>Every song you load is saved in “My songs”, with your notes, the instrument you picked and the sections. When you come back, the last song you used opens.</p>
+    <p>Every song you load is saved in “My songs”, <strong>in your account</strong>, with your notes, the instrument you picked, the sections, your progress and your Tile by Tile step. Sign in on any device and they are there; the last song you used opens. Nothing is kept in the browser.</p>
     <ul>
-      <li><strong>Without an account</strong> you can only try the sample song.</li>
-      <li><strong>Free account:</strong> up to 3 songs, saved <strong>on this device</strong>. On another device you need to load them again. If you clear the site’s data on this device, they are deleted too.</li>
-      <li><strong>Premium:</strong> unlimited songs, kept <strong>in your account</strong> and on every device you sign in to. There is nothing to press: songs are kept up to date automatically when you sign in, load or delete a song, come back to the page or get your connection back. Deleting a song deletes it everywhere.</li>
-      <li>To delete a song, use the bin icon next to it.</li>
+      <li><strong>Without an account</strong> you can only try the sample song (and nothing you change is kept).</li>
+      <li><strong>Free account:</strong> up to 3 songs in your account.</li>
+      <li><strong>Premium:</strong> as many songs as you like.</li>
+      <li>There is nothing to press: changes are saved to your account as you go. You need an internet connection to open your songs.</li>
+      <li>To delete a song, use the bin icon next to it: it is deleted from your account, with its notes and progress.</li>
     </ul>
   </section>
 
@@ -215,11 +212,11 @@
     </details>
     <details>
       <summary>Are my files sent anywhere?</summary>
-      <p>Files are opened right here in your browser. On the free plan they are stored only on your device. With Premium, the songs in “My songs” are also stored, privately, in your account so they appear on your other devices. See the <a href="/licenses#privacy">terms and privacy</a>.</p>
+      <p>Your songs are opened in your browser and stored, privately, in your account (with Supabase, our hosting provider), so they are on every device you sign in to. They are never shared with anyone. See the <a href="/licenses#privacy">terms and privacy</a>.</p>
     </details>
     <details>
       <summary>How do I cancel Premium?</summary>
-      <p>Open <a href="/account">your account</a> and choose “Manage subscription”. Premium stays on until the end of the period you paid for. After that, the songs already on each device stay there, and the free plan applies (up to 3 songs, on that device).</p>
+      <p>Open <a href="/account">your account</a> and choose “Manage subscription”. Premium stays on until the end of the period you paid for. After that, the free plan applies: all your songs stay in your account and you can keep opening them, but you can only add new ones while you have fewer than 3.</p>
     </details>
   </section>
 </main>

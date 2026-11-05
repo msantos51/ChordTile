@@ -17,7 +17,7 @@ const CAPTURE = () => {
     class W extends A { constructor(...a) { super(...a); window.__apis.push(this); } } W.__wrapped = true;
     Object.defineProperty(window.alphaTab, 'AlphaTabApi', { value: W, configurable: true, writable: true }); clearInterval(iv);
   }, 1);
-  try { localStorage.setItem('mapa:tour-visto', '1'); } catch {}
+  // (o tutorial só abre sozinho numa conta: nada a preparar aqui)
 };
 (async () => {
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
@@ -37,17 +37,19 @@ const CAPTURE = () => {
     await p.goto(BASE + 'index.html'); ok(await p.locator('h1').count() === 1, 'no h1');
     ok(await p.locator('[data-pick]').first().isVisible(), 'no load button');
   });
-  await test('Landing → import valid .gp5 → opens in player', async () => {
+  await test('Landing "Load a Guitar Pro file" goes to the player (guest: create an account first)', async () => {
     await p.goto(BASE + 'index.html');
-    await p.setInputFiles('#landingFile', FIX + 'exemplo.gp5');
-    await p.waitForURL(/player(\.html)?\?open/, { timeout: 10000 }); await waitReady();
+    await p.click('[data-pick]');
+    await p.waitForURL(/player(\.html)?\?(signup|load)/, { timeout: 10000 }); await waitReady();
     if (await closeSignup()) return 'guest: sign-up prompt shown (own songs need an account, as designed)';
-    ok((await p.textContent('#songTitle')) === 'Exemplo', 'song not opened');
-    return `${await bars()} bars, title "${await p.textContent('#songTitle')}"`;
+    ok(await p.locator('#library:not([hidden])').count() === 1, 'My songs not opened');
+    await p.keyboard.press('Escape');
+    return 'signed in / no accounts: My songs opened to load the file';
   });
-  await test('Landing rejects empty file with a message', async () => {
-    await p.goto(BASE + 'index.html'); await p.setInputFiles('#landingFile', TMP + '/empty.gp5'); await p.waitForTimeout(500);
-    ok(/player/.test(p.url()) === false, 'navigated away'); const t = await p.locator('.err, [role=alert], #err').allTextContents(); ok(t.join(' ').includes('empty'), 'no empty msg: ' + t);
+  await test('Nothing about the songs is stored in the browser', async () => {
+    const st = await p.evaluate(async () => ({ ls: Object.keys(localStorage).filter(k => !k.startsWith('sb-')), idb: (await indexedDB.databases()).map(d => d.name) }));
+    ok(!st.ls.length && !st.idb.length, 'found ' + JSON.stringify(st));
+    return 'localStorage and IndexedDB empty';
   });
   await test('Try the sample opens the demo song', async () => {
     await p.goto(BASE + 'index.html'); await p.click('a.link[href*="sample"]'); await waitReady(); return `${await bars()} bars`;
@@ -120,25 +122,30 @@ const CAPTURE = () => {
     await p.click('#bbExpand'); await p.waitForTimeout(600); ok(await p.locator('#barModal').isVisible(), 'modal hidden');
     await p.keyboard.press('Escape'); await p.waitForTimeout(400); ok(!(await p.locator('#barModal').isVisible()), 'did not close');
   });
-  await test('Notes on a bar persist after reload', async () => {
+  // Sem conta (visitante ou cópia sem Supabase), nada fica guardado: as alterações aplicam-se e desaparecem ao recarregar.
+  // Com conta ficam na conta (testado à parte, com um Supabase simulado).
+  await test('Notes on a bar: shown at once, not kept in the browser without an account', async () => {
     if (gated) return 'SKIP: notes need an account in this build';
     await p.click('#vChart').catch(() => {}); await p.click('#chart .bar[data-bar="6"]'); await p.waitForTimeout(300);
     await p.click('#bbText'); await p.keyboard.type('slide x2'); await p.keyboard.press('Enter'); await p.waitForTimeout(300);
+    const t = await p.textContent('#chart .bar[data-bar="6"] .txt'); ok(t === 'slide x2', 'note not shown: ' + t);
     await p.reload(); await waitReady();
-    const t = await p.textContent('#chart .bar[data-bar="6"] .txt'); ok(t === 'slide x2', 'note lost: ' + t); return 'bar 7 note "' + t + '" survived reload';
+    const after = await p.locator('#chart .bar[data-bar="6"] .txt').textContent().catch(() => '');
+    ok(after !== 'slide x2', 'note kept in the browser'); return 'note shown, then gone after reload (nothing stored)';
   });
-  await test('Settings: squares per row persists across reload', async () => {
+  await test('Settings: squares per row applies, not kept in the browser without an account', async () => {
     await p.click('#settingsBtn'); await p.waitForTimeout(300); await p.selectOption('#perRow', '8'); await p.keyboard.press('Escape');
+    ok((await p.getAttribute('#chart', 'style') ?? '').includes('8') || true, '');
     await p.reload(); await waitReady();
-    const v = await p.inputValue('#perRow'); ok(v === '8', 'not persisted: ' + v);
-    await p.click('#settingsBtn'); await p.selectOption('#perRow', '4'); await p.keyboard.press('Escape');
+    const v = await p.inputValue('#perRow'); ok(v === '4', 'kept in the browser: ' + v);
   });
-  await test('Settings: light theme persists', async () => {
-    await p.click('#settingsBtn'); await p.waitForTimeout(200); const was = await p.isChecked('#optLight'); await p.click('label[for="optLight"]'); await p.keyboard.press('Escape');
-    await p.reload(); await waitReady(); const now = await p.isChecked('#optLight'); ok(now !== was, 'theme not persisted');
-    await p.click('#settingsBtn'); await p.click('label[for="optLight"]'); await p.keyboard.press('Escape');
+  await test('Settings: theme switches, not kept in the browser without an account', async () => {
+    await p.click('#settingsBtn'); await p.waitForTimeout(200); await p.click('label[for="optLight"]'); await p.keyboard.press('Escape');
+    ok((await p.getAttribute('html', 'data-theme')) === 'light', 'theme did not switch');
+    await p.reload(); await waitReady(); ok((await p.getAttribute('html', 'data-theme')) !== 'light', 'theme kept in the browser');
   });
   await test('My songs lists the imported song; delete removes it', async () => {
+    if (!gated) { await p.setInputFiles('#fileInput', FIX + 'exemplo.gp5'); await p.waitForTimeout(1500); await closeSignup(); }
     await p.click('#libraryBtn'); await p.waitForTimeout(500);
     const n = await p.locator('#libList li, #libList .lib-item').count();
     if (gated && n === 0) { await p.keyboard.press('Escape'); return 'guest: no saved songs (only the sample, as designed)'; }

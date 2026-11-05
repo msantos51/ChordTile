@@ -1212,7 +1212,7 @@ if (cloudEnabled) {
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refreshPlan().then(() => runSync(true)); });
 }
 const welcome = () => toast('You’re signed in. Welcome!');
-$('accountBtn').addEventListener('click', () => { if (account) location.href = './account.html'; else openAuthDialog('signin', undefined, welcome); });
+$('accountBtn').addEventListener('click', () => { if (account) location.href = '/account'; else openAuthDialog('signin', undefined, welcome); });
 // Sem Supabase configurado (por exemplo em desenvolvimento) não há contas: tudo fica desbloqueado
 if (!cloudEnabled) { $('accountBtn').hidden = true; queueMicrotask(() => setPlan({ kind: 'lifetime', premium: true, until: null })); }
 $('syncBtn').addEventListener('click', () => (plan.premium ? runSync(false) : openPaywall('sync')));
@@ -1588,7 +1588,7 @@ async function boot(): Promise<unknown> {
 }
 boot()
   .catch(() => openSample())
-  // Ligações diretas: player.html?premium abre os planos; ?signup a criação de conta
+  // Ligações diretas: /player?premium abre os planos; ?signup a criação de conta
   .then(() => {
     const q = new URLSearchParams(location.search);
     if (q.has('premium')) openPaywall('upgrade');

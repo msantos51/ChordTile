@@ -32,7 +32,7 @@ export function mountAuth(box: HTMLElement, mode: AuthMode, opts: { message?: st
       <button type="submit" class="btn primary auth-submit">${mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}</button>
       <p class="auth-switch">${mode === 'signin' ? 'New to ChordTile? <button type="button" class="auth-link" data-go="signup">Create a free account</button>'
         : 'Already have an account? <button type="button" class="auth-link" data-go="signin">Sign in</button>'}</p>
-      ${mode === 'signup' ? '<p class="auth-fine">By creating an account you accept the <a href="./licenses.html">terms and privacy policy</a>.</p>' : ''}
+      ${mode === 'signup' ? '<p class="auth-fine">By creating an account you accept the <a href="/licenses">terms and privacy policy</a>.</p>' : ''}
     </form>`;
   const form = box.querySelector('form')!;
   const field = (n: string) => form.querySelector<HTMLInputElement>(`[name="${n}"]`);

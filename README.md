@@ -149,7 +149,7 @@ Quem cria conta (email e palavra-passe, com "Forgot your password?" por email) d
 
 1. Cria um projeto em [supabase.com](https://supabase.com) (o plano grátis chega para começar).
 2. No **SQL Editor**, corre `supabase/migrations/001_songs.sql` (tabela `songs`, bucket privado `songs` e regras de acesso por utilizador).
-3. Em **Authentication → URL Configuration**, põe `https://www.chordtile.com/` em *Site URL* e acrescenta `https://www.chordtile.com/player.html` e `https://www.chordtile.com/account.html` e `http://localhost:5173/player.html` em *Redirect URLs*.
+3. Em **Authentication → URL Configuration**, põe `https://www.chordtile.com/` em *Site URL* e acrescenta `https://www.chordtile.com/player` e `https://www.chordtile.com/account` e `http://localhost:5173/player.html` em *Redirect URLs*.
 4. Põe a *Project URL* e a chave pública (*publishable* ou *anon*) em `.env.production`. Esse ficheiro já tem o projeto do site e é usado no build (`npm run build` e o deploy). Para testar com outro projeto em `npm run dev`, cria um `.env.local` a partir de `.env.example`.
 
 A chave *anon* é pública por natureza; quem protege os dados são as regras RLS do ficheiro SQL (cada pessoa só lê e escreve as suas músicas).
@@ -177,14 +177,14 @@ Praticar é sempre grátis. O Premium é para quem quer guardar e acompanhar o q
 
 ### Estado atual (Stripe, conta ChordTile)
 
-Já criado em **modo live** (pagamentos reais): produto *ChordTile Premium* (`prod_VZH1CnBUMOkyDZ`), os 3 preços (`lookup_key`: `premium_monthly` 3,99 €, `premium_yearly` 29 €, `premium_lifetime` 49 €, IVA incluído), os 3 Payment Links (em `.env.production`, com regresso a `https://www.chordtile.com/player.html?checkout=success`), o portal do cliente e o webhook para a função `stripe-webhook`. Os mesmos objetos existem em **modo de teste** para experimentar. No Supabase (**Edge Functions → Secrets**) os segredos `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` têm de ser os de **live**.
+Já criado em **modo live** (pagamentos reais): produto *ChordTile Premium* (`prod_VZH1CnBUMOkyDZ`), os 3 preços (`lookup_key`: `premium_monthly` 3,99 €, `premium_yearly` 29 €, `premium_lifetime` 49 €, IVA incluído), os 3 Payment Links (em `.env.production`, com regresso a `https://www.chordtile.com/player?checkout=success`), o portal do cliente e o webhook para a função `stripe-webhook`. Os mesmos objetos existem em **modo de teste** para experimentar. No Supabase (**Edge Functions → Secrets**) os segredos `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` têm de ser os de **live**.
 
 ### Ativar os pagamentos (Stripe)
 
 A tabela, as regras e a função `stripe-webhook` já estão no projeto Supabase. Falta a parte da Stripe:
 
 1. Na Stripe, cria um produto **Premium** com 3 preços: 3,99 € mensal, 29 € anual (recorrentes) e 49 € único.
-2. Cria um **Payment Link** para cada preço. Em *After payment*, escolhe "Don't show confirmation page" e redireciona para `https://www.chordtile.com/player.html?checkout=success`. Ativa a recolha de morada/IVA se usares o Stripe Tax.
+2. Cria um **Payment Link** para cada preço. Em *After payment*, escolhe "Don't show confirmation page" e redireciona para `https://www.chordtile.com/player?checkout=success`. Ativa a recolha de morada/IVA se usares o Stripe Tax.
 3. Em **Settings → Billing → Customer portal**, ativa o portal e copia o *link de login*.
 4. Põe os 3 links e o do portal em `.env.production` (`VITE_STRIPE_LINK_*` e `VITE_STRIPE_PORTAL_URL`).
 5. Em **Developers → Webhooks**, adiciona o endpoint `https://dgxmxzhkbbosiadexayy.supabase.co/functions/v1/stripe-webhook` com os eventos `checkout.session.completed`, `customer.subscription.updated` e `customer.subscription.deleted`.

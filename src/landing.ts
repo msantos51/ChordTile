@@ -1,5 +1,5 @@
 // Página inicial: apresentação do site. O ficheiro escolhido aqui fica guardado neste browser
-// (IndexedDB) e o leitor abre-o logo (player.html?open). Nada é enviado para um servidor.
+// (IndexedDB) e o leitor abre-o logo (/player?open). Nada é enviado para um servidor.
 import './fonts';
 import './landing.css';
 import { setPendingFile } from './app/library';
@@ -20,7 +20,7 @@ async function openInReader(f: File | undefined) {
   try {
     const bytes = new Uint8Array(await f.arrayBuffer());
     await setPendingFile(f.name, bytes);
-    location.href = './player.html?open';
+    location.href = '/player?open';
   } catch {
     fail('Couldn’t hand the file to the player in this browser (private mode?). Open the player and load it there.');
   }

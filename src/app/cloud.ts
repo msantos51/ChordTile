@@ -43,7 +43,7 @@ const pageUrl = (page: string) => new URL(page, location.href).href.split('?')[0
 /** Cria a conta. `needsConfirm`: o Supabase pede para confirmar o email antes de entrar. */
 export async function signUp(email: string, password: string, name: string): Promise<{ needsConfirm: boolean }> {
   const c = await sb();
-  const { data, error } = await c.auth.signUp({ email, password, options: { data: { name }, emailRedirectTo: pageUrl('player.html') } });
+  const { data, error } = await c.auth.signUp({ email, password, options: { data: { name }, emailRedirectTo: pageUrl('/player') } });
   if (error) throw error;
   // Email já registado (o Supabase não o diz, por privacidade): devolve um utilizador sem identidades
   if (data.user && data.user.identities && data.user.identities.length === 0) throw Object.assign(new Error('User already registered'), { code: 'user_already_exists' });
@@ -59,7 +59,7 @@ export async function signIn(email: string, password: string): Promise<void> {
 /** Envia o email para escolher uma nova palavra-passe (o link abre a página da conta). */
 export async function sendPasswordReset(email: string): Promise<void> {
   const c = await sb();
-  const { error } = await c.auth.resetPasswordForEmail(email, { redirectTo: pageUrl('account.html') + '?reset=1' });
+  const { error } = await c.auth.resetPasswordForEmail(email, { redirectTo: pageUrl('/account') + '?reset=1' });
   if (error) throw error;
 }
 
@@ -71,7 +71,7 @@ export async function updatePassword(password: string): Promise<void> {
 /** Muda o email: o Supabase envia um link de confirmação para o novo endereço. */
 export async function updateEmail(email: string): Promise<void> {
   const c = await sb();
-  const { error } = await c.auth.updateUser({ email }, { emailRedirectTo: pageUrl('account.html') });
+  const { error } = await c.auth.updateUser({ email }, { emailRedirectTo: pageUrl('/account') });
   if (error) throw error;
 }
 export async function updateName(name: string): Promise<void> {

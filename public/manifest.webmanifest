@@ -3,7 +3,7 @@
   "short_name": "ChordTile",
   "description": "Learn songs from Guitar Pro files: sections, bars coloured by note and synced tablature.",
   "lang": "en",
-  "start_url": "./player.html",
+  "start_url": "/player",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",

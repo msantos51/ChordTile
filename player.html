@@ -42,12 +42,7 @@
     </div>
   </div>
   <div class="top-actions">
-    <button class="btn account-btn" id="accountBtn" type="button">
-      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span id="accountBtnText">Sign in</span>
-    </button>
-    <button class="btn premium-btn" id="premiumBtn" type="button" aria-haspopup="dialog" aria-controls="paywall">
-      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg><span id="premiumBtnText">Go Premium</span>
-    </button>
+    <!-- A música: biblioteca, instrumento e carregar -->
     <button class="btn" id="libraryBtn" type="button" aria-expanded="false" aria-controls="library" title="My songs">
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M3 5h3M3 9h3"/></svg><span>Songs</span>
     </button>
@@ -56,6 +51,12 @@
       <span class="sr">Instrument</span>
       <select id="trackQuick"></select>
     </label>
+    <label class="btn primary" for="fileInput">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg><span>Load file</span>
+      <input type="file" id="fileInput">
+    </label>
+    <span class="vsep" aria-hidden="true"></span>
+    <!-- A app: ajuda, tema e definições -->
     <div class="help-wrap">
       <button class="btn icon" id="helpBtn" type="button" aria-label="Help" aria-expanded="false" aria-controls="helpMenu" title="Help">
         <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01"/></svg>
@@ -72,10 +73,14 @@
     <button class="btn" id="settingsBtn" type="button" aria-label="Settings" aria-expanded="false" aria-controls="settings">
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span>Settings</span>
     </button>
-    <label class="btn primary" for="fileInput">
-      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg><span>Load file</span>
-      <input type="file" id="fileInput">
-    </label>
+    <span class="vsep" aria-hidden="true"></span>
+    <!-- A conta: plano e conta (no fim, como é habitual) -->
+    <button class="btn premium-btn" id="premiumBtn" type="button" aria-haspopup="dialog" aria-controls="paywall">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg><span id="premiumBtnText">Go Premium</span>
+    </button>
+    <button class="btn account-btn" id="accountBtn" type="button">
+      <svg class="i person" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="avatar" id="accountAvatar" aria-hidden="true" hidden></span><span id="accountBtnText">Sign in</span>
+    </button>
   </div>
 </header>
 

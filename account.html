@@ -45,8 +45,13 @@
 
   <!-- Com sessão -->
   <div id="accOn" hidden>
-    <h1>Your account</h1>
-    <p class="lead">Signed in as <strong id="accEmailTop"></strong></p>
+    <div class="acc-head">
+      <div>
+        <h1>Your account</h1>
+        <p class="lead">Signed in as <strong id="accEmailTop"></strong></p>
+      </div>
+      <button class="btn" type="button" id="signOutHere">Sign out</button>
+    </div>
 
     <section class="acc-card" aria-labelledby="hProfile">
       <h2 id="hProfile">Profile</h2>
@@ -77,10 +82,8 @@
         <label class="auth-field"><span>New email</span><input type="email" id="newEmail" autocomplete="email" placeholder="new@example.com"></label>
         <button class="btn" type="submit">Change email</button>
       </form>
-      <div class="set-row">
-        <button class="btn" type="button" id="signOutHere">Sign out</button>
-        <button class="btn" type="button" id="signOutAll">Sign out on all devices</button>
-      </div>
+      <p class="acc-row acc-all"><span class="hint">Lost a device or signed in on a shared computer?</span>
+        <button class="btn" type="button" id="signOutAll">Sign out on all devices</button></p>
     </section>
 
     <section class="acc-card acc-danger" aria-labelledby="hDelete">

@@ -38,8 +38,8 @@ async function render(a: Account | null, recovery = false) {
           : paid ? 'Renews or ends on ' + new Date(p.until!).toLocaleDateString() + '.'
             : 'Free plan.';
     $('accFeats').innerHTML = (p.premium
-      ? ['Unlimited songs', 'Tile by Tile: learn songs by heart', 'Loop, play along and solo', 'Expand any bar up close', 'PDF charts', 'Progress per section', 'Sync across devices']
-      : ['Up to ' + FREE_SONG_LIMIT + ' songs', 'Speed, metronome and count-in', 'Notes on the bars', '🔒 Tile by Tile, loop, play along, solo, expand, PDF, progress and sync are Premium'])
+      ? ['Unlimited songs', 'Tile by Tile: learn songs by heart', 'Loop, play along and solo', 'Expand any bar up close', 'PDF charts', 'Progress per section', 'Songs kept in your account, on every device']
+      : ['Up to ' + FREE_SONG_LIMIT + ' songs, saved on this device', 'Speed, metronome and count-in', 'Notes on the bars', '🔒 Tile by Tile, loop, play along, solo, expand, PDF, progress and songs in your account are Premium'])
       .map(t => '<li>' + t + '</li>').join('');
     show('accUpgrade', !paid);
     $('accUpgrade').textContent = p.kind === 'trial' ? 'Keep Premium' : 'Go Premium';
@@ -74,7 +74,7 @@ $<HTMLFormElement>('resetForm').addEventListener('submit', async e => {
   try { await updatePassword(pw); history.replaceState(null, '', location.pathname); toast('New password saved. You’re signed in.'); show('accReset', false); location.reload(); }
   catch (x) { err.hidden = false; err.textContent = authErrorMessage(x); }
 });
-$('signOutHere').addEventListener('click', () => void run(null, () => signOut(false), 'Signed out. Your songs stay in this browser.'));
+$('signOutHere').addEventListener('click', () => void run(null, () => signOut(false), 'Signed out.'));
 $('signOutAll').addEventListener('click', () => void run(null, () => signOut(true), 'Signed out on all devices.'));
 input('delConfirm').addEventListener('input', () => { $<HTMLButtonElement>('delBtn').disabled = input('delConfirm').value.trim() !== 'DELETE'; });
 $<HTMLFormElement>('delForm').addEventListener('submit', async e => {

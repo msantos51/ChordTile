@@ -16,12 +16,12 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     title: 'Load your song',
-    text: 'Guitar Pro (.gp3, .gp4, .gp5, .gpx, .gp) and MusicXML files work. You can also drag the file onto the page. The file is only read in your browser.',
+    text: 'Guitar Pro (.gp3, .gp4, .gp5, .gpx, .gp) and MusicXML files work. You can also drag the file onto the page. The file is opened right here in your browser.',
     targets: ['label.btn.primary[for="fileInput"]'],
   },
   {
     title: 'Your songs are saved',
-    text: 'Every song you load is kept in “My songs”, in this browser, with your edits. Next time the last one opens straight away.',
+    text: 'Every song you load is kept in “My songs” with your edits: on this device, or in your account on all your devices with Premium. Next time the last one opens straight away.',
     targets: ['#libraryBtn'],
   },
   {

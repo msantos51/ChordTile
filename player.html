@@ -103,6 +103,16 @@
         <button class="btn primary" id="learnNext" type="button">Next</button>
       </div>
     </section>
+    <!-- Destaque do método Tile by Tile (escondido enquanto se aprende) -->
+    <aside class="learn-cta" id="learnCta" aria-labelledby="learnCtaTitle">
+      <span class="lc-icon" aria-hidden="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M14 17.5l2.2 2.2L21 15"/></svg></span>
+      <div class="lc-text">
+        <p class="lc-kicker">Tile by Tile <span class="lc-tag">Learning method</span></p>
+        <h2 id="learnCtaTitle">Learn this song by heart</h2>
+        <p id="learnCtaText">Section by section: first with the tab, then from the tiles only, until you play the whole song without reading.</p>
+      </div>
+      <button class="btn primary lc-btn" id="learnCtaBtn" data-gate="tools" type="button">Start Tile by Tile</button>
+    </aside>
     <div class="viewswitch" role="tablist">
       <button role="tab" id="vChart" aria-selected="true">Chart</button>
       <button role="tab" id="vTab" aria-selected="false">Tab</button>
@@ -225,12 +235,15 @@
   </div>
   <footer class="bm-foot">
     <button type="button" class="bm-play" id="bmPlay"><svg class="i f" viewBox="0 0 24 24" id="bmPlayIcon"><path d="M8 5v14l11-7z"/></svg><span id="bmPlayText">Play on loop</span></button>
+    <label class="bm-opt">Speed <select id="bmSpeed" aria-label="Speed"><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="100" selected>100%</option><option value="125">125%</option></select></label>
     <label class="bm-opt"><input type="checkbox" id="bmCountIn" checked> 1-bar count-in</label>
-    <label class="bm-opt"><input type="checkbox" id="bmMetro" checked> Metronome</label>
+    <!-- O metrónomo e o seu som juntos, num só controlo -->
+    <div class="bm-metro" role="group" aria-label="Metronome">
+      <label class="bm-opt"><input type="checkbox" id="bmMetro" checked> Metronome</label>
+      <select class="bm-sound" id="bmSound" aria-label="Metronome sound"></select>
+    </div>
     <label class="bm-opt" title="Mute my instrument and play along"><input type="checkbox" id="bmMute"> Play along</label>
     <label class="bm-opt" title="Only my instrument: mutes the rest of the band"><input type="checkbox" id="bmSolo"> Solo</label>
-    <select class="bm-sound" id="bmSound" aria-label="Metronome sound"></select>
-        <label class="bm-opt">Speed <select id="bmSpeed" aria-label="Speed"><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="100" selected>100%</option><option value="125">125%</option></select></label>
     <span class="bm-reps">Repeat <strong id="bmReps">0</strong></span>
   </footer>
 </section>
@@ -275,7 +288,7 @@
   <div class="sheet-body">
     <button class="set-premium" type="button" id="setPremium">
       <span class="set-premium-icon" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg></span>
-      <span class="set-premium-text"><strong id="setPremiumText">Go Premium</strong><span id="setPremiumSub">Try 14 days free: sync, more songs and every bar up close</span></span>
+      <span class="set-premium-text"><strong id="setPremiumText">Go Premium</strong><span id="setPremiumSub">Try 7 days free: sync, more songs and every bar up close</span></span>
       <svg class="i set-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
     </button>
 
@@ -353,7 +366,7 @@
     <li><b>Sync across devices</b> <span>Phone, tablet and computer</span></li>
   </ul>
   <div class="pw-trial" id="pwTrial">
-    <p><b>Try everything free for 14 days.</b> Create a free account: no card needed.</p>
+    <p><b>Try everything free for 7 days.</b> Create a free account: no card needed.</p>
     <div class="account-row">
       <button class="btn primary" type="button" id="pwSignup">Create free account</button>
       <button class="btn" type="button" id="pwSignin">Sign in</button>

@@ -377,6 +377,8 @@ a.btn { color: inherit; text-decoration: none; }
 .doc-body h2 { font-weight: 600; font-size: 18px; margin: 0 0 10px; }
 .doc-body section { margin-top: 36px; scroll-margin-top: 24px; }
 .doc-body p, .doc-body li { max-width: 70ch; }
+/* Ajuda e termos: texto justificado, com hifenização para não abrir buracos entre palavras */
+body.doc:not(.acc) .doc-body :is(p, li) { text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
 .doc-body ul { padding-left: 20px; display: grid; gap: 8px; }
 .doc-body code { font-family: var(--f-mono); font-size: .9em; background: var(--panel-2); padding: 1px 5px; border-radius: 4px; }
 .lead { color: var(--ink-soft); margin: 0; }
@@ -471,7 +473,9 @@ a.btn { color: inherit; text-decoration: none; }
   .bm-foot .bm-play { grid-column: 1 / -1; height: 44px; }
   .bm-foot .bm-opt, .bm-foot .bm-sound { height: var(--h-ctl-lg); min-width: 0; width: 100%; max-width: none; }
   .bm-foot .bm-opt { justify-content: flex-start; padding: 0 10px; white-space: nowrap; overflow: hidden; }
-  .bm-foot .bm-opt:has(#bmSpeed), .bm-foot .bm-sound { grid-column: 1 / -1; }
+  .bm-foot .bm-opt:has(#bmSpeed), .bm-foot .bm-metro { grid-column: 1 / -1; }
+  .bm-foot .bm-metro .bm-opt { width: auto; flex: none; }
+  .bm-foot .bm-metro .bm-sound { flex: 1; width: auto; max-width: none; }
   .bm-foot .bm-opt select { flex: 1; min-width: 0; }
   .bm-foot .bm-reps { grid-column: 1 / -1; justify-self: end; margin: -2px 2px 0; }
 }
@@ -853,3 +857,32 @@ body.learning .sbtn[aria-label^="Practise"], body.learning .learn-btn { display:
 .acc-head .lead { margin-bottom: 0; }
 .acc-head #signOutHere { margin-bottom: 4px; }
 .acc-all { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; margin-top: 8px; }
+
+/* Janela do compasso: o metrónomo e o som dele formam um só controlo (pílula dividida) */
+.bm-metro { display: inline-flex; align-items: stretch; }
+.bm-metro .bm-opt { border-radius: var(--r-pill) 0 0 var(--r-pill); }
+.bm-metro .bm-sound { border-radius: 0 var(--r-pill) var(--r-pill) 0; border-left: 0; max-width: 200px; }
+.bm-metro:has(#bmMetro:not(:checked)) .bm-sound { opacity: .55; }
+
+/* ---------- Destaque do Tile by Tile (por cima do esquema) ---------- */
+.learn-cta { max-width: 1440px; margin: 0 auto 18px; padding: 16px 18px; border-radius: var(--r-card);
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px 18px;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 16%, var(--panel)) 0%, var(--panel) 70%);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line-2)); }
+.learn-cta .lc-icon { width: 48px; height: 48px; border-radius: var(--r-item); display: grid; place-items: center;
+  background: var(--accent); color: var(--accent-ink); }
+.learn-cta .lc-icon .i { width: 26px; height: 26px; }
+.learn-cta .lc-kicker { margin: 0 0 2px; font: 600 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-text);
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.learn-cta .lc-tag { font: 500 10px var(--f-body); letter-spacing: .06em; padding: 2px 8px; border-radius: var(--r-pill);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line-2)); color: var(--ink-soft); text-transform: uppercase; }
+.learn-cta h2 { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
+.learn-cta p#learnCtaText { margin: 0; font-size: 13.5px; color: var(--ink-soft); line-height: 1.45; max-width: 70ch; }
+.learn-cta .lc-btn { white-space: nowrap; }
+body.learning .learn-cta { display: none; }
+@media (max-width: 600px) {
+  .learn-cta { grid-template-columns: auto 1fr; padding: 14px; gap: 10px 12px; margin-bottom: 12px; }
+  .learn-cta .lc-icon { width: 40px; height: 40px; }
+  .learn-cta h2 { font-size: 16px; }
+  .learn-cta .lc-btn { grid-column: 1 / -1; width: 100%; justify-content: center; }
+}

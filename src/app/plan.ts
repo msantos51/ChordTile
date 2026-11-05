@@ -1,4 +1,4 @@
-// Planos: Free (com limites) e Premium (experiência de 14 dias, subscrição ou vitalícia).
+// Planos: Free (com limites) e Premium (experiência de 7 dias, subscrição ou vitalícia).
 // A mesma regra está em supabase/migrations/002_entitlements.sql (private.is_premium), que é
 // quem manda de facto na sincronização; aqui decide só o que o site mostra.
 

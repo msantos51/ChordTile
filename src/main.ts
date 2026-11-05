@@ -161,7 +161,7 @@ function loadBytes(bytes: Uint8Array, name: string, isSample: boolean): boolean 
   if (saved?.perRow) { st.perRow = saved.perRow; select('perRow').value = String(saved.perRow); }
 
   practice.progress = storage.get<SongProgress>('mapa:progress:' + st.fileKey) ?? {}; practice.lastTick = -1; practice.lastAt = 0;
-  renderInfo(name); renderTrackControls(); detect(); renderChart(); renderTab(); updateNow(-1, 0);
+  renderInfo(name); renderTrackControls(); detect(); renderChart(); renderTab(); updateNow(-1, 0); updateLearnCta();
   return true;
 }
 
@@ -1233,7 +1233,7 @@ function gateOk(f: Feature): boolean {
   if (a === 'ok') return true;
   if (a === 'account') {
     const premiumOnly = access({ kind: 'free', premium: false, until: null }, f) === 'premium';
-    openAuthDialog('signup', GATE_NAMES[f] + (premiumOnly ? ' is Premium: create a free account to try it for 14 days.' : ' need a free account.'), welcome);
+    openAuthDialog('signup', GATE_NAMES[f] + (premiumOnly ? ' is Premium: create a free account to try it for 7 days.' : ' need a free account.'), welcome);
   } else openPaywall(f as PaywallReason);
   return false;
 }
@@ -1261,7 +1261,7 @@ function setPlan(p: PlanState) {
   const btn = $('premiumBtn');
   btn.classList.toggle('on', p.premium);
   $('setPremiumText').textContent = p.premium ? planLabel(p) : 'Go Premium';
-  $('setPremiumSub').textContent = p.premium ? 'All features unlocked. Thank you!' : 'Try 14 days free: sync, more songs and every bar up close';
+  $('setPremiumSub').textContent = p.premium ? 'All features unlocked. Thank you!' : 'Try 7 days free: sync, more songs and every bar up close';
   $('premiumBtnText').textContent = p.kind === 'trial' ? planLabel(p).replace('Premium trial · ', 'Trial · ') : p.premium ? 'Premium' : 'Go Premium';
   if (was !== p.premium) { renderProgress(); renderLibrary(); }
   updateSyncRow(); applyLocks();
@@ -1504,7 +1504,7 @@ function exitLearn() {
   document.body.classList.remove('learning', 'learn-tab', 'learn-tiles', 'learn-song');
   $('learnPanel').hidden = true; setLearnStyle('');
   if (st.api && api().playerState === PLAYING) api().pause();
-  setTabRange(null); clearLoop(); renderChart();
+  setTabRange(null); clearLoop(); renderChart(); updateLearnCta();
   history.replaceState(null, '', location.pathname + location.hash);
 }
 
@@ -1561,10 +1561,18 @@ function syncLearnPlay() {
   $('learnPlay').querySelector('svg')!.innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
 }
 $('learnBtn').addEventListener('click', enterLearn);
+$('learnCtaBtn').addEventListener('click', enterLearn);
+/** Cartão do Tile by Tile por cima do esquema: "Start" ou "Continue · Step 3 of 9" se já houver progresso nesta música. */
+function updateLearnCta() {
+  if (!st.score) return;
+  const total = learnSteps().length, step = storage.get<{ step: number }>(learnKey())?.step ?? 0;
+  const going = step > 0 && step < total;
+  $('learnCtaBtn').textContent = going ? 'Continue · step ' + (step + 1) + ' of ' + total : 'Start Tile by Tile';
+}
 $('learnExit').addEventListener('click', exitLearn);
 $('learnBack').addEventListener('click', () => { learn.step--; showLearnStep(); });
 $('learnNext').addEventListener('click', () => {
-  if (learn.step >= learnSteps().length - 1) { toast('You can play “' + ($('songTitle').textContent || 'the song') + '” by heart. Well done!'); exitLearn(); return; }
+  if (learn.step >= learnSteps().length - 1) { toast('You can play “' + ($('songTitle').textContent || 'the song') + '” by heart. Well done!'); storage.set(learnKey(), { step: 0 }); exitLearn(); return; }
   learn.step++; showLearnStep(); scrollTo({ top: 0, behavior: 'smooth' });
 });
 $('learnPlay').addEventListener('click', () => {

@@ -171,7 +171,7 @@ Praticar é sempre grátis. O Premium é para quem quer guardar e acompanhar o q
 | — | — | **Sincronização** entre dispositivos (também imposta no servidor, nas regras RLS) |
 | — | Progresso registado, mas escondido | **Progresso por secção**: tempo, melhor velocidade, "Mastered" (3 voltas a 100 %) |
 
-- **Experiência ("reverse trial")**: cada conta nova tem 14 dias de Premium, sem cartão (gatilho em `auth.users`, ver `supabase/migrations/002_entitlements.sql`). Depois passa para Free e mantém tudo o que já tinha.
+- **Experiência ("reverse trial")**: cada conta nova tem 7 dias de Premium, sem cartão (gatilho em `auth.users`, ver `supabase/migrations/002_entitlements.sql` e `003_trial_7_days.sql`). Depois passa para Free e mantém tudo o que já tinha.
 - **Preços** (em `src/app/billing.ts`): 3,99 €/mês, 29 €/ano, 49 € vitalício (preço de fundador).
 - **Código**: regras do plano em `src/app/plan.ts`; progresso em `src/app/practice.ts` (testado); pagamentos em `src/app/billing.ts`; função do servidor em `supabase/functions/stripe-webhook`.
 

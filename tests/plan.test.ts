@@ -5,7 +5,7 @@ import { addLoop, addTime, isMastered, progressText, songSummary } from '../src/
 const DAY = 86_400_000, now = 1_000 * DAY;
 
 describe('planos', () => {
-  it('experiência de 14 dias, depois Free', () => {
+  it('experiência de 7 dias, depois Free', () => {
     const e = { plan: 'trial' as const, trialEndsAt: now + 3 * DAY, premiumUntil: null };
     expect(planState(e, now)).toEqual({ kind: 'trial', premium: true, until: now + 3 * DAY });
     expect(planLabel(planState(e, now), now)).toBe('Premium trial · 3 days left');

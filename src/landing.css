@@ -250,3 +250,12 @@ h1 em { font-style: normal; color: var(--red); }
 @media (prefers-reduced-motion: reduce) {
   .layer, .btn, .mp-sel, .mp-cursor, .ptr { transition: none !important; }
 }
+
+/* Destaque do método Tile by Tile, por baixo dos botões */
+.tbt { display: inline-flex; align-items: center; gap: 10px; margin-top: clamp(14px, 2.4vh, 24px); padding: 8px 14px 8px 8px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--off); color: var(--black); text-decoration: none; font-size: 13.5px; line-height: 1.3; max-width: 100%; }
+.tbt:hover { border-color: var(--red); }
+.tbt strong { color: var(--red); }
+.tbt-tag { flex: none; font: 700 10.5px var(--f-body); letter-spacing: .14em; text-transform: uppercase; color: #fff; background: var(--red); padding: 5px 10px; border-radius: 999px; }
+.tbt-arrow { flex: none; color: var(--red); font-weight: 700; transition: transform .15s; }
+.tbt:hover .tbt-arrow { transform: translateX(3px); }

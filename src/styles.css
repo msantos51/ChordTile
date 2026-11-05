@@ -911,3 +911,21 @@ body.learning .learn-cta { display: none; }
   .bm-staff .nt .tq { font-size: 9.5px; padding: 1px 4px; }
   .bm-techs { font-size: 12px; gap: 4px 12px; }
 }
+
+/* Contacto (/contact) */
+.contact .contact-first { margin: 10px 0 0; font-size: 13.5px; }
+.contact-form { max-width: 70ch; margin-top: 22px; }
+.contact-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 560px) { .contact-row { grid-template-columns: 1fr; } }
+.auth-field select, .auth-field textarea { width: 100%; border: 1px solid var(--line-2); background: var(--bg); color: var(--ink); font: 400 15px var(--f-body); }
+.auth-field select { height: var(--h-ctl-lg); padding: 0 14px; border-radius: var(--r-pill); }
+.auth-field textarea { padding: 12px 16px; border-radius: var(--r-md); resize: vertical; min-height: 150px; line-height: 1.5; }
+.auth-field :is(select, textarea):focus-visible { outline: none; border-color: var(--hover-line); }
+.contact-hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.contact-send { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.contact-send .btn { height: var(--h-ctl-lg); padding-inline: 22px; }
+.contact-send .btn:disabled { opacity: .6; cursor: default; }
+.contact-status { margin: 0; font-size: 14px; font-weight: 500; flex: 1 1 220px; }
+.contact-status.ok { color: var(--ink); }
+.contact-status.ok::before { content: "✓ "; color: var(--accent-text); font-weight: 700; }
+.contact-status.err { color: var(--accent-text); }

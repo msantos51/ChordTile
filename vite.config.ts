@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import type { Connect, Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
 
-const PAGES = ['player', 'licenses', 'help', 'account'];
+const PAGES = ['player', 'licenses', 'help', 'account', 'contact'];
 
 /**
  * Endereços sem ".html" (/player, /account…), como o GitHub Pages os serve: o servidor local

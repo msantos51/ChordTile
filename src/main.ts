@@ -112,7 +112,12 @@ function opts(): LabelOptions & { splitBars: boolean; useFileChords: boolean } {
 }
 
 // Altura do leitor flutuante (para margens e barras por cima dele)
-new ResizeObserver(() => document.documentElement.style.setProperty('--dock-h', $('dock').offsetHeight + 'px')).observe($('dock'));
+/** Altura da barra fixa em baixo (a do leitor, ou a do Tile by Tile no telemóvel). */
+const bottomBarH = () => Math.max($('dock').offsetHeight, $('learnDock').offsetHeight);
+{
+  const ro = new ResizeObserver(() => document.documentElement.style.setProperty('--dock-h', bottomBarH() + 'px'));
+  ro.observe($('dock')); ro.observe($('learnDock'));
+}
 // Altura do cabeçalho (para o rodapé ficar no fundo do ecrã quando há pouca música)
 new ResizeObserver(() => document.documentElement.style.setProperty('--top-h', document.querySelector<HTMLElement>('.top')!.offsetHeight + 'px')).observe(document.querySelector('.top')!);
 
@@ -377,7 +382,7 @@ function markPlaying(i: number, scroll = true) {
   if (!el) return;
   el.classList.add('playing');
   if (!scroll) return;
-  const r = el.getBoundingClientRect(), dockH = $('dock').offsetHeight;
+  const r = el.getBoundingClientRect(), dockH = bottomBarH();
   if (r.top < 60 || r.bottom > innerHeight - dockH - 30) {
     el.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   }
@@ -786,7 +791,7 @@ function initApi() {
     delay.run(() => {
       const at = barAtTick(tick);
       if (!at) return;
-      if (at.i !== st.playingBar) { st.playingBar = at.i; markPlaying(at.i); }
+      if (at.i !== st.playingBar) { st.playingBar = at.i; markPlaying(at.i); followTab(at.i); }
       else ensurePlayingMark(at.i);
       updateNow(at.i, at.frac);
       trackPractice(at.i, tick);
@@ -986,6 +991,12 @@ function goBar(i: number, fromChart = false) {
   // A tablatura acompanha: rola até ao compasso escolhido.
   scrollTabToBar(i);
 }
+/** No telemóvel a tablatura não tem scroll próprio (rola a página): acompanha o compasso a tocar. */
+function followTab(i: number) {
+  const sc = $('tabScroll');
+  if (sc.scrollHeight > sc.clientHeight + 4) return; // painel com scroll próprio: o alphaTab trata disso
+  scrollTabToBar(i);
+}
 /** Rola a tablatura (o painel, ou a página no telemóvel) até o compasso i ficar à vista. */
 function scrollTabToBar(i: number, smooth = true) {
   const b = st.api?.boundsLookup?.findMasterBarByIndex(i)?.visualBounds;
@@ -999,7 +1010,7 @@ function scrollTabToBar(i: number, smooth = true) {
     const y = tabTop - scTop + sc.scrollTop + b.y;
     if (y < sc.scrollTop + 8 || y + b.h > sc.scrollTop + sc.clientHeight - 8) sc.scrollTo({ top: Math.max(0, y - sc.clientHeight / 3), behavior });
   } else {
-    const y = tabTop + scrollY + b.y, dockH = $('dock').offsetHeight;
+    const y = tabTop + scrollY + b.y, dockH = bottomBarH();
     if (y < scrollY + 80 || y + b.h > scrollY + innerHeight - dockH - 16) window.scrollTo({ top: Math.max(0, y - innerHeight / 3), behavior });
   }
 }
@@ -1681,6 +1692,7 @@ function showLearnStep() {
   b.classList.toggle('learn-tiles', step.kind === 'tiles');
   b.classList.toggle('learn-song', step.kind === 'song');
   $('learnPanel').hidden = false;
+  $('learnText').classList.remove('open');
   $('learnName').textContent = LEARN_NAME;
   $('learnCount').textContent = 'Step ' + (i + 1) + ' of ' + steps.length;
   $('learnPct').textContent = Math.round(i / steps.length * 100) + '%';
@@ -1722,7 +1734,7 @@ function syncLearnPlay() {
   $('learnPlay').querySelector('svg')!.innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
 }
 // Os botões do leitor no painel são atalhos para os da barra de baixo (que fica escondida enquanto se aprende)
-document.querySelectorAll<HTMLButtonElement>('.learn-controls [data-for]').forEach(b => {
+document.querySelectorAll<HTMLButtonElement>('.learn-tools [data-for]').forEach(b => {
   const orig = $<HTMLButtonElement>(b.dataset.for!);
   const sync = () => { b.setAttribute('aria-pressed', orig.getAttribute('aria-pressed') || 'false'); b.disabled = orig.disabled; };
   new MutationObserver(sync).observe(orig, { attributes: true, attributeFilter: ['aria-pressed', 'disabled'] });
@@ -1744,6 +1756,7 @@ function updateLearnCta() {
   $('learnCtaBtn').textContent = going ? 'Continue · step ' + (step + 1) + ' of ' + total : 'Start Tile by Tile';
 }
 $('learnExit').addEventListener('click', exitLearn);
+$('learnText').addEventListener('click', () => $('learnText').classList.toggle('open'));
 $('learnBack').addEventListener('click', () => goLearnStep(learn.step - 1));
 $('learnNext').addEventListener('click', () => {
   if (learn.step >= learnSteps().length - 1) { toast('You can play “' + ($('songTitle').textContent || 'the song') + '” by heart. Well done!'); storage.set(learnKey(), { step: 0 }); exitLearn(); return; }

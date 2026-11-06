@@ -848,12 +848,16 @@ label.set-item { cursor: pointer; }
 .learn-phase { margin: 0; font-size: 13px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .learn-phase .lp-n { font: 600 10.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: var(--r-pill);
   background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent-text); }
-/* Comandos do leitor (a barra de baixo esconde-se enquanto se aprende) */
-.learn-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
-.learn-controls .tbtn:disabled { opacity: .5; }
+/* Comandos do leitor (a barra de baixo esconde-se enquanto se aprende): tocar e velocidade · opções, na mesma linha */
+.learn-panel { grid-template-columns: auto minmax(0, 1fr); column-gap: 0; }
+.learn-panel > *, .learn-nav { grid-column: 1 / -1; }
+.learn-dock { display: contents; }
+.learn-controls { order: 4; grid-column: 1; display: flex; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+.learn-tools { order: 5; grid-column: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 0 0 12px; border-top: 1px solid var(--line); }
+.learn-tools .tbtn:disabled { opacity: .5; }
 .learn-status { flex: 1 1 140px; min-width: 0; font-size: 12px; color: var(--ink-soft); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Navegação: voltar · o próximo passo, bem à vista */
-.learn-nav { display: flex; align-items: stretch; gap: 10px; }
+.learn-nav { order: 6; display: flex; align-items: stretch; gap: 10px; }
 .learn-back { height: auto; min-height: var(--h-ctl-lg); }
 .learn-back .i { width: 16px; height: 16px; }
 .learn-next { margin-left: auto; display: inline-flex; align-items: center; gap: 14px; min-height: var(--h-ctl-lg); padding: 8px 14px 8px 18px;
@@ -874,20 +878,46 @@ body.learn-tiles .tabcol, body.learn-song .tabcol { display: none !important; }
 body.learn-tiles .chartcol, body.learn-song .chartcol { display: block !important; max-width: 900px; width: 100%; margin: 0 auto; }
 body.learning .sbtn[aria-label^="Practise"], body.learning .learn-btn { display: none; }
 @media (max-width: 600px) {
-  .learn-panel { padding: 14px; margin-bottom: 12px; }
-  .learn-panel h2 { font-size: 18px; }
-  .learn-pct strong { font-size: 17px; }
-  .lp-item { flex-basis: 88px; }
-  .learn-controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-  .learn-controls .learn-play { grid-column: span 2; justify-content: center; }
-  .learn-controls .learn-play span { display: inline; }
-  .learn-controls .speed { grid-column: span 2; justify-content: center; }
-  .learn-controls .tbtn { width: auto; min-width: 0; padding-inline: 4px; }
-  .learn-controls .tbtn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  /* Painel compacto: o que se está a aprender (tab ou quadrados) tem de caber no ecrã */
+  .learn-panel { padding: 12px; margin-bottom: 12px; gap: 10px; }
+  .learn-head { align-items: center; gap: 10px; }
+  .learn-kicker { font-size: 10px; letter-spacing: .06em; }
+  .learn-panel h2 { font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .learn-pct strong { font-size: 16px; }
+  .learn-pct span { display: none; }
+  .lp-item { flex-basis: 84px; }
+  .lp-item button { padding: 6px 8px; gap: 5px; }
+  .lp-name { font-size: 12px; }
+  .learn-phase { font-size: 12.5px; }
+  /* A explicação em duas linhas; toca para ler tudo */
+  .learn-text { font-size: 13px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
+  .learn-text.open { display: block; }
+  .learn-tools { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 10px 0 0; }
+  .learn-tools .tbtn { width: auto; min-width: 0; min-height: 44px; padding: 4px; }
+  .learn-tools .tbtn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .learn-status { display: none; }
+  /* Tocar, velocidade e passo seguinte fixos em baixo, como a barra do leitor */
+  .learn-dock { display: grid; gap: 8px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 8; background: var(--dock);
+    border-top: 1px solid var(--line-2); box-shadow: 0 -10px 40px rgba(0, 0, 0, .3);
+    padding: 8px max(12px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+  .learn-panel[hidden] .learn-dock { display: none; }
+  .learn-controls { display: flex; gap: 8px; padding: 0; border: 0; }
+  .learn-controls .learn-play { flex: 1; justify-content: center; min-height: 44px; }
+  .learn-controls .learn-play span { display: inline; }
+  .learn-controls .speed { flex: none; width: auto; }
+  .learn-nav { gap: 8px; }
+  .learn-back { width: 48px; padding: 0; justify-content: center; }
   .learn-back span { display: none; }
-  .learn-next { flex: 1; }
+  .learn-next { flex: 1; min-width: 0; min-height: 48px; padding: 6px 12px 6px 14px; gap: 10px; justify-content: space-between; }
+  .learn-next small { font-size: 10.5px; }
+  .learn-next strong { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .learn-btn span { display: none; }
+  /* Menos distrações: sem o cabeçalho "Chart / Export PDF"; tab sem espaço vazio por baixo */
+  body.learning .chartcol > .panel-head { display: none; }
+  body.learning #tab { min-height: 0; }
+  body.learning .tabcol { position: static; }
+  /* O quadrado a tocar não cresce (o anel já o destaca) para não sair da secção */
+  body.learning .bar.playing { transform: none; }
 }
 
 /* Texto só para leitores de ecrã */

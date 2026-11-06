@@ -719,6 +719,14 @@ for (const ev of ['pointerdown', 'keydown'] as const) {
 }
 
 // ---------- Leitor (alphaTab) ----------
+// O alphaTab só dá o clique na tablatura por terminado se o botão for largado em cima dela. Largado noutro
+// sítio (ou por cima da barra do compasso), ficava "preso" e a tablatura deixava de acompanhar a música.
+for (const ev of ['mouseup', 'pointerup', 'pointercancel', 'touchend', 'blur'] as const) {
+  addEventListener(ev, () => setTimeout(() => {
+    const a = st.api as unknown as { _isBeatMouseDown?: boolean; _isNoteMouseDown?: boolean } | null;
+    if (a) { a._isBeatMouseDown = false; a._isNoteMouseDown = false; }
+  }), { capture: true });
+}
 function initApi() {
   const a = new at.AlphaTabApi($('tab'), {
     core: { fontDirectory: vendor + 'font/', scriptFile: vendor + 'alphaTab.min.js', engine: 'svg' },
@@ -769,13 +777,24 @@ function initApi() {
   });
   a.midiEventsPlayedFilter = [at.midi.MidiEventType.AlphaTabMetronome];
   a.midiEventsPlayed.on(e => { for (const m of e.events) if ((m as AlphaTab.midi.AlphaTabMetronomeEvent).isMetronome) onMetronome(m as AlphaTab.midi.AlphaTabMetronomeEvent); });
+  // O quadrado a tocar e a barra de progresso seguem a posição do próprio leitor (o tempo da música),
+  // e não o cursor da tablatura: assim acompanham sempre, mesmo com a tablatura escondida ou só com uma secção
+  // desenhada (Tile by Tile), onde o alphaTab não avisa da mudança de tempo.
+  a.playerPositionChanged.on(e => {
+    if (a.playerState !== PLAYING) return;
+    const tick = e.currentTick;
+    delay.run(() => {
+      const at = barAtTick(tick);
+      if (!at) return;
+      if (at.i !== st.playingBar) { st.playingBar = at.i; markPlaying(at.i); }
+      else ensurePlayingMark(at.i);
+      updateNow(at.i, at.frac);
+      trackPractice(at.i, tick);
+    });
+  });
   a.playedBeatChanged.on(beat => delay.run(() => {
-    const mb = beat.voice.bar.masterBar, i = mb.index;
-    if (i !== st.playingBar) { st.playingBar = i; markPlaying(i); }
-    let frac = 0; try { frac = beat.playbackStart / mb.calculateDuration(); } catch { /* compasso vazio */ }
-    updateNow(i, frac);
+    const i = beat.voice.bar.masterBar.index;
     if (modal.open && i === modal.bar) highlightModal(beat.playbackStart, beat.id);
-    trackPractice(i, barTick(i) + beat.playbackStart);
   }));
   // Clicar numa nota da tablatura leva o esquema para esse compasso.
   a.beatMouseDown.on(beat => {
@@ -796,6 +815,20 @@ function initApi() {
     a.updateSettings(); a.render();
   });
   a.error.on(e => { $('status').textContent = 'Player error: ' + (e?.message ?? e); });
+}
+/** Compasso (e fração já tocada) num tempo do leitor; conta com as repetições. */
+function barAtTick(tick: number): { i: number; frac: number } | null {
+  const list = st.api?.tickCache?.masterBars;
+  if (!list?.length) return null;
+  let lo = 0, hi = list.length - 1;
+  while (lo < hi) { const m = (lo + hi + 1) >> 1; if (list[m].start <= tick) lo = m; else hi = m - 1; }
+  const l = list[lo], len = l.end - l.start;
+  return { i: l.masterBar.index, frac: len > 0 ? Math.max(0, Math.min(1, (tick - l.start) / len)) : 0 };
+}
+/** Se o esquema foi redesenhado (ou o destaque se perdeu), volta a marcar o quadrado a tocar. */
+function ensurePlayingMark(i: number) {
+  const el = document.querySelector('.bar[data-bar="' + i + '"]');
+  if (el && !el.classList.contains('playing')) markPlaying(i, false);
 }
 function setStatus(txt: string) {
   const s = $('status'); s.textContent = txt;

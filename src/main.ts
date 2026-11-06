@@ -1128,11 +1128,12 @@ function setView(v: 'chart' | 'tab') {
   document.body.dataset.view = v;
   $('vChart').setAttribute('aria-selected', String(v === 'chart'));
   $('vTab').setAttribute('aria-selected', String(v === 'tab'));
-  if (v === 'tab') { st.api?.render(); pendingScroll = true; }
+  // As ações do quadrado escolhido (barra de baixo) são do esquema: não ficam a tapar a tablatura.
+  if (v === 'tab') { $('barbar').hidden = true; document.querySelectorAll('.bar.sel').forEach(e => e.classList.remove('sel')); st.api?.render(); pendingScroll = true; }
 }
 $('vChart').addEventListener('click', () => setView('chart'));
 $('vTab').addEventListener('click', () => setView('tab'));
-setView('chart');
+setView('tab');
 
 // ---------- Ficheiros ----------
 /** Maior ficheiro aceite (igual ao limite do armazenamento na nuvem). Um Guitar Pro tem quase sempre menos de 2 MB. */
@@ -1664,6 +1665,8 @@ function exitLearn() {
   document.body.classList.remove('learning', 'learn-tab', 'learn-tiles', 'learn-song');
   $('learnPanel').hidden = true; setLearnStyle('');
   if (st.api && api().playerState === PLAYING) api().pause();
+  // A tablatura volta a ter a música toda: ao acabar de a desenhar, mostra o compasso onde se ficou
+  pendingScroll = true;
   setTabRange(null); clearLoop(); renderChart(); updateLearnCta();
   history.replaceState(null, '', location.pathname + location.hash);
 }

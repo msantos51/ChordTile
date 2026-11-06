@@ -33,7 +33,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     title: 'The song chart',
     text: 'Each square is a bar, coloured by its note (C red, D orange, E yellow…). Tap a bar to jump there (the tab scrolls to it); “Practise” loops the section. Double-click a bar, or use “Add note”, to write your own note under the chord.',
-    targets: ['#chart .section', '#chart'],
+    targets: ['#chart .section', '#chart', '#vChart'],
   },
   {
     title: 'The tab follows along',

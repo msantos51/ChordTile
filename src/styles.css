@@ -187,7 +187,8 @@ svg.f { fill: currentColor; stroke: none; }
 .tabcol { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
 .tabpanel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px 16px 6px; }
 .now-chip { font: 500 11px var(--f-mono); color: var(--accent-text); }
-.tabwrap { position: relative; }
+/* isolation: o cursor do alphaTab (z-index 1000) fica dentro da tablatura, e não por cima do leitor, do topo ou dos painéis */
+.tabwrap { position: relative; isolation: isolate; }
 #tabScroll { max-height: calc(100vh - var(--dock-h, 120px) - 150px); max-height: calc(100dvh - var(--dock-h, 120px) - 150px); overflow: auto; -webkit-overflow-scrolling: touch; }
 #tab { min-height: 320px; }
 .tab-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-soft); pointer-events: none; }

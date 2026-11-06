@@ -742,7 +742,10 @@ function initApi() {
     },
     player: {
       playerMode: 'EnabledSynthesizer', outputMode: 'WebAudioScriptProcessor', soundFont: vendor + 'soundfont/sonivox.sf3',
-      scrollElement: $('tabScroll'), enableCursor: true, enableAnimatedBeatCursor: true, enableUserInteraction: true, scrollOffsetY: -40,
+      scrollElement: $('tabScroll'), enableCursor: true, enableAnimatedBeatCursor: true, enableUserInteraction: true,
+      // O scroll automático é feito por nós (followTab), a partir da posição real da música:
+      // o do alphaTab dependia do cursor e deixava a tablatura parada no início enquanto a música avançava.
+      scrollMode: at.ScrollMode.Off,
     },
   });
   st.api = a;
@@ -991,28 +994,36 @@ function goBar(i: number, fromChart = false) {
   // A tablatura acompanha: rola até ao compasso escolhido.
   scrollTabToBar(i);
 }
-/** No telemóvel a tablatura não tem scroll próprio (rola a página): acompanha o compasso a tocar. */
+/** A tablatura (o painel no computador, a página no telemóvel) acompanha o compasso a tocar. */
 function followTab(i: number) {
-  const sc = $('tabScroll');
-  if (sc.scrollHeight > sc.clientHeight + 4) return; // painel com scroll próprio: o alphaTab trata disso
   scrollTabToBar(i);
 }
-/** Rola a tablatura (o painel, ou a página no telemóvel) até o compasso i ficar à vista. */
+/**
+ * Rola a tablatura até o compasso i ficar à vista. Conta com o que se vê mesmo: o painel da tablatura
+ * pode ter scroll próprio e ao mesmo tempo estar meio fora da janela (ou tapado pela barra do leitor),
+ * por isso a zona visível é a interseção do painel com a janela.
+ */
 function scrollTabToBar(i: number, smooth = true) {
   const b = st.api?.boundsLookup?.findMasterBarByIndex(i)?.visualBounds;
   const tab = $('tab'), sc = $('tabScroll');
   if (!b || !tab.offsetParent) return; // tablatura ainda por desenhar ou escondida (vista do esquema)
   const behavior: ScrollBehavior = smooth && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto';
-  const tabTop = tab.getBoundingClientRect().top;
+  const vpTop = 80, vpBot = innerHeight - bottomBarH() - 16;
+  let top = tab.getBoundingClientRect().top + b.y; // topo do compasso no ecrã
   if (sc.scrollHeight > sc.clientHeight + 4) {
-    // Painel com scroll próprio (computador): o compasso fica a um terço do topo do painel
-    const scTop = sc.getBoundingClientRect().top;
-    const y = tabTop - scTop + sc.scrollTop + b.y;
-    if (y < sc.scrollTop + 8 || y + b.h > sc.scrollTop + sc.clientHeight - 8) sc.scrollTo({ top: Math.max(0, y - sc.clientHeight / 3), behavior });
-  } else {
-    const y = tabTop + scrollY + b.y, dockH = bottomBarH();
-    if (y < scrollY + 80 || y + b.h > scrollY + innerHeight - dockH - 16) window.scrollTo({ top: Math.max(0, y - innerHeight / 3), behavior });
+    // Painel com scroll próprio (computador): o compasso fica a um terço da parte visível do painel
+    const r = sc.getBoundingClientRect();
+    const visTop = Math.max(r.top, vpTop), visBot = Math.min(r.bottom, vpBot);
+    if (top < visTop + 8 || top + b.h > visBot - 8) {
+      const anchor = visBot - visTop > b.h + 16 ? visTop + (visBot - visTop) / 3 : r.top + 8;
+      const max = sc.scrollHeight - sc.clientHeight;
+      const next = Math.max(0, Math.min(max, sc.scrollTop + top - anchor));
+      top -= next - sc.scrollTop;
+      if (Math.abs(next - sc.scrollTop) > 1) sc.scrollTo({ top: next, behavior });
+    }
   }
+  // A página: se mesmo assim o compasso não estiver na janela (painel fora do ecrã, ou telemóvel)
+  if (top < vpTop || top + b.h > vpBot) window.scrollTo({ top: Math.max(0, scrollY + top - innerHeight / 3), behavior });
 }
 function playFrom(i: number) {
   if (!st.ready) { toast('The sounds are still loading.'); return; }

@@ -86,6 +86,7 @@
 
 <div class="app">
   <main class="content">
+    <div class="content-main">
     <div id="err" hidden class="error"></div>
     <section class="learn-panel" id="learnPanel" hidden aria-labelledby="learnTitle">
       <div class="learn-head">
@@ -93,14 +94,34 @@
           <p class="learn-kicker"><span id="learnName">Tile by Tile</span> · <span id="learnCount">Step 1 of 9</span></p>
           <h2 id="learnTitle">Intro</h2>
         </div>
+        <div class="learn-pct" aria-hidden="true"><strong id="learnPct">0%</strong><span>done</span></div>
         <button class="btn sm" id="learnExit" type="button">Exit</button>
       </div>
-      <ol class="learn-track" id="learnTrack" aria-label="Your progress"></ol>
-      <p class="learn-text" id="learnText"></p>
-      <div class="learn-actions">
-        <button class="btn" id="learnBack" type="button">Back</button>
-        <button class="btn" id="learnPlay" type="button"><svg class="i f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Play on loop</span></button>
-        <button class="btn primary" id="learnNext" type="button">Next</button>
+      <!-- O percurso: uma etapa por secção (com a tab e depois só com os quadrados) e, no fim, a música toda -->
+      <ol class="learn-path" id="learnTrack" aria-label="Your progress"></ol>
+      <div class="learn-stage">
+        <p class="learn-phase" id="learnPhase"></p>
+        <p class="learn-text" id="learnText"></p>
+      </div>
+      <!-- Os comandos do leitor ficam aqui em cima enquanto se aprende (a barra de baixo esconde-se) -->
+      <div class="learn-controls" role="group" aria-label="Player controls">
+        <button class="btn primary learn-play" id="learnPlay" type="button"><svg class="i f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Play on loop</span></button>
+        <label class="speed" for="learnSpeed" data-gate="tools" title="Speed">
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 14l4-5"/></svg>
+          <select id="learnSpeed" aria-label="Speed"><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="100" selected>100%</option><option value="125">125%</option></select>
+        </label>
+        <button class="tbtn" type="button" data-for="metroBtn" data-gate="tools" aria-pressed="false" title="Metronome"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l3.5 18h-13z"/><path d="M12 16l6-8"/></svg><span>Metronome</span></button>
+        <button class="tbtn" type="button" data-for="countBtn" data-gate="tools" aria-pressed="false" title="Count-in"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg><span>Count-in</span></button>
+        <button class="tbtn" type="button" data-for="muteBtn" data-gate="playalong" aria-pressed="false" title="Mute my instrument and play along"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg><span>Play along</span></button>
+        <button class="tbtn" type="button" data-for="soloBtn" data-gate="solo" aria-pressed="false" title="Only my instrument: mutes the rest of the band"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><span>Solo</span></button>
+        <span class="learn-status" id="learnStatus" aria-live="polite"></span>
+      </div>
+      <div class="learn-nav">
+        <button class="btn learn-back" id="learnBack" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Back</span></button>
+        <button class="learn-next" id="learnNext" type="button">
+          <span class="ln-text"><small id="learnNextKicker">Next step</small><strong id="learnNextLabel">Next</strong></span>
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
       </div>
     </section>
     <!-- Destaque do método Tile by Tile (escondido enquanto se aprende) -->
@@ -155,6 +176,7 @@
           </div>
         </div>
       </section>
+    </div>
     </div>
     <footer class="site-foot">
       <p>Files are opened right here in your browser and kept, privately, in your account, so you can use them on any device you sign in to. Only load files you have the right to use.</p>

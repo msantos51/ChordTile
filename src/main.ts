@@ -113,6 +113,8 @@ function opts(): LabelOptions & { splitBars: boolean; useFileChords: boolean } {
 
 // Altura do leitor flutuante (para margens e barras por cima dele)
 new ResizeObserver(() => document.documentElement.style.setProperty('--dock-h', $('dock').offsetHeight + 'px')).observe($('dock'));
+// Altura do cabeçalho (para o rodapé ficar no fundo do ecrã quando há pouca música)
+new ResizeObserver(() => document.documentElement.style.setProperty('--top-h', document.querySelector<HTMLElement>('.top')!.offsetHeight + 'px')).observe(document.querySelector('.top')!);
 
 // ---------- Sincronização ----------
 const delay = new VisualDelay(() => st.syncMs, () => !!st.api && st.api.playerState === PLAYING);
@@ -1025,7 +1027,7 @@ $('prevBtn').addEventListener('click', () => goBar((st.playingBar < 0 ? 0 : st.p
 $('nextBtn').addEventListener('click', () => goBar((st.playingBar < 0 ? -1 : st.playingBar) + 1));
 select('speed').addEventListener('change', () => {
   const v = +select('speed').value;
-  select('bmSpeed').value = String(v);
+  select('bmSpeed').value = String(v); select('learnSpeed').value = String(v);
   if (st.api) st.api.playbackSpeed = v / 100;
   if (st.ready) setStatus(api().playerState === PLAYING ? 'Playing' : 'Paused');
 });
@@ -1348,6 +1350,7 @@ function applyLocks() {
   });
   select('speed').disabled = access(plan, 'tools') !== 'ok';
   select('bmSpeed').disabled = select('speed').disabled;
+  select('learnSpeed').disabled = select('speed').disabled;
 }
 
 // ---------- Plano (Free / Premium) ----------
@@ -1610,6 +1613,30 @@ function exitLearn() {
   history.replaceState(null, '', location.pathname + location.hash);
 }
 
+const esc = (t: string) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!));
+function goLearnStep(i: number) { learn.step = i; showLearnStep(); scrollTo({ top: 0, behavior: 'smooth' }); }
+/** O percurso: um bloco por secção (com a tab, depois só com os quadrados) e a música toda no fim. */
+function renderLearnPath(steps: LearnStep[], i: number) {
+  const track = $('learnTrack'); track.innerHTML = '';
+  const add = (label: string, first: number, parts: number, last = false) => {
+    const li = document.createElement('li');
+    const end = first + parts - 1;
+    li.className = 'lp-item' + (i > end ? ' done' : i >= first ? ' now' : '') + (last ? ' last' : '');
+    const b = document.createElement('button'); b.type = 'button';
+    b.title = last ? 'The whole song, from the tiles' : label + ': with the tab, then from the tiles';
+    if (i >= first && i <= end) b.setAttribute('aria-current', 'step');
+    const name = document.createElement('span'); name.className = 'lp-name'; name.textContent = label;
+    const pips = document.createElement('span'); pips.className = 'lp-pips'; pips.setAttribute('aria-hidden', 'true');
+    for (let j = first; j <= end; j++) { const p = document.createElement('i'); p.className = j < i ? 'done' : j === i ? 'now' : ''; pips.append(p); }
+    b.append(name, pips);
+    b.addEventListener('click', () => { if (i < first || i > end) goLearnStep(first); });
+    li.append(b); track.append(li);
+  };
+  st.sections.forEach((sec, k) => add(sec.name, k * 2, 2));
+  add('Whole song', steps.length - 1, 1, true);
+  track.querySelector<HTMLElement>('[aria-current]')?.scrollIntoView({ block: 'nearest', inline: 'center' });
+}
+
 function showLearnStep() {
   const steps = learnSteps();
   const i = (learn.step = Math.max(0, Math.min(learn.step, steps.length - 1)));
@@ -1623,32 +1650,31 @@ function showLearnStep() {
   $('learnPanel').hidden = false;
   $('learnName').textContent = LEARN_NAME;
   $('learnCount').textContent = 'Step ' + (i + 1) + ' of ' + steps.length;
-  const track = $('learnTrack'); track.innerHTML = '';
-  steps.forEach((s, j) => {
-    const li = document.createElement('li');
-    li.className = j < i ? 'done' : j === i ? 'now' : '';
-    li.title = s.kind === 'song' ? 'The whole song' : st.sections[s.sec].name + (s.kind === 'tab' ? ' · from the tab' : ' · from the tiles');
-    track.append(li);
-  });
+  $('learnPct').textContent = Math.round(i / steps.length * 100) + '%';
+  renderLearnPath(steps, i);
   $<HTMLButtonElement>('learnBack').disabled = i === 0;
-  const esc = (t: string) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!));
+  const phase = (n: string, what: string) => { $('learnPhase').innerHTML = '<span class="lp-n">' + n + '</span> ' + what; };
+  const next = (kicker: string, label: string) => { $('learnNextKicker').textContent = kicker; $('learnNextLabel').textContent = label; };
   if (step.kind === 'song') {
     $('learnTitle').textContent = 'The whole song';
-    $('learnText').innerHTML = 'Now play the <strong>whole song from the tiles</strong>, without the tab. Tap a tile to add a note where you still hesitate. If a section isn’t there yet, go back to it.';
-    $('learnNext').textContent = 'Finish';
+    phase('Final step', 'From the tiles only, start to finish');
+    $('learnText').innerHTML = 'Now play the <strong>whole song from the tiles</strong>, without the tab. Tap a tile to add a note where you still hesitate. If a section isn’t there yet, go back to it in the path above.';
+    next('Played it all?', 'Finish Tile by Tile');
     setLearnStyle(''); setTabRange(null);
     if (st.ready) { if (api().playerState === PLAYING) api().pause(); clearLoop(); renderChart(); goBar(0); }
   } else {
-    const sec = st.sections[step.sec], name = esc(sec.name), next = st.sections[step.sec + 1];
+    const sec = st.sections[step.sec], name = esc(sec.name), nextSec = st.sections[step.sec + 1];
+    $('learnTitle').textContent = sec.name;
     if (step.kind === 'tab') {
-      $('learnTitle').textContent = sec.name + ' · learn it from the tab';
-      $('learnText').innerHTML = 'Learn <strong>' + name + '</strong> with the tab. It plays on loop: follow it, slow it down with the speed menu if you need to, and repeat until you can play it. Then hide the tab.';
-      $('learnNext').textContent = 'Hide the tab';
+      phase('1 of 2', 'Learn it with the tab');
+      $('learnText').innerHTML = 'Learn <strong>' + name + '</strong> with the tab. It plays on loop: follow it, slow it down with the speed if you need to, and repeat until you can play it. Then go on: the tab is hidden and you play it from the tiles.';
+      next('Got it? Next step', 'Play ' + sec.name + ' without the tab');
       setLearnStyle(''); setTabRange(step.sec);
     } else {
-      $('learnTitle').textContent = sec.name + ' · play it from the tiles';
+      phase('2 of 2', 'Play it from the tiles, no tab');
       $('learnText').innerHTML = 'The tab is gone: play <strong>' + name + '</strong> from the tiles only. Tap a tile to add a note (a reminder like “slide” or “x2”). If you get stuck, go back to the tab.';
-      $('learnNext').textContent = next ? 'Next section: ' + next.name : 'Play the whole song';
+      if (nextSec) next('Got it? Next section', nextSec.name + ' with the tab');
+      else next('Got it? Final step', 'The whole song from the tiles');
       setLearnStyle('.chart .section:not([data-sec="' + step.sec + '"]) { display: none; }');
     }
     setSectionLoop(step.sec);
@@ -1662,6 +1688,19 @@ function syncLearnPlay() {
   $('learnPlay').querySelector('span')!.textContent = playing ? 'Pause' : song ? 'Play the whole song' : 'Play on loop';
   $('learnPlay').querySelector('svg')!.innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
 }
+// Os botões do leitor no painel são atalhos para os da barra de baixo (que fica escondida enquanto se aprende)
+document.querySelectorAll<HTMLButtonElement>('.learn-controls [data-for]').forEach(b => {
+  const orig = $<HTMLButtonElement>(b.dataset.for!);
+  const sync = () => { b.setAttribute('aria-pressed', orig.getAttribute('aria-pressed') || 'false'); b.disabled = orig.disabled; };
+  new MutationObserver(sync).observe(orig, { attributes: true, attributeFilter: ['aria-pressed', 'disabled'] });
+  sync();
+  b.addEventListener('click', () => orig.click());
+});
+select('learnSpeed').addEventListener('change', () => {
+  select('speed').value = select('learnSpeed').value;
+  select('speed').dispatchEvent(new Event('change'));
+});
+new MutationObserver(() => { $('learnStatus').textContent = $('status').textContent; }).observe($('status'), { childList: true, subtree: true, characterData: true });
 $('learnBtn').addEventListener('click', enterLearn);
 $('learnCtaBtn').addEventListener('click', enterLearn);
 /** Cartão do Tile by Tile por cima do esquema: "Start" ou "Continue · Step 3 of 9" se já houver progresso nesta música. */
@@ -1672,10 +1711,10 @@ function updateLearnCta() {
   $('learnCtaBtn').textContent = going ? 'Continue · step ' + (step + 1) + ' of ' + total : 'Start Tile by Tile';
 }
 $('learnExit').addEventListener('click', exitLearn);
-$('learnBack').addEventListener('click', () => { learn.step--; showLearnStep(); });
+$('learnBack').addEventListener('click', () => goLearnStep(learn.step - 1));
 $('learnNext').addEventListener('click', () => {
   if (learn.step >= learnSteps().length - 1) { toast('You can play “' + ($('songTitle').textContent || 'the song') + '” by heart. Well done!'); storage.set(learnKey(), { step: 0 }); exitLearn(); return; }
-  learn.step++; showLearnStep(); scrollTo({ top: 0, behavior: 'smooth' });
+  goLearnStep(learn.step + 1);
 });
 $('learnPlay').addEventListener('click', () => {
   if (!st.ready) { toast('The sounds are still loading.'); return; }

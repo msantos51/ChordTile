@@ -1122,18 +1122,33 @@ addEventListener('keydown', e => {
   if (e.key === 'ArrowRight') { e.preventDefault(); $('nextBtn').click(); }
 });
 
-// Vista no telemóvel
+// Vista: no telemóvel/tablet Chart ou Tab; no computador também Both (lado a lado).
+// No computador, o painel sozinho fica expandido e centrado.
 let pendingScroll = false;
-function setView(v: 'chart' | 'tab') {
-  document.body.dataset.view = v;
-  $('vChart').setAttribute('aria-selected', String(v === 'chart'));
-  $('vTab').setAttribute('aria-selected', String(v === 'tab'));
+type View = 'chart' | 'tab' | 'both';
+const wideMq = matchMedia('(min-width: 1101px)');
+const views = { mobile: 'tab' as View, desk: 'both' as View };
+function syncViewSwitch() {
+  const v = wideMq.matches ? views.desk : views.mobile;
+  for (const [id, k] of [['vChart', 'chart'], ['vTab', 'tab'], ['vBoth', 'both']] as const) $(id).setAttribute('aria-selected', String(v === k));
+}
+function setView(v: View) {
+  const wide = wideMq.matches;
+  if (wide) views.desk = v; else if (v !== 'both') views.mobile = v;
+  document.body.dataset.view = views.mobile;
+  document.body.dataset.desk = views.desk;
+  syncViewSwitch();
+  const cur = wide ? views.desk : views.mobile;
   // As ações do quadrado escolhido (barra de baixo) são do esquema: não ficam a tapar a tablatura.
-  if (v === 'tab') { $('barbar').hidden = true; document.querySelectorAll('.bar.sel').forEach(e => e.classList.remove('sel')); st.api?.render(); pendingScroll = true; }
+  if (cur === 'tab') { $('barbar').hidden = true; document.querySelectorAll('.bar.sel').forEach(e => e.classList.remove('sel')); }
+  // A tablatura mudou de largura (ou voltou a aparecer): redesenhar e voltar ao compasso atual.
+  if (cur !== 'chart') { st.api?.render(); pendingScroll = true; }
 }
 $('vChart').addEventListener('click', () => setView('chart'));
 $('vTab').addEventListener('click', () => setView('tab'));
-setView('tab');
+$('vBoth').addEventListener('click', () => setView('both'));
+wideMq.addEventListener('change', syncViewSwitch);
+setView(wideMq.matches ? 'both' : 'tab');
 
 // ---------- Ficheiros ----------
 /** Maior ficheiro aceite (igual ao limite do armazenamento na nuvem). Um Guitar Pro tem quase sempre menos de 2 MB. */

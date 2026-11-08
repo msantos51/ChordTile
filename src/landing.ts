@@ -110,15 +110,39 @@ new ResizeObserver(() => {
 let run = 0;
 const CANCEL = Symbol('cancel');
 const wait = (ms: number) => { const id = run; return new Promise<void>((ok, ko) => setTimeout(() => (id === run ? ok() : ko(CANCEL)), ms)); };
-const anim = (el: Element, k: Keyframe[], o: KeyframeAnimationOptions) => el.animate(k, { fill: 'forwards', easing: 'cubic-bezier(.2,.8,.2,1)', ...o });
+// Curvas de movimento (iguais às do CSS): expo-out para entradas, mola discreta para o que "pousa"
+const EASE = 'cubic-bezier(.16,1,.3,1)', EASE_IO = 'cubic-bezier(.65,0,.35,1)';
+const linearOk = CSS.supports('animation-timing-function', 'linear(0, 1)');
+/** Mola amortecida amostrada como easing linear() (cai para uma cúbica com ligeiro excesso). */
+function spring(zeta: number, omega: number, fallback: string) {
+  if (!linearOk) return fallback;
+  const wd = omega * Math.sqrt(1 - zeta * zeta), pts: string[] = [];
+  for (let i = 0; i <= 32; i++) {
+    const t = i / 32, x = 1 - Math.exp(-zeta * omega * t) * (Math.cos(wd * t) + (zeta * omega / wd) * Math.sin(wd * t));
+    pts.push(i === 32 ? '1' : x.toFixed(3));
+  }
+  return 'linear(' + pts.join(', ') + ')';
+}
+const SPRING = spring(0.72, 12, 'cubic-bezier(.34,1.3,.64,1)');
+const POP = spring(0.55, 11, 'cubic-bezier(.34,1.56,.64,1)');
+const anim = (el: Element, k: Keyframe[], o: KeyframeAnimationOptions) => el.animate(k, { fill: 'forwards', easing: EASE, ...o });
 const ptr = $('ptr');
 let ptrAt = { x: 470, y: 380 };
 /** A ponta da seta está a (5, 3) px do canto da caixa do cursor: move a caixa para a ponta ficar em (x, y). */
 const TIP = { x: 5, y: 3 };
 const at = (p: { x: number; y: number }) => `translate(${p.x - TIP.x}px, ${p.y - TIP.y}px)`;
+/** Move o cursor como uma mão: num arco suave (não em linha reta), a acelerar e a travar. */
 async function moveTo(x: number, y: number, ms = 650) {
   ptr.classList.add('on');
-  anim(ptr, [{ transform: at(ptrAt) }, { transform: at({ x, y }) }], { duration: ms, easing: 'cubic-bezier(.5,0,.2,1)' });
+  const a = ptrAt, dx = x - a.x, dy = y - a.y, len = Math.hypot(dx, dy) || 1;
+  // Ponto de controlo ao lado do caminho (curva para um lado, proporcional à distância)
+  const bend = Math.min(60, len * 0.14), c = { x: a.x + dx / 2 + (dy / len) * bend, y: a.y + dy / 2 - (dx / len) * bend };
+  const frames: Keyframe[] = [];
+  for (let i = 0; i <= 16; i++) {
+    const t = i / 16, u = 1 - t;
+    frames.push({ transform: at({ x: u * u * a.x + 2 * u * t * c.x + t * t * x, y: u * u * a.y + 2 * u * t * c.y + t * t * y }) });
+  }
+  anim(ptr, frames, { duration: ms, easing: 'cubic-bezier(.55,0,.15,1)' });
   ptrAt = { x, y }; await wait(ms);
 }
 async function click() { ptr.classList.remove('click'); void ptr.offsetWidth; ptr.classList.add('click'); await wait(180); }
@@ -126,7 +150,12 @@ async function click() { ptr.classList.remove('click'); void ptr.offsetWidth; pt
 const DUR = [3900, 5200, 6600, 6600];
 const NAMES = ['Import', 'Sections & notes', 'Practise with the tab', 'Open a bar'];
 function setStep(k: number) {
-  $('sceneNo').textContent = '0' + (k + 1); $('sceneName').textContent = NAMES[k];
+  const no = $('sceneNo'), name = $('sceneName');
+  if (name.textContent !== NAMES[k]) {
+    no.textContent = '0' + (k + 1); name.textContent = NAMES[k];
+    if (!reduce) [no, name].forEach((e, j) => e.animate([{ opacity: 0, transform: 'translateY(60%)', filter: 'blur(4px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }],
+      { duration: 700, delay: j * 60, easing: EASE, fill: 'backwards' }));
+  }
   steps.forEach((li, j) => {
     li.classList.toggle('on', j === k); li.classList.toggle('done', j < k);
     const bar = li.querySelector<HTMLElement>('.prog i')!;
@@ -187,7 +216,8 @@ async function sceneImport() {
   anim(ptr, [{ opacity: 1 }, { opacity: 0 }], { duration: 300 });
   anim($('readFill'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 1150, easing: 'cubic-bezier(.4,0,.2,1)' });
   await wait(1200);
-  $('readText').textContent = '✓ 52 bars · 4 sections found';
+  const rt = $('readText'); rt.textContent = '✓ 52 bars · 4 sections found';
+  rt.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 450, easing: EASE });
   await wait(650);
 }
 
@@ -198,7 +228,7 @@ async function sceneBoard() {
   SECTIONS.forEach((sec, k) => {
     anim(boardLabels[k], [{ opacity: 0, transform: 'translateX(-10px)' }, { opacity: 1, transform: 'none' }], { duration: 400, delay: 250 + k * 420 });
     sec.chords.forEach((_, j) => {
-      anim(boardTiles[i++], [{ opacity: 0, transform: 'translateY(12px) scale(.6)' }, { opacity: 1, transform: 'none' }], { duration: 480, delay: 300 + k * 420 + j * 40 });
+      anim(boardTiles[i++], [{ opacity: 0, transform: 'translateY(14px) scale(.7)' }, { opacity: 1, transform: 'none' }], { duration: 750, delay: 300 + k * 420 + j * 45, easing: POP });
     });
   });
   await wait(2500);
@@ -283,7 +313,7 @@ async function sceneExpand() {
   // A janela cresce a partir do compasso da tablatura
   const z = $('zoom'), zr = { x: 30, y: 110, w: z.offsetWidth, h: z.offsetHeight };
   const from = `translate(${g.abs.x - zr.x}px, ${g.abs.y - zr.y}px) scale(${g.abs.w / zr.w}, ${g.abs.h / zr.h})`;
-  anim(z, [{ opacity: 0, transform: from }, { opacity: 1, transform: 'none', offset: 0.35 }, { opacity: 1, transform: 'none' }], { duration: 650 });
+  anim(z, [{ opacity: 0, transform: from }, { opacity: 1, offset: 0.25 }, { opacity: 1, transform: 'none' }], { duration: 800, easing: SPRING });
   await wait(750);
   const slots = [...$('zCount').querySelectorAll<HTMLElement>('span')];
   const notes = [...$('zStaff').querySelectorAll<HTMLElement>('.nt')];
@@ -297,7 +327,7 @@ async function sceneExpand() {
   }
   slots.forEach(x => x.classList.remove('on')); notes.forEach(n => n.classList.remove('on'));
   await wait(200);
-  anim(z, [{ opacity: 1, transform: 'none' }, { opacity: 1, transform: from, offset: 0.75 }, { opacity: 0, transform: from }], { duration: 500, easing: 'cubic-bezier(.6,0,.4,1)' });
+  anim(z, [{ opacity: 1, transform: 'none' }, { opacity: 1, transform: from, offset: 0.75 }, { opacity: 0, transform: from }], { duration: 520, easing: EASE_IO });
   await wait(520);
   sel.classList.remove('on');
 }
@@ -333,5 +363,8 @@ if (reduce) staticScene(2);
 else {
   new IntersectionObserver(([e]) => { const was = visible; visible = e.isIntersecting; if (visible && !was) go(scene); if (!visible) pause(); }, { threshold: 0.2 }).observe(stage);
   document.addEventListener('visibilitychange', () => (document.hidden ? pause() : visible && go(scene)));
-  go(0);
+  // Primeiro deixa a página entrar (título e painel), depois começa a demonstração
+  run++; const first = run;
+  setStep(0);
+  setTimeout(() => { if (first === run) go(0); }, 900);
 }

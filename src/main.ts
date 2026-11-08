@@ -454,7 +454,19 @@ function setTheme(theme: Theme) {
     st.api.render();
   }
 }
-$('themeBtn').addEventListener('click', () => setTheme(currentTheme() === 'light' ? 'dark' : 'light'));
+/** Troca de tema com transição: o novo tema abre-se num círculo a partir do botão (onde o browser deixa). */
+function switchTheme(theme: Theme, from?: HTMLElement) {
+  const doc = document as Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void> } };
+  if (!doc.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { setTheme(theme); return; }
+  const r = from?.getBoundingClientRect();
+  const x = r ? r.left + r.width / 2 : innerWidth / 2, y = r ? r.top + r.height / 2 : 0;
+  const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  doc.startViewTransition(() => setTheme(theme)).ready.then(() => {
+    document.documentElement.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+      { duration: 650, easing: 'cubic-bezier(.65,0,.35,1)', pseudoElement: '::view-transition-new(root)' });
+  }).catch(() => {});
+}
+$('themeBtn').addEventListener('click', () => switchTheme(currentTheme() === 'light' ? 'dark' : 'light', $('themeBtn')));
 // Nas definições (no telemóvel o botão do tema, a ajuda e o Premium ficam só aqui)
 input('optLight').checked = currentTheme() === 'light';
 input('optLight').addEventListener('change', () => setTheme(input('optLight').checked ? 'light' : 'dark'));

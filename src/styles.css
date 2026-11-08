@@ -1051,3 +1051,87 @@ body.learning .learn-cta { display: none; }
 .contact-status.ok { color: var(--ink); }
 .contact-status.ok::before { content: "✓ "; color: var(--accent-text); font-weight: 700; }
 .contact-status.err { color: var(--accent-text); }
+
+/* ==========================================================================
+   Movimento e detalhe (leitor e páginas de texto)
+   Uma linguagem de movimento única, igual à da página inicial: entradas em expo-out, molas discretas
+   no que se carrega, e painéis/janelas que entram em vez de aparecer de repente. Só transform,
+   opacity e filter. Os efeitos de hover ficam só para rato (não "colam" em ecrãs tácteis).
+   ========================================================================== */
+:root {
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --ease-io: cubic-bezier(.65, 0, .35, 1);
+  --spring: cubic-bezier(.34, 1.3, .64, 1);
+}
+@supports (animation-timing-function: linear(0, 1)) {
+  :root { --spring: linear(0, .052, .176, .329, .487, .631, .753, .851, .924, .975, 1.008, 1.028, 1.037, 1.038, 1.036, 1.031, 1.025, 1.019, 1.013, 1.009, 1.005, 1.003, 1.001, 1); }
+}
+::selection { background: color-mix(in srgb, var(--accent) 70%, transparent); color: #fff; }
+
+/* Botões: resposta imediata ao toque (encolhe) e regresso com mola */
+.btn, .tbtn, .sbtn, .ibtn, .barbar button, .tab-sel-bar button, .help-menu a, .help-menu button {
+  transition: transform .35s var(--spring), background-color .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease), box-shadow .3s var(--ease), filter .2s; }
+.play { transition: transform .4s var(--spring), box-shadow .35s var(--ease), background-color .2s; }
+:is(.btn, .tbtn, .sbtn, .ibtn, .barbar button, .tab-sel-bar button):active:not(:disabled) { transform: scale(.96); transition-duration: .08s; }
+.play:active:not(:disabled) { transform: scale(.92); transition-duration: .08s; }
+.btn svg.i, .tbtn svg.i, .sbtn svg.i { transition: transform .45s var(--spring); }
+.tbtn[aria-pressed="true"] svg.i, .sbtn.on svg.i { animation: ct-tap .45s var(--spring); }
+@keyframes ct-tap { 35% { scale: .8; } }
+
+/* Quadrados do esquema: elevação com sombra no hover, mola ao acompanhar a música */
+.bar { transition: transform .3s var(--spring), box-shadow .25s var(--ease), background-color .25s var(--ease); }
+.bar:active { transform: scale(.97); transition-duration: .08s; }
+.section { transition: box-shadow .4s var(--ease), background-color .4s var(--ease); }
+
+@media (hover: hover) and (pointer: fine) {
+  .btn.primary:hover:not(:disabled) { box-shadow: 0 12px 26px -10px color-mix(in srgb, var(--accent) 85%, transparent); transform: translateY(-1px); }
+  .play:hover:not(:disabled) { transform: scale(1.06); box-shadow: 0 12px 28px -8px color-mix(in srgb, var(--accent) 85%, transparent); }
+  .bar:hover:not(.playing) { box-shadow: inset 0 0 0 1px var(--line-2), 0 8px 18px -10px rgba(0, 0, 0, .55); }
+  .chart.colored .bar[data-pc]:hover:not(.playing) { box-shadow: inset 0 -3px 0 var(--nc), 0 10px 20px -10px color-mix(in srgb, var(--nc) 70%, #000); }
+  :is(.btn, .tbtn, .play):active:not(:disabled) { transform: scale(.96); }
+}
+
+/* Painéis e janelas: entram, não aparecem */
+@keyframes ct-fade { from { opacity: 0; } }
+@keyframes ct-pop { from { opacity: 0; scale: .96; translate: 0 8px; } }
+@keyframes ct-drop { from { opacity: 0; scale: .97; translate: 0 -6px; } }
+@keyframes ct-rise { from { opacity: 0; translate: 0 12px; } }
+@keyframes ct-from-right { from { translate: 100% 0; } }
+@keyframes ct-from-left { from { translate: -100% 0; } }
+.scrim:not([hidden]) { animation: ct-fade .35s var(--ease); }
+.sheet:not([hidden]) { animation: ct-from-right .55s var(--ease); }
+.sheet.left:not([hidden]) { animation-name: ct-from-left; }
+.sheet:not([hidden]) .sheet-body > * { animation: ct-rise .6s var(--ease) backwards; }
+.sheet:not([hidden]) .sheet-body > :nth-child(2) { animation-delay: .04s; }
+.sheet:not([hidden]) .sheet-body > :nth-child(3) { animation-delay: .08s; }
+.sheet:not([hidden]) .sheet-body > :nth-child(n+4) { animation-delay: .12s; }
+.bar-modal:not([hidden]) { animation: ct-pop .5s var(--ease); }
+.help-menu:not([hidden]) { animation: ct-drop .3s var(--ease); transform-origin: top right; }
+.barbar:not([hidden]) { animation: ct-rise .45s var(--spring); }
+.tab-sel-bar:not([hidden]) { animation: ct-drop .3s var(--ease); }
+.toast:not([hidden]) { animation: ct-drop .45s var(--spring); }
+.auth-dialog[open] { animation: ct-pop .5s var(--ease); }
+.auth-dialog[open]::backdrop { animation: ct-fade .35s var(--ease); }
+.drop:not([hidden]) { animation: ct-fade .25s var(--ease); }
+.drop:not([hidden]) div { animation: ct-pop .45s var(--spring); }
+.tour-card { animation: ct-fade .35s var(--ease); }
+.err:not([hidden]) { animation: ct-rise .4s var(--ease); }
+
+/* Interruptores com mola */
+.sheet input[type="checkbox"]::after, .bm-opt input[type="checkbox"]::after { transition: transform .4s var(--spring); }
+.sheet input[type="checkbox"], .bm-opt input[type="checkbox"] { transition: background-color .25s var(--ease); }
+
+/* Barra de progresso: brilho suave na ponta */
+.progress-fill { position: relative; }
+.progress-fill::after { content: ""; position: absolute; right: 0; top: 50%; width: 10px; height: 10px; margin: -5px -5px 0 0; border-radius: 50%;
+  background: var(--accent-2); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); opacity: 0; transition: opacity .2s; }
+.progress:hover .progress-fill::after { opacity: 1; }
+
+/* Troca de tema: o novo tema abre-se em círculo a partir do botão (ver main.ts) */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scrim, .sheet, .sheet .sheet-body > *, .bar-modal, .help-menu, .barbar, .tab-sel-bar, .toast, .auth-dialog, .auth-dialog::backdrop,
+  .drop, .drop div, .tour-card, .err, .tbtn svg.i, .sbtn svg.i { animation: none !important; }
+  :is(.btn, .tbtn, .sbtn, .ibtn, .play, .bar):active { transform: none !important; }
+}

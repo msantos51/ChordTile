@@ -19,6 +19,7 @@ import { openAuthDialog } from './app/auth-ui';
 import { FREE_SONG_LIMIT, GUEST, access, canSaveSong, planLabel, planState, songLimit, type Feature, type PlanState } from './app/plan';
 import { OFFERS, checkoutUrl, paymentsEnabled } from './app/billing';
 import { addLoop, addTime, isMastered, progressText, type SongProgress } from './app/practice';
+import { buildSteps, byHeartPct, connectedTo, firstStepOf, isFinal, knownSections, restoreStep, runsGoal, stepRange, stepSection, type LearnStep, type SavedLearn } from './app/learn-path';
 import { readLegacyData, readLegacySongs, relativeDay, wipeLegacy, type SongMeta } from './app/library';
 import { TAB_COLORS, applyTheme, currentTheme, savedTheme, type Theme } from './app/theme';
 import { attachAccount, detachAccount, flush, store } from './app/user-store';
@@ -1022,6 +1023,8 @@ function scrollTabToBar(i: number, smooth = true) {
       if (Math.abs(next - sc.scrollTop) > 1) sc.scrollTo({ top: next, behavior });
     }
   }
+  // No Tile by Tile sem a tab, a tab só aparece por cima (Peek): a página não se mexe
+  if (document.body.classList.contains('learn-tiles')) return;
   // A página: se mesmo assim o compasso não estiver na janela (painel fora do ecrã, ou telemóvel)
   if (top < vpTop || top + b.h > vpBot) window.scrollTo({ top: Math.max(0, scrollY + top - innerHeight / 3), behavior });
 }
@@ -1459,7 +1462,7 @@ type PaywallReason = 'upgrade' | 'library' | 'sync' | 'progress' | 'expand' | 'p
 const PAYWALL_COPY: Record<PaywallReason, [string, string]> = {
   upgrade: ['Practise like you mean it', 'Premium unlocks loop, Tile by Tile, play along, solo, every bar up close, PDF charts and unlimited songs.'],
   loop: ['Loop the hard part', 'Premium loops the whole song, a section or a single bar, as many times as you need.'],
-  learn: ['Learn songs by heart', 'Tile by Tile is Premium: learn each section from the tab, then from the tiles only, until you play the whole song without reading.'],
+  learn: ['Learn songs by heart', 'Tile by Tile is Premium: learn each section with the tab, play it without, then join it to the ones before, until you play the whole song by heart.'],
   playalong: ['Play along with the band', 'Premium mutes your instrument so you play your part with the rest of the band.'],
   solo: ['Hear only your part', 'Premium plays your instrument alone, so you can hear exactly what to play.'],
   library: ['Keep all your songs', 'The free plan keeps ' + FREE_SONG_LIMIT + ' songs in your account. Premium keeps as many as you like.'],
@@ -1524,13 +1527,16 @@ function flushProgress() {
 /** Chamado a cada nota tocada: soma tempo à secção e deteta o fim de cada volta do loop. */
 function trackPractice(bar: number, tick: number) {
   const now = performance.now();
+  // Fim de uma volta: o leitor voltou atrás no loop (no Tile by Tile o loop pode juntar várias secções)
+  const looping = st.loopSection >= 0 || st.loopBar >= 0 || (learn.on && !!st.api?.isLooping);
+  const wrapped = looping && practice.lastTick >= 0 && tick < practice.lastTick;
+  practice.lastTick = tick;
+  if (wrapped && learn.on) learnLoopDone();
   if (st.isSample) return;
   const k = secOf(bar), start = st.sections[k]?.start ?? 0;
   if (practice.lastAt) { practice.progress = addTime(practice.progress, start, now - practice.lastAt, Date.now()); practice.dirty = true; }
   practice.lastAt = now;
-  const looping = st.loopSection >= 0 || st.loopBar >= 0;
-  if (looping && practice.lastTick >= 0 && tick < practice.lastTick) onLoopDone();
-  practice.lastTick = tick;
+  if (wrapped) onLoopDone();
   if (Date.now() - practice.savedAt > 5000) flushProgress();
 }
 function onLoopDone() {
@@ -1622,41 +1628,48 @@ addEventListener('resize', () => { if (tour.open) placeTour(visibleTarget(TOUR_S
 
 
 // ---------- Tile by Tile: aprender a música de cor, secção a secção ----------
-// Para cada secção: primeiro aprende-se com a tab (só a dessa secção, em loop); depois a tab esconde-se e toca-se
-// só com os quadrados (onde se podem escrever notas). No fim, a música toda só com os quadrados.
-// A etapa em que se está fica guardada por música, para continuar mais tarde.
+// O percurso (learn-path.ts): para cada secção, aprende-se com a tab (só a dessa secção, em loop), depois toca-se
+// de cor (só os quadrados) e, a partir da 2.ª, junta-se a tudo o que já se sabe (1 → 2, 1 → 3…) até à música toda.
+// Cada volta do loop conta; espreitar a tab ("Peek") faz com que essa volta não conte. O passo fica guardado por música.
 const LEARN_NAME = 'Tile by Tile';
-type LearnStep = { kind: 'tab' | 'tiles'; sec: number } | { kind: 'song' };
-const learn = { on: false, step: 0 };
+const learn = { on: false, step: 0, runs: 0, peeked: false, peeking: false, lit: -1, kicker: '' };
 const learnKey = () => 'mapa:learn:' + st.fileKey;
-function learnSteps(): LearnStep[] {
-  const steps: LearnStep[] = [];
-  st.sections.forEach((_, k) => { steps.push({ kind: 'tab', sec: k }, { kind: 'tiles', sec: k }); });
-  steps.push({ kind: 'song' });
-  return steps;
+const learnSteps = () => buildSteps(st.sections.length);
+const secBars = () => st.sections.map((s, k) => secEnd(k) - s.start);
+/** "Intro → Verse", ou "Intro → … → Chorus" quando são muitas. */
+function joinName(from: number, to: number) {
+  const names = st.sections.slice(from, to + 1).map(s => s.name);
+  return names.length > 3 ? names[0] + ' → … → ' + names[names.length - 1] : names.join(' → ');
+}
+function stepLabel(steps: LearnStep[], j: number) {
+  const s = steps[j];
+  if (isFinal(steps, j) && s.kind !== 'learn') return 'The whole song, no tab';
+  if (s.kind === 'learn') return st.sections[s.sec].name + ' with the tab';
+  if (s.kind === 'recall') return st.sections[s.sec].name + ' without the tab';
+  return joinName(s.from, s.to) + ', no tab';
 }
 function setLearnStyle(css: string) {
   let el = document.getElementById('learnStyle');
   if (!el) { el = document.createElement('style'); el.id = 'learnStyle'; document.head.append(el); }
   el.textContent = css;
 }
-/** A tablatura só com os compassos da secção (null = a música toda). */
-function setTabRange(sec: number | null) {
+/** A tablatura só com os compassos das secções from…to (null = a música toda). */
+function setTabRange(from: number | null, to: number | null = from) {
   const a = st.api; if (!a) return;
   const d = a.settings.display;
-  const start = sec === null ? 1 : st.sections[sec].start + 1;
-  const count = sec === null ? -1 : secEnd(sec) - st.sections[sec].start;
+  const start = from === null ? 1 : st.sections[from].start + 1;
+  const count = from === null || to === null ? -1 : secEnd(to) - st.sections[from].start;
   if (d.startBar === start && d.barCount === count) return;
   d.startBar = start; d.barCount = count;
   a.updateSettings(); a.render();
 }
-/** Loop da secção, pronto a tocar (sem começar sozinho). */
-function setSectionLoop(k: number) {
+/** Loop das secções from…to, pronto a tocar (sem começar sozinho). */
+function setLearnLoop(from: number, to: number) {
   if (!st.ready) return;
   if (api().playerState === PLAYING) api().pause();
-  st.loopSection = k; st.loopBar = -1; practice.lastTick = -1;
-  const s = st.sections[k], end = secEnd(k);
-  api().playbackRange = { startTick: barTick(s.start), endTick: barEndTick(end - 1) } as AlphaTab.synth.PlaybackRange;
+  st.loopSection = from === to ? from : -1; st.loopBar = -1; practice.lastTick = -1;
+  const s = st.sections[from];
+  api().playbackRange = { startTick: barTick(s.start), endTick: barEndTick(secEnd(to) - 1) } as AlphaTab.synth.PlaybackRange;
   api().isLooping = true; setPressed('loopBtn', true);
   renderChart();
   delay.clear();
@@ -1667,8 +1680,7 @@ function setSectionLoop(k: number) {
 function enterLearn() {
   if (!st.score || !gateOk('learn')) return;
   learn.on = true;
-  const saved = storage.get<{ step: number }>(learnKey());
-  learn.step = Math.max(0, Math.min(saved?.step ?? 0, learnSteps().length - 1));
+  learn.step = restoreStep(storage.get<SavedLearn>(learnKey()), learnSteps(), st.sections.length);
   closeBarModal(); openLibrary(false); openSettings(false, false); $('barbar').hidden = true;
   history.replaceState(null, '', location.pathname + '?learn' + location.hash);
   showLearnStep();
@@ -1676,8 +1688,9 @@ function enterLearn() {
 }
 function exitLearn() {
   if (!learn.on) return;
+  setPeek(false);
   learn.on = false;
-  document.body.classList.remove('learning', 'learn-tab', 'learn-tiles', 'learn-song');
+  document.body.classList.remove('learning', 'learn-tab', 'learn-tiles', 'learn-final');
   $('learnPanel').hidden = true; setLearnStyle('');
   if (st.api && api().playerState === PLAYING) api().pause();
   // A tablatura volta a ter a música toda: ao acabar de a desenhar, mostra o compasso onde se ficou
@@ -1688,78 +1701,155 @@ function exitLearn() {
 
 const esc = (t: string) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!));
 function goLearnStep(i: number) { learn.step = i; showLearnStep(); scrollTo({ top: 0, behavior: 'smooth' }); }
-/** O percurso: um bloco por secção (com a tab, depois só com os quadrados) e a música toda no fim. */
+const learnGoalMet = (steps: LearnStep[]) => learn.runs >= runsGoal(steps, learn.step);
+
+/**
+ * O percurso é a própria música: uma peça por secção, com um quadrado por compasso. Os quadrados ficam
+ * cinzentos até se tocar a secção de cor; aí ganham a cor da nota. As secções já tocadas seguidas ficam ligadas.
+ */
 function renderLearnPath(steps: LearnStep[], i: number) {
   const track = $('learnTrack'); track.innerHTML = '';
-  const add = (label: string, first: number, parts: number, last = false) => {
+  const cur = steps[i], met = learnGoalMet(steps);
+  const known = knownSections(steps, i, cur?.kind === 'recall' && met);
+  const linked = connectedTo(steps, i, met);
+  const [from, to] = cur ? stepRange(cur) : [-1, -1];
+  const here = cur ? stepSection(cur) : -1;
+  st.sections.forEach((sec, k) => {
     const li = document.createElement('li');
-    const end = first + parts - 1;
-    li.className = 'lp-item' + (i > end ? ' done' : i >= first ? ' now' : '') + (last ? ' last' : '');
+    li.className = 'lp-item' + (known[k] ? ' known' : '') + (k >= from && k <= to ? ' now' : '')
+      + (k < linked ? ' link' : '') + (k === learn.lit ? ' lit' : '');
     const b = document.createElement('button'); b.type = 'button';
-    b.title = last ? 'The whole song, from the tiles' : label + ': with the tab, then from the tiles';
-    if (i >= first && i <= end) b.setAttribute('aria-current', 'step');
-    const name = document.createElement('span'); name.className = 'lp-name'; name.textContent = label;
+    b.title = sec.name + (known[k] ? ': you can play it by heart' : ': learn it with the tab, then play it without');
+    b.setAttribute('aria-label', sec.name + (known[k] ? ', by heart' : ''));
+    if (k === here) b.setAttribute('aria-current', 'step');
+    const name = document.createElement('span'); name.className = 'lp-name'; name.textContent = sec.name;
+    const tiles = document.createElement('span'); tiles.className = 'lp-tiles'; tiles.setAttribute('aria-hidden', 'true');
+    for (let n = sec.start, j = 0; n < secEnd(k); n++, j++) {
+      const t = document.createElement('i'); colorCell(t, barText(n)); t.style.setProperty('--d', Math.min(j, 24) * 35 + 'ms'); tiles.append(t);
+    }
+    // Os passos desta secção: tab · de cor · ligar
     const pips = document.createElement('span'); pips.className = 'lp-pips'; pips.setAttribute('aria-hidden', 'true');
-    for (let j = first; j <= end; j++) { const p = document.createElement('i'); p.className = j < i ? 'done' : j === i ? 'now' : ''; pips.append(p); }
-    b.append(name, pips);
-    b.addEventListener('click', () => { if (i < first || i > end) goLearnStep(first); });
+    steps.forEach((s, j) => {
+      if (stepSection(s) !== k) return;
+      const p = document.createElement('i'); p.className = j < i || (j === i && met) ? 'done' : j === i ? 'now' : ''; pips.append(p);
+    });
+    b.append(name, tiles, pips);
+    b.addEventListener('click', () => { if (k !== here) goLearnStep(firstStepOf(steps, k)); });
     li.append(b); track.append(li);
-  };
-  st.sections.forEach((sec, k) => add(sec.name, k * 2, 2));
-  add('Whole song', steps.length - 1, 1, true);
+  });
+  $('learnPct').textContent = byHeartPct(known, secBars()) + '%';
+  learn.lit = -1;
   track.querySelector<HTMLElement>('[aria-current]')?.scrollIntoView({ block: 'nearest', inline: 'center' });
+}
+
+/** As voltas deste passo: ●●○ "2 of 3". Com as voltas todas feitas, o botão do passo seguinte acende-se. */
+function renderRuns() {
+  const steps = learnSteps(), step = steps[learn.step];
+  if (!step) return;
+  const goal = runsGoal(steps, learn.step), done = Math.min(learn.runs, goal), met = done >= goal;
+  const el = $('learnRuns'); el.innerHTML = '';
+  el.classList.toggle('met', met);
+  const lab = document.createElement('span'); lab.className = 'lr-label';
+  lab.textContent = goal === 1 ? 'One run, start to finish, no peeking' : step.kind === 'learn' ? 'Runs with the tab' : 'Runs without the tab';
+  const pips = document.createElement('span'); pips.className = 'lr-pips'; pips.setAttribute('aria-hidden', 'true');
+  for (let j = 0; j < goal; j++) { const p = document.createElement('i'); if (j < done) p.className = 'on'; pips.append(p); }
+  const cnt = document.createElement('strong'); cnt.className = 'lr-count';
+  cnt.textContent = met ? (learn.runs > goal ? 'Done · ' + learn.runs + ' runs' : 'Done!') : done + ' of ' + goal;
+  el.append(lab, pips, cnt);
+  el.setAttribute('aria-label', lab.textContent + ': ' + cnt.textContent);
+  $('learnNext').classList.toggle('ready', met);
+  $('learnNextKicker').textContent = met ? (isFinal(steps, learn.step) ? 'You did it!' : 'Nailed it · next step') : learn.kicker;
+}
+
+/** Fim de uma volta do loop (chamado pelo leitor). */
+function learnLoopDone() {
+  const steps = learnSteps(), i = learn.step, step = steps[i];
+  if (!step) return;
+  const peeked = learn.peeked;
+  learn.peeked = learn.peeking; // quem ainda está a espreitar já estraga a volta seguinte
+  if (step.kind !== 'learn' && peeked) { toast('You peeked at the tab, so that run doesn’t count. Go again!'); return; }
+  const goal = runsGoal(steps, i), before = learn.runs;
+  learn.runs++;
+  if (before < goal && learn.runs >= goal) {
+    const sec = st.sections[stepSection(step)];
+    if (step.kind === 'recall') {
+      learn.lit = step.sec;
+      const pct = byHeartPct(knownSections(steps, i, true), secBars());
+      toast('“' + sec.name + '” is yours, no tab needed! ' + pct + '% of the song by heart.');
+    } else if (isFinal(steps, i)) toast('The whole song, by heart. Amazing!');
+    else if (step.kind === 'join') toast(joinName(step.from, step.to) + ' in a row, no tab. Great!');
+    else toast('You’ve got “' + sec.name + '” with the tab. Now try it without.');
+    renderLearnPath(steps, i);
+  } else if (step.kind !== 'learn' || learn.runs < goal) toast(learn.runs < goal ? 'Run ' + learn.runs + ' of ' + goal + '. Keep going!' : 'Another clean run!');
+  renderRuns();
+}
+
+/** Espreitar a tab (enquanto se carrega no botão) nos passos sem a tab. */
+function setPeek(on: boolean) {
+  if (learn.peeking === on) return;
+  learn.peeking = on;
+  if (on) learn.peeked = true;
+  document.body.classList.toggle('peeking', on);
+  $('learnPeek').setAttribute('aria-pressed', String(on));
+  if (on && st.playingBar >= 0) requestAnimationFrame(() => scrollTabToBar(st.playingBar, false));
 }
 
 function showLearnStep() {
   const steps = learnSteps();
   const i = (learn.step = Math.max(0, Math.min(learn.step, steps.length - 1)));
-  const step = steps[i];
-  storage.set(learnKey(), { step: i });
-  const b = document.body;
+  const step = steps[i], final = isFinal(steps, i), goal = runsGoal(steps, i);
+  storage.set(learnKey(), { v: 2, step: i } satisfies SavedLearn);
+  learn.runs = 0; learn.peeked = false; setPeek(false);
+  const b = document.body, noTab = step.kind !== 'learn';
   b.classList.add('learning');
-  b.classList.toggle('learn-tab', step.kind === 'tab');
-  b.classList.toggle('learn-tiles', step.kind === 'tiles');
-  b.classList.toggle('learn-song', step.kind === 'song');
+  b.classList.toggle('learn-tab', !noTab);
+  b.classList.toggle('learn-tiles', noTab);
+  b.classList.toggle('learn-final', final);
   $('learnPanel').hidden = false;
   $('learnText').classList.remove('open');
   $('learnName').textContent = LEARN_NAME;
   $('learnCount').textContent = 'Step ' + (i + 1) + ' of ' + steps.length;
-  $('learnPct').textContent = Math.round(i / steps.length * 100) + '%';
   renderLearnPath(steps, i);
   $<HTMLButtonElement>('learnBack').disabled = i === 0;
-  const phase = (n: string, what: string) => { $('learnPhase').innerHTML = '<span class="lp-n">' + n + '</span> ' + what; };
-  const next = (kicker: string, label: string) => { $('learnNextKicker').textContent = kicker; $('learnNextLabel').textContent = label; };
-  if (step.kind === 'song') {
+  const phase = (kind: string, n: string, what: string) => { $('learnPhase').innerHTML = '<span class="lp-n ' + kind + '">' + n + '</span> ' + what; };
+  const [from, to] = stepRange(step);
+  const name = '<strong>' + esc(step.kind === 'join' ? joinName(from, to) : st.sections[from].name) + '</strong>';
+  const times = goal === 2 ? 'twice' : goal + ' times';
+  if (final) {
     $('learnTitle').textContent = 'The whole song';
-    phase('Final step', 'From the tiles only, start to finish');
-    $('learnText').innerHTML = 'Now play the <strong>whole song from the tiles</strong>, without the tab. Tap a tile to add a note where you still hesitate. If a section isn’t there yet, go back to it in the path above.';
-    next('Played it all?', 'Finish Tile by Tile');
-    setLearnStyle(''); setTabRange(null);
-    if (st.ready) { if (api().playerState === PLAYING) api().pause(); clearLoop(); renderChart(); goBar(0); }
+    phase('final', 'Final step', 'Start to finish, no tab');
+    $('learnText').innerHTML = 'This is it: play the <strong>whole song</strong> from the tiles, start to finish, without the tab. One run without peeking and it’s yours.';
+  } else if (step.kind === 'learn') {
+    $('learnTitle').textContent = st.sections[from].name;
+    phase('learn', 'Learn', 'With the tab');
+    $('learnText').innerHTML = 'Follow the tab of ' + name + ' while it plays on loop. Slow it down with the speed if you need to. Play it ' + times + ' along with the tab, then try it without.';
+  } else if (step.kind === 'recall') {
+    $('learnTitle').textContent = st.sections[from].name;
+    phase('recall', 'Remember', 'No tab, just the tiles');
+    $('learnText').innerHTML = 'The tab is gone: play ' + name + ' from the tiles only, ' + times + '. Stuck? Hold <strong>Peek</strong> to see the tab for a moment, but that run won’t count. Double-tap a tile to write a reminder (“slide”, “x2”).';
   } else {
-    const sec = st.sections[step.sec], name = esc(sec.name), nextSec = st.sections[step.sec + 1];
-    $('learnTitle').textContent = sec.name;
-    if (step.kind === 'tab') {
-      phase('1 of 2', 'Learn it with the tab');
-      $('learnText').innerHTML = 'Learn <strong>' + name + '</strong> with the tab. It plays on loop: follow it, slow it down with the speed if you need to, and repeat until you can play it. Then go on: the tab is hidden and you play it from the tiles.';
-      next('Got it? Next step', 'Play ' + sec.name + ' without the tab');
-      setLearnStyle(''); setTabRange(step.sec);
-    } else {
-      phase('2 of 2', 'Play it from the tiles, no tab');
-      $('learnText').innerHTML = 'The tab is gone: play <strong>' + name + '</strong> from the tiles only. Tap a tile to add a note (a reminder like “slide” or “x2”). If you get stuck, go back to the tab.';
-      if (nextSec) next('Got it? Next section', nextSec.name + ' with the tab');
-      else next('Got it? Final step', 'The whole song from the tiles');
-      setLearnStyle('.chart .section:not([data-sec="' + step.sec + '"]) { display: none; }');
-    }
-    setSectionLoop(step.sec);
+    $('learnTitle').textContent = joinName(from, to);
+    phase('join', 'Connect', (to - from + 1) + ' sections in a row, no tab');
+    $('learnText').innerHTML = 'Now join it to what you already know: play ' + name + ' without stopping and without the tab, ' + times + '. The changes between sections are where it usually breaks.';
   }
+  if (final) { learn.kicker = 'Played it all?'; $('learnNextLabel').textContent = 'Finish Tile by Tile'; }
+  else {
+    const nx = steps[i + 1];
+    learn.kicker = nx.kind === 'learn' ? 'Next section' : nx.kind === 'recall' ? 'Next: without the tab' : 'Next: connect it';
+    $('learnNextLabel').textContent = stepLabel(steps, i + 1);
+  }
+  const shown = st.sections.map((_, k) => k).filter(k => k >= from && k <= to).map(k => ':not([data-sec="' + k + '"])').join('');
+  setLearnStyle(noTab ? '.chart .section' + shown + ' { display: none; }' : '');
+  setTabRange(from, to);
+  setLearnLoop(from, to);
+  renderRuns();
   syncLearnPlay();
 }
 function syncLearnPlay() {
   if (!learn.on) return;
   const playing = !!st.api && st.ready && api().playerState === PLAYING;
-  const song = learnSteps()[learn.step]?.kind === 'song';
-  $('learnPlay').querySelector('span')!.textContent = playing ? 'Pause' : song ? 'Play the whole song' : 'Play on loop';
+  const final = isFinal(learnSteps(), learn.step);
+  $('learnPlay').querySelector('span')!.textContent = playing ? 'Pause' : final ? 'Play the whole song' : 'Play on loop';
   $('learnPlay').querySelector('svg')!.innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
 }
 // Os botões do leitor no painel são atalhos para os da barra de baixo (que fica escondida enquanto se aprende)
@@ -1777,27 +1867,41 @@ select('learnSpeed').addEventListener('change', () => {
 new MutationObserver(() => { $('learnStatus').textContent = $('status').textContent; }).observe($('status'), { childList: true, subtree: true, characterData: true });
 $('learnBtn').addEventListener('click', enterLearn);
 $('learnCtaBtn').addEventListener('click', enterLearn);
-/** Cartão do Tile by Tile por cima do esquema: "Start" ou "Continue · Step 3 of 9" se já houver progresso nesta música. */
+/** Cartão do Tile by Tile por cima do esquema: "Start", "Continue · 40% by heart" ou, no fim, "Practise again". */
 function updateLearnCta() {
   if (!st.score) return;
-  const total = learnSteps().length, step = storage.get<{ step: number }>(learnKey())?.step ?? 0;
-  const going = step > 0 && step < total;
-  $('learnCtaBtn').textContent = going ? 'Continue · step ' + (step + 1) + ' of ' + total : 'Start Tile by Tile';
+  const steps = learnSteps(), saved = storage.get<SavedLearn>(learnKey());
+  const step = restoreStep(saved, steps, st.sections.length);
+  const pct = byHeartPct(knownSections(steps, step), secBars());
+  $('learnCtaBtn').textContent = saved?.done ? 'Practise again' : step > 0 ? 'Continue · ' + pct + '% by heart' : 'Start Tile by Tile';
+  $('learnCtaTitle').textContent = saved?.done ? 'You know this song by heart' : 'Learn this song by heart';
 }
 $('learnExit').addEventListener('click', exitLearn);
 $('learnText').addEventListener('click', () => $('learnText').classList.toggle('open'));
 $('learnBack').addEventListener('click', () => goLearnStep(learn.step - 1));
 $('learnNext').addEventListener('click', () => {
-  if (learn.step >= learnSteps().length - 1) { toast('You can play “' + ($('songTitle').textContent || 'the song') + '” by heart. Well done!'); storage.set(learnKey(), { step: 0 }); exitLearn(); return; }
+  if (learn.step >= learnSteps().length - 1) {
+    toast('You can play “' + ($('songTitle').textContent || 'the song') + '” by heart. Well done!');
+    storage.set(learnKey(), { v: 2, step: 0, done: true } satisfies SavedLearn); exitLearn(); return;
+  }
   goLearnStep(learn.step + 1);
 });
 $('learnPlay').addEventListener('click', () => {
   if (!st.ready) { toast('The sounds are still loading.'); return; }
   if (api().playerState === PLAYING) { api().pause(); return; }
   const step = learnSteps()[learn.step];
-  if (step && step.kind !== 'song' && st.loopSection !== step.sec) setSectionLoop(step.sec);
+  if (step && !st.api?.isLooping) { const [from, to] = stepRange(step); setLearnLoop(from, to); }
   api().play();
 });
+// Peek: carregar e manter (rato ou dedo) mostra a tab; ao largar esconde-se. Com o teclado, alterna.
+{
+  const peek = $<HTMLButtonElement>('learnPeek');
+  peek.addEventListener('pointerdown', e => { e.preventDefault(); peek.setPointerCapture(e.pointerId); setPeek(true); });
+  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture'] as const) peek.addEventListener(ev, () => setPeek(false));
+  peek.addEventListener('click', e => { if (e.detail === 0) setPeek(!learn.peeking); });
+  peek.addEventListener('contextmenu', e => e.preventDefault());
+  peek.addEventListener('blur', () => setPeek(false));
+}
 
 // Ao abrir: a música de exemplo (?sample); ou a última aberta na conta (em qualquer dispositivo);
 // sem conta ou sem músicas, a de exemplo. ?load (vindo da página inicial) abre "My songs" para carregar uma.

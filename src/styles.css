@@ -842,19 +842,30 @@ label.set-item { cursor: pointer; }
 .learn-pct { margin-left: auto; display: grid; justify-items: end; line-height: 1.1; }
 .learn-pct strong { font: 700 20px var(--f-mono); color: var(--accent-text); }
 .learn-pct span { font-size: 11px; color: var(--ink-soft); }
-/* Percurso: um bloco por secção, com dois tracinhos (com a tab · só os quadrados) */
-.learn-path { list-style: none; margin: 0; padding: 2px 0 4px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; }
-.lp-item { flex: 1 0 96px; min-width: 0; }
-.lp-item.last { flex: 0 0 auto; min-width: 104px; }
-.lp-item button { width: 100%; display: grid; gap: 6px; padding: 8px 10px; border-radius: var(--r-item, 10px); border: 1px solid var(--line-2);
-  background: transparent; color: var(--ink-soft); text-align: left; cursor: pointer; font: inherit; }
+/* Percurso: a música em miniatura. Uma peça por secção, um quadrado por compasso: cinzento até se saber de cor,
+   depois com a cor da nota. As secções já tocadas seguidas ficam ligadas por um traço. */
+.learn-path { list-style: none; margin: 0; padding: 2px 0 6px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: thin; }
+.lp-item { position: relative; flex: 1 0 112px; min-width: 0; }
+.lp-item.link::after { content: ""; position: absolute; top: 50%; right: -9px; width: 10px; height: 3px; border-radius: 2px; background: var(--accent); z-index: 1; }
+.lp-item button { width: 100%; height: 100%; display: grid; align-content: start; gap: 7px; padding: 8px 10px; border-radius: var(--r-item, 10px); border: 1px solid var(--line-2);
+  background: transparent; color: var(--ink-soft); text-align: left; cursor: pointer; font: inherit; transition: border-color .2s, background .2s; }
 .lp-item button:hover { background: var(--panel-2); }
 .lp-item.now button { border-color: var(--accent); color: var(--ink); background: color-mix(in srgb, var(--accent) 10%, transparent); }
-.lp-item.done button { color: var(--ink); }
+.lp-item.known button { color: var(--ink); }
 .lp-name { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lp-item.done .lp-name::before { content: "✓ "; color: var(--accent-text); }
+.lp-item.known .lp-name::before { content: "✓ "; color: var(--accent-text); }
+.lp-tiles { display: flex; flex-wrap: wrap; gap: 3px; }
+.lp-tiles i { width: 9px; height: 9px; border-radius: 2px; background: var(--line-2); transition: background .35s; }
+.lp-item.known .lp-tiles i { background: var(--ink-soft); }
+.lp-item.known .lp-tiles i[data-pc] { background: var(--nc); }
+.lp-item.known .lp-tiles i.two { background: linear-gradient(90deg, var(--nc) 50%, var(--nc2) 50%); }
+/* Acabou de se saber de cor: os quadrados acendem-se um a um */
+.lp-item.lit .lp-tiles i { animation: lp-light .5s var(--d, 0ms) both cubic-bezier(.2, .9, .3, 1.4); }
+.lp-item.lit button { animation: lp-glow 1.4s ease-out; }
+@keyframes lp-light { from { transform: scale(.2); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes lp-glow { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); } 100% { box-shadow: 0 0 0 14px transparent; } }
 .lp-pips { display: flex; gap: 3px; }
-.lp-pips i { flex: 1; height: 5px; border-radius: var(--r-pill); background: var(--line-2); }
+.lp-pips i { flex: 1; height: 4px; border-radius: var(--r-pill); background: var(--line-2); }
 .lp-pips i.done { background: color-mix(in srgb, var(--accent) 55%, var(--line-2)); }
 .lp-pips i.now { background: var(--accent); }
 /* A etapa atual */
@@ -862,6 +873,23 @@ label.set-item { cursor: pointer; }
 .learn-phase { margin: 0; font-size: 13px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .learn-phase .lp-n { font: 600 10.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: var(--r-pill);
   background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent-text); }
+.learn-phase .lp-n.final { background: var(--accent); color: var(--accent-ink); }
+/* Voltas deste passo: ●●○ 2 of 3 */
+.learn-runs { margin: 4px 0 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-soft); }
+.learn-runs:empty { display: none; }
+.lr-pips { display: inline-flex; gap: 6px; }
+.lr-pips i { width: 14px; height: 14px; border-radius: 4px; border: 2px solid var(--line-2); transition: background .25s, border-color .25s, transform .25s; }
+.lr-pips i.on { background: var(--accent); border-color: var(--accent); transform: scale(1.08); animation: lp-light .45s both cubic-bezier(.2, .9, .3, 1.4); }
+.lr-count { font: 700 12.5px var(--f-mono); color: var(--ink); }
+.learn-runs.met .lr-count { color: var(--accent-text); }
+/* Peek: só nos passos sem a tab */
+.learn-peek { display: none; user-select: none; -webkit-user-select: none; touch-action: none; -webkit-touch-callout: none; }
+body.learn-tiles .learn-peek { display: inline-flex; }
+.learn-peek[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, transparent); }
+/* O passo seguinte acende-se quando se fizeram as voltas */
+.learn-next.ready { animation: ln-ready 1.6s ease-in-out infinite; }
+@keyframes ln-ready { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); } 60% { box-shadow: 0 0 0 10px transparent; } }
+@media (prefers-reduced-motion: reduce) { .lp-item.lit .lp-tiles i, .lp-item.lit button, .lr-pips i.on, .learn-next.ready { animation: none; } }
 /* Comandos do leitor (a barra de baixo esconde-se enquanto se aprende): tocar e velocidade · opções, na mesma linha */
 .learn-panel { grid-template-columns: auto minmax(0, 1fr); column-gap: 0; }
 .learn-panel > *, .learn-nav { grid-column: 1 / -1; }
@@ -886,10 +914,16 @@ body.learning .dock, body.learning .barbar { display: none !important; }
 body.learning .viewswitch { display: none !important; }
 body.learn-tab .chartcol { display: none !important; }
 body.learn-tab .tabcol { display: block !important; }
-body.learn-tab .cols, body.learn-tiles .cols, body.learn-song .cols { grid-template-columns: minmax(0, 1fr); }
-/* Etapas "quadrados" e "música toda": só o esquema, sem a tablatura */
-body.learn-tiles .tabcol, body.learn-song .tabcol { display: none !important; }
-body.learn-tiles .chartcol, body.learn-song .chartcol { display: block !important; max-width: 900px; width: 100%; margin: 0 auto; }
+body.learn-tab .cols, body.learn-tiles .cols { grid-template-columns: minmax(0, 1fr); }
+/* Etapas sem a tab: só o esquema. A tab fica desenhada por cima, escondida, e aparece enquanto se carrega em "Peek". */
+body.learn-tiles .chartcol { display: block !important; max-width: 900px; width: 100%; margin: 0 auto; }
+body.learning.learn-tiles .tabcol { display: block !important; position: fixed; z-index: 20; top: auto; left: 50%; width: min(1100px, calc(100vw - 32px));
+  bottom: calc(var(--dock-h, 0px) + 16px); transform: translate(-50%, 16px); visibility: hidden; opacity: 0; pointer-events: none;
+  transition: opacity .18s, transform .18s, visibility 0s .18s; }
+body.learning.learn-tiles .tabcol .tabpanel { box-shadow: var(--shadow); border: 1px solid var(--accent); }
+body.learning.learn-tiles #tabScroll { max-height: min(55vh, 460px); }
+body.learning.learn-tiles #tab { min-height: 0; }
+body.learning.learn-tiles.peeking .tabcol { visibility: visible; opacity: 1; transform: translate(-50%, 0); transition: opacity .15s, transform .15s; }
 body.learning .sbtn[aria-label^="Practise"], body.learning .learn-btn { display: none; }
 @media (max-width: 600px) {
   /* Painel compacto: o que se está a aprender (tab ou quadrados) tem de caber no ecrã */
@@ -898,7 +932,7 @@ body.learning .sbtn[aria-label^="Practise"], body.learning .learn-btn { display:
   .learn-kicker { font-size: 10px; letter-spacing: .06em; }
   .learn-panel h2 { font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .learn-pct strong { font-size: 16px; }
-  .learn-pct span { display: none; }
+  .learn-pct span { font-size: 10px; }
   .lp-item { flex-basis: 84px; }
   .lp-item button { padding: 6px 8px; gap: 5px; }
   .lp-name { font-size: 12px; }

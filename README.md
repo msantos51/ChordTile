@@ -88,9 +88,16 @@ Se o ficheiro tiver acordes escritos nesse instrumento, usa esses.
 
 ### Tile by Tile (aprender de cor)
 
-Método guiado no leitor (`player.html?learn`, atalho `learn.html`): para cada secção, primeiro só a tab dessa secção
-em loop (`display.startBar`/`barCount` do alphaTab), depois a tab esconde-se e ficam só os quadrados dessa secção
-(com notas); no fim, a música toda só com os quadrados. O passo fica na conta (`user_data`, chave `mapa:learn:<música>`).
+Método guiado no leitor (`player.html?learn`, atalho `learn.html`). O percurso (`src/app/learn-path.ts`, testado) é,
+para cada secção: **Learn** (só a tab dessa secção em loop, `display.startBar`/`barCount` do alphaTab) →
+**Remember** (a tab esconde-se, ficam só os quadrados dessa secção) → **Connect** (a partir da 2.ª secção, toca-se
+da 1.ª até essa, seguido e sem a tab). A última ligação é a música toda.
+
+- Cada volta do loop conta (3 por secção, 2 ao ligar, 1 na música toda); o botão do passo seguinte acende-se.
+- **Peek**: carregar e manter mostra a tab por cima; a volta em que se espreitou não conta.
+- No topo, a música em miniatura: um quadrado por compasso, cinzento até a secção se saber de cor e depois com a
+  cor da nota; as secções já tocadas seguidas ficam ligadas, com a percentagem da música sabida de cor.
+- O passo fica na conta (`user_data`, chave `mapa:learn:<música>`, `{ v: 2, step }`; o formato antigo é convertido).
 
 ### Metrónomo exato
 

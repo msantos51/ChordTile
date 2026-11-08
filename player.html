@@ -94,14 +94,16 @@
           <p class="learn-kicker"><span id="learnName">Tile by Tile</span> · <span id="learnCount">Step 1 of 9</span></p>
           <h2 id="learnTitle">Intro</h2>
         </div>
-        <div class="learn-pct" aria-hidden="true"><strong id="learnPct">0%</strong><span>done</span></div>
+        <div class="learn-pct" title="How much of the song you can already play without the tab"><strong id="learnPct">0%</strong><span>by heart</span></div>
         <button class="btn sm" id="learnExit" type="button">Exit</button>
       </div>
-      <!-- O percurso: uma etapa por secção (com a tab e depois só com os quadrados) e, no fim, a música toda -->
+      <!-- O percurso é a música: uma peça por secção, com um quadrado por compasso, que ganha cor quando se sabe de cor -->
       <ol class="learn-path" id="learnTrack" aria-label="Your progress"></ol>
       <div class="learn-stage">
         <p class="learn-phase" id="learnPhase"></p>
         <p class="learn-text" id="learnText"></p>
+        <!-- Voltas do loop neste passo (sem espreitar a tab) -->
+        <p class="learn-runs" id="learnRuns" aria-live="polite"></p>
       </div>
       <!-- Opções do leitor (metrónomo, contagem, tocar por cima, solo) -->
       <div class="learn-tools" role="group" aria-label="Player options">
@@ -116,6 +118,7 @@
       <div class="learn-dock" id="learnDock">
         <div class="learn-controls" role="group" aria-label="Player controls">
           <button class="btn primary learn-play" id="learnPlay" type="button"><svg class="i f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Play on loop</span></button>
+          <button class="btn learn-peek" id="learnPeek" type="button" aria-pressed="false" title="Hold to see the tab for a moment (that run won’t count)"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Peek</span></button>
           <label class="speed" for="learnSpeed" data-gate="tools" title="Speed">
             <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 14l4-5"/></svg>
             <select id="learnSpeed" aria-label="Speed"><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="100" selected>100%</option><option value="125">125%</option></select>
@@ -136,7 +139,7 @@
       <div class="lc-text">
         <p class="lc-kicker">Tile by Tile <span class="lc-tag">Learning method</span></p>
         <h2 id="learnCtaTitle">Learn this song by heart</h2>
-        <p id="learnCtaText">Section by section: first with the tab, then from the tiles only, until you play the whole song without reading.</p>
+        <p id="learnCtaText">Learn a section with the tab, play it without, then join it to the ones before. Section by section, until you play the whole song without reading.</p>
       </div>
       <button class="btn primary lc-btn" id="learnCtaBtn" data-gate="learn" type="button">Start Tile by Tile</button>
     </aside>

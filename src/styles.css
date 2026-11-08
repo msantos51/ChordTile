@@ -1135,3 +1135,44 @@ body.learning .learn-cta { display: none; }
   .drop, .drop div, .tour-card, .err, .tbtn svg.i, .sbtn svg.i { animation: none !important; }
   :is(.btn, .tbtn, .sbtn, .ibtn, .play, .bar):active { transform: none !important; }
 }
+
+/* ---------- Telemóvel: mais espaço para a tablatura ----------
+   Topo numa só linha (só ícones), destaque do Tile by Tile numa faixa fina,
+   seletor Tab/Chart mais baixo e a tablatura de ponta a ponta. */
+@media (max-width: 600px) {
+  .top { flex-wrap: nowrap; gap: 8px; padding-block: 8px; }
+  .top-left { flex: 1 1 0; flex-basis: 0; min-width: 0; gap: 8px; }
+  .top-left .logo { width: 28px; height: 28px; }
+  #songTitle { font-size: 15px; line-height: 1.25; }
+  #songMeta { font-size: 11px; }
+  .top-actions { width: auto; flex: none; gap: 6px; }
+  .top-actions .btn { width: 40px; height: 40px; min-height: 40px; padding: 0; justify-content: center; flex: none; }
+  #settingsBtn span, #libraryBtn span { display: none; }
+  /* Instrumento: só o ícone; a lista abre por cima dele (o nome aparece no topo da tablatura) */
+  .track-pick { flex: none; padding: 0; }
+  .track-pick::after { display: none; }
+  .track-pick select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; }
+
+  .learn-cta { grid-template-columns: auto 1fr auto; padding: 8px 8px 8px 10px; gap: 10px; margin-bottom: 10px; border-radius: var(--r-item); }
+  .learn-cta .lc-icon { width: 32px; height: 32px; border-radius: 10px; }
+  .learn-cta .lc-icon .i { width: 18px; height: 18px; }
+  .learn-cta .lc-kicker, .learn-cta p#learnCtaText { display: none; }
+  .learn-cta h2 { margin: 0; font-size: 14px; line-height: 1.25; }
+  .learn-cta .lc-btn { grid-column: auto; width: auto; height: 36px; min-height: 36px; padding: 0 14px; font-size: 13px; }
+
+  .viewswitch { padding: 2px; margin-bottom: 8px; }
+  .viewswitch button { min-height: 34px; padding-block: 4px; }
+
+  body:not(.learning) .tabpanel { margin-inline: -16px; border-radius: 0; border-inline: 0; padding: 6px 0 2px; }
+  .tabpanel .panel-head { padding: 0 16px; margin-bottom: 0; min-height: 24px; }
+}
+
+/* Telemóvel deitado: pouca altura, por isso o destaque do Tile by Tile sai
+   (o botão continua no topo do esquema) e a tablatura fica de ponta a ponta */
+@media (max-height: 500px) and (orientation: landscape) {
+  .learn-cta { display: none; }
+  .content { padding-top: 6px; }
+  .viewswitch { margin-bottom: 6px; padding: 2px; }
+  .viewswitch button { min-height: 30px; padding-block: 2px; }
+  body:not(.learning) .tabpanel { margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); border-radius: 0; border-inline: 0; padding: 2px 0; }
+}

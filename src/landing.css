@@ -132,6 +132,9 @@ h1 em { font-style: normal; color: var(--red); }
 .m-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .m-name { font: 700 13px var(--f-body); letter-spacing: .14em; text-transform: uppercase; }
 .m-name small { font-size: 11px; font-weight: 500; opacity: .75; margin-left: 8px; }
+.m-ok { display: inline-block; margin-left: 10px; padding: 2px 8px; border-radius: 999px; background: #fff; color: var(--red); font-size: 10.5px; letter-spacing: .08em;
+  opacity: 0; transform: scale(.6); transition: opacity .3s var(--ease), transform .45s var(--spring); }
+.m-ok.on { opacity: 1; transform: none; }
 .m-runs { display: inline-flex; align-items: center; gap: 6px; font: 600 10.5px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; }
 .m-runs span { margin-right: 4px; }
 .m-runs i { width: 9px; height: 9px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .6); transition: background .3s, box-shadow .3s, scale .4s var(--spring); }

@@ -109,7 +109,15 @@ function spring(zeta: number, omega: number, fallback: string) {
 const POP = spring(0.55, 11, 'cubic-bezier(.34,1.56,.64,1)');
 const anim = (el: Element, k: Keyframe[], o: KeyframeAnimationOptions) => el.animate(k, { fill: 'forwards', easing: EASE, ...o });
 
-const DUR = [4300, 6600, 4200, 4200];
+/** Tempos das cenas (ms). As barras dos passos usam as mesmas contas, por isso acabam com a cena. */
+const T = { enter: 450, bar1: 260, bar2: 200, hide: 650, run: 190, flip: 220, join: 140, wave: 28, hold: 800, count: 14, tick: 40 };
+const COUNT_MS = T.count * T.tick;
+const DUR = [
+  T.enter + 8 * T.bar1 + 8 * T.bar2 + 250,
+  T.hide + 16 * T.run + 8 * T.flip + COUNT_MS + T.hold,
+  T.enter + 250 + 550 + 400 + 16 * T.join + T.hold,
+  T.enter + 200 + COUNT_MS + 250 + 600 + 24 * T.wave + T.hold,
+];
 const NAMES = ['Learn it with the tab', 'Play it without', 'Join it up', 'Know it by heart'];
 const SCENE_IDS = ['learn', 'recall', 'join', 'heart'];
 function setStep(k: number) {
@@ -132,9 +140,10 @@ function setStep(k: number) {
 function setStrip(list: HTMLElement[], known: number) {
   list.forEach((s, k) => { s.classList.toggle('k', k < known); s.classList.toggle('n', k === known); });
 }
-const setRuns = (done: number, text: string) => {
+/** Voltas: `done` já feitas (cheias) e `now` a que se está a tocar (contorno forte). */
+const setRuns = (done: number, text: string, now = -1) => {
   $('mRunText').textContent = text;
-  $('mRuns').querySelectorAll('i').forEach((p, j) => p.classList.toggle('on', j < done));
+  $('mRuns').querySelectorAll('i').forEach((p, j) => { p.classList.toggle('on', j < done); p.classList.toggle('now', j === now); });
 };
 
 /** Volta tudo ao estado inicial (cena 1), sem animação. */
@@ -156,15 +165,19 @@ function chorusKnown() {
   setRuns(3, 'By heart'); setStrip(segs, CHORUS + 1); $('mPct').textContent = pctOf(CHORUS + 1) + '%';
 }
 
+/** Conta de `from` até `to` num elemento (a percentagem a subir). */
+async function count(el: HTMLElement, from: number, to: number, suffix: string) {
+  for (let v = 1; v <= T.count; v++) { el.textContent = Math.round(from + ((to - from) * v) / T.count) + suffix; await wait(T.tick); }
+}
 const light = (list: HTMLElement[], i: number) => list.forEach((t, j) => t.classList.toggle('on', j === i));
 
 async function sceneLearn() {
-  await wait(400);
+  await wait(T.enter);
   const cur = $('mCur'); cur.classList.add('on');
   for (const [loop, speed] of [[1, 75], [2, 100]] as const) {
     setRuns(0, 'Loop ' + loop + '/2 · ' + speed + '%');
     for (let i = 0; i < 8; i++) {
-      const b = tabBars[i], ms = (loop === 1 ? 260 : 200);
+      const b = tabBars[i], ms = loop === 1 ? T.bar1 : T.bar2;
       light(chorusTiles, i);
       const sys = b.parentElement as HTMLElement, x = sys.offsetLeft + b.offsetLeft, y = sys.offsetTop, w = b.offsetWidth;
       anim(cur, [{ transform: `translate(${x}px, ${y}px)` }, { transform: `translate(${x + w - 2}px, ${y}px)` }], { duration: ms, easing: 'linear' });
@@ -176,57 +189,59 @@ async function sceneLearn() {
 }
 
 async function sceneRecall() {
-  // A tab sobe e desfoca até desaparecer: fica só o esquema
+  // A tab sobe e desfoca até desaparecer: fica só o esquema (o texto muda logo, com a tab)
   $('mTab').classList.add('gone');
-  await wait(700);
+  setRuns(0, 'Run 1 of 3 · no tab', 0);
+  await wait(T.hide);
   for (let r = 0; r < 3; r++) {
-    setRuns(r, 'Run ' + (r + 1) + ' of 3 · no tab');
+    setRuns(r, 'Run ' + (r + 1) + ' of 3 · no tab', r);
     for (let i = 0; i < 8; i++) {
       light(chorusTiles, i);
       if (r === 2) {
         // Última volta: cada quadrado vira e aparece na cor da nota
         const t = chorusTiles[i];
-        anim(t, [{ transform: 'perspective(300px) rotateX(0)' }, { transform: 'perspective(300px) rotateX(90deg)' }], { duration: 110, easing: 'ease-in' });
-        await wait(110); t.classList.add('known');
+        anim(t, [{ transform: 'perspective(300px) rotateX(0)' }, { transform: 'perspective(300px) rotateX(90deg)' }], { duration: T.flip / 2, easing: 'ease-in' });
+        await wait(T.flip / 2); t.classList.add('known');
         anim(t, [{ transform: 'perspective(300px) rotateX(-90deg)' }, { transform: 'none' }], { duration: 420, easing: POP });
-        await wait(110);
-      } else await wait(190);
+        await wait(T.flip / 2);
+      } else await wait(T.run);
     }
     setRuns(r + 1, 'Run ' + (r + 1) + ' of 3 · no tab');
   }
   light(chorusTiles, -1);
   setRuns(3, 'By heart');
-  // O refrão passa a estar de cor na faixa da música
-  await wait(250);
+  // O refrão passa a estar de cor na faixa da música e a percentagem sobe
   setStrip(segs, CHORUS + 1);
   anim(segs[CHORUS], [{ transform: 'scaleY(1.5)' }, { transform: 'none' }], { duration: 500, easing: POP });
-  const pct = $('mPct'), from = pctOf(CHORUS), to = pctOf(CHORUS + 1);
-  for (let v = 1; v <= 10; v++) { pct.textContent = Math.round(from + ((to - from) * v) / 10) + '%'; await wait(40); }
-  await wait(700);
+  await count($('mPct'), pctOf(CHORUS), pctOf(CHORUS + 1), '%');
+  await wait(T.hold);
 }
 
 async function sceneJoin() {
-  await wait(550);
-  anim($('jLink'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 450 });
-  await wait(500);
+  // O verso (já sabido) aparece com a cena; o refrão chega da direita e encaixa a seguir
+  const card = $('jB');
+  anim(card, [{ opacity: 0, transform: 'translateX(70px) scale(.92)' }, { opacity: 1, transform: 'none' }], { duration: 650, delay: T.enter + 250, easing: POP, fill: 'both' });
+  await wait(T.enter + 250 + 550);
+  anim($('jLink'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 350 });
+  await wait(400);
   // Um só cursor: o verso e logo a seguir o refrão, sem parar
-  for (let i = 0; i < joinTiles.length; i++) { light(joinTiles, i); await wait(150); }
+  for (let i = 0; i < joinTiles.length; i++) { light(joinTiles, i); await wait(T.join); }
   light(joinTiles, -1);
-  await wait(650);
+  await wait(T.hold);
 }
 
 async function sceneHeart() {
-  await wait(400);
-  // As secções que faltam acendem, a percentagem chega a 100%
-  for (let k = CHORUS + 1; k < SECTIONS.length; k++) {
-    setStrip(bigSegs, k + 1);
-    anim(bigSegs[k], [{ transform: 'scaleY(1.5)' }, { transform: 'none' }], { duration: 500, easing: POP });
-  }
-  const pct = $('hPct'), from = pctOf(CHORUS + 1);
-  for (let v = 1; v <= 12; v++) { pct.textContent = String(Math.round(from + ((100 - from) * v) / 12)); await wait(45); }
+  // Os quadrados da música toda entram em cascata enquanto a percentagem sobe
+  allTiles.forEach((t, j) => anim(t, [{ opacity: 0, transform: 'translateY(10px) scale(.7)' }, { opacity: 1, transform: 'none' }],
+    { duration: 450, delay: T.enter + j * 22, easing: POP, fill: 'both' }));
+  await wait(T.enter + 200);
+  setStrip(bigSegs, SECTIONS.length);
+  anim(bigSegs[SECTIONS.length - 1], [{ transform: 'scaleY(1.5)' }, { transform: 'none' }], { duration: 500, easing: POP });
+  await count($('hPct'), pctOf(CHORUS + 1), 100, '');
+  await wait(250);
   // Uma onda pelos quadrados da música toda
-  allTiles.forEach((t, j) => anim(t, [{ transform: 'none' }, { transform: 'translateY(-10px) scale(1.08)', offset: 0.4 }, { transform: 'none' }], { duration: 650, delay: j * 35, easing: EASE_IO, fill: 'none' }));
-  await wait(650 + allTiles.length * 35 + 900);
+  allTiles.forEach((t, j) => anim(t, [{ transform: 'none' }, { transform: 'translateY(-10px) scale(1.08)', offset: 0.4 }, { transform: 'none' }], { duration: 600, delay: j * T.wave, easing: EASE_IO, fill: 'none' }));
+  await wait(600 + allTiles.length * T.wave + T.hold);
 }
 
 const SCENES = [sceneLearn, sceneRecall, sceneJoin, sceneHeart];

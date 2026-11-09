@@ -485,7 +485,7 @@ $('closeSettings').addEventListener('click', () => openSettings(false));
 $('scrim').addEventListener('click', () => { openSettings(false, false); openLibrary(false); });
 input('optColors').addEventListener('change', renderChart);
 ['optMinor', 'optSplit', 'optFileChords', 'optNames', 'optAcc'].forEach(id => $(id).addEventListener('change', () => { detect(); renderChart(); }));
-select('perRow').addEventListener('change', () => { st.perRow = +select('perRow').value; save(); renderChart(); });
+select('perRow').addEventListener('change', () => { st.perRow = +select('perRow').value; save(); renderChart(); if (learn.on) renderLearnPath(learnSteps(), learn.step); });
 select('tabPerRow').addEventListener('change', () => {
   tabPerRow = +select('tabPerRow').value; storage.set('mapa:tabPerRow', tabPerRow);
   if (st.api) { Object.assign(st.api.settings.display, tabLayout()); st.api.updateSettings(); st.api.render(); }
@@ -1735,7 +1735,9 @@ function renderLearnPath(steps: LearnStep[], i: number) {
     b.setAttribute('aria-label', sec.name + (known[k] ? ', by heart' : ''));
     if (k === here) b.setAttribute('aria-current', 'step');
     const name = document.createElement('span'); name.className = 'lp-name'; name.textContent = sec.name;
+    // Os quadrados em linhas como no esquema (o mesmo n.º por linha), e não todos seguidos
     const tiles = document.createElement('span'); tiles.className = 'lp-tiles'; tiles.setAttribute('aria-hidden', 'true');
+    tiles.style.setProperty('--per', String(st.perRow));
     for (let n = sec.start, j = 0; n < secEnd(k); n++, j++) {
       const t = document.createElement('i'); colorCell(t, barText(n)); t.style.setProperty('--d', Math.min(j, 24) * 35 + 'ms'); tiles.append(t);
     }

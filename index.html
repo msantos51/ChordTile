@@ -9,13 +9,13 @@
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#c8102e">
-<title>ChordTile · Online Guitar Pro player to learn songs by heart</title>
-<meta name="description" content="Open Guitar Pro (.gp, .gp5, .gpx) and MusicXML tabs online and learn any song by heart: chords in colour, synced tab, section loops and slow-down. Free to try.">
+<title>ChordTile · Learn any song by heart, tile by tile</title>
+<meta name="description" content="Learn any song by heart with the Tile by Tile method: one section with the tab, then without, then joined to the rest. Works with Guitar Pro (.gp, .gp5, .gpx) and MusicXML tabs. Free to try.">
 <link rel="canonical" href="https://www.chordtile.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ChordTile">
-<meta property="og:title" content="ChordTile · Online Guitar Pro player to learn songs by heart">
-<meta property="og:description" content="Open Guitar Pro (.gp, .gp5, .gpx) and MusicXML tabs online and learn any song by heart: chords in colour, synced tab, section loops and slow-down. Free to try.">
+<meta property="og:title" content="ChordTile · Learn any song by heart, tile by tile">
+<meta property="og:description" content="Learn any song by heart with the Tile by Tile method: one section with the tab, then without, then joined to the rest. Works with Guitar Pro (.gp, .gp5, .gpx) and MusicXML tabs. Free to try.">
 <meta property="og:url" content="https://www.chordtile.com/">
 <meta property="og:image" content="https://www.chordtile.com/og-image.png">
 <meta property="og:image:width" content="1200">
@@ -108,85 +108,145 @@
     </header>
 
     <div class="copy">
-      <p class="kicker caps">For Guitar Pro files · guitar &amp; bass</p>
-      <h1><span class="ln"><span>Stop reading</span></span><span class="ln"><span>tabs.</span></span><em><span class="ln"><span>Start knowing</span></span><span class="ln"><span>songs.</span></span></em></h1>
-      <p class="lead">Load a Guitar Pro file and learn it section by section, tile by tile, until you can play it by heart.</p>
+      <p class="kicker caps">The Tile by Tile method · guitar &amp; bass</p>
+      <h1><span class="ln"><span>Learn any song</span></span><span class="ln"><span>by heart.</span></span><em><span class="ln"><span>Tile by tile.</span></span></em></h1>
+      <p class="lead">Learn one section with the tab. Play it without. Join it to the ones before. Section by section, until you play the whole song without reading a note.</p>
       <div class="buy">
-        <button class="btn" type="button" data-pick><span class="plus" aria-hidden="true">+</span>Load a Guitar Pro file</button>
-        <a class="link" href="/player?sample">Try the sample</a>
+        <button class="btn" type="button" data-pick>Learn a song by heart<svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <a class="link" href="/player?sample">Try it on the sample</a>
       </div>
-      <a class="tbt" href="/help#tile-by-tile"><span class="tbt-tag">Method</span><span><strong>Tile by Tile</strong>: learn any song by heart, one section at a time</span><span class="tbt-arrow" aria-hidden="true">→</span></a>
+      <p class="also"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Works with your Guitar Pro &amp; MusicXML files · full tab player, loops, speed and metronome included</p>
     </div>
   </section>
 
   <section class="right">
     <div class="right-top">
-      <nav class="nav-r" aria-label="Player"><a href="/player#songs">My songs</a><a href="/help">Help</a><a href="/account" id="navAccount">Sign in</a></nav>
+      <nav class="nav-r" aria-label="Site"><a href="#method">The method</a><a href="/player#songs">My songs</a><a href="/help">Help</a><a href="/account" id="navAccount">Sign in</a></nav>
       <a class="pill-white" href="/player">Open the player</a>
     </div>
 
-    <figure class="stage" id="stage" aria-label="Animation: a Guitar Pro file is imported, the song is split into sections, a section is practised on loop with the tab following, and one bar of the tab is expanded">
-      <div class="canvas" id="canvas" data-scene="import" aria-hidden="true">
-        <p class="scene-label"><span id="sceneNo">01</span><span id="sceneName">Import</span></p>
+    <figure class="stage" id="stage" aria-label="Animation of the Tile by Tile method: a section is learnt with the tab, played without it until its tiles light up in colour, joined to the section before, and finally the whole song is known by heart">
+      <div class="canvas" id="canvas" data-scene="learn" aria-hidden="true">
+        <p class="scene-label"><span id="sceneNo">01</span><span id="sceneName">Learn it with the tab</span></p>
 
-        <!-- 1. Importar -->
-        <div class="layer l-import">
-          <div class="dropzone" id="dropzone">
-            <svg viewBox="0 0 24 24"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>
-            <span>Drop a Guitar Pro file</span>
-            <div class="reading"><i id="readFill"></i></div>
-            <small id="readText">Reading the file…</small>
+        <!-- 1–2. Uma secção: com a tab e depois sem ela -->
+        <div class="layer l-learn">
+          <div class="m-tab" id="mTab"><div id="mSystems"></div><i class="m-cur" id="mCur"></i></div>
+          <div class="m-hid" id="mHid">Tab hidden</div>
+          <div class="m-card">
+            <div class="m-head"><span class="m-name">Chorus <small>8 bars</small></span><span class="m-runs" id="mRuns"><span id="mRunText">Loop · 75%</span><i></i><i></i><i></i></span></div>
+            <div class="m-tiles" id="mTiles"></div>
           </div>
-          <div class="file" id="file"><b>GP</b><span>my-song.gp5<small>48 KB</small></span><i class="grab"><svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10 19z"/></svg></i></div>
-        </div>
-
-        <!-- 2. Secções -->
-        <div class="layer l-board"><div class="rows" id="rows"></div></div>
-
-        <!-- 3–4. O leitor: esquema ao lado da tablatura -->
-        <div class="layer l-player">
-          <div class="mp">
-            <div class="mp-top"><svg class="logo" viewBox="16 16 224 224" aria-hidden="true"><path fill-rule="evenodd" d="M76 16H180A60 60 0 0 1 240 76V180A60 60 0 0 1 180 240H76A60 60 0 0 1 16 180V76A60 60 0 0 1 76 16ZM199 104A43 43 0 0 0 156 61H108A43 43 0 0 0 65 104V152A43 43 0 0 0 108 195H156A43 43 0 0 0 199 152H169A13 13 0 0 1 156 165H108A13 13 0 0 1 95 152V104A13 13 0 0 1 108 91H156A13 13 0 0 1 169 104Z"/></svg><b>My song</b><span class="mp-chip">Guitar</span><span class="mp-load">+ Load file</span></div>
-            <div class="mp-body">
-              <div class="mp-chart" id="mpChart"></div>
-              <div class="mp-tab" id="mpTab"><p class="mp-h">Tab · guitar</p><div id="mpSystems"></div>
-                <div class="mp-sel" id="mpSel"><div class="mp-selbar" id="mpSelBar"><span>Bar 14 · G</span><b id="mpExpand">⤢ Expand</b><em>Loop</em></div></div>
-                <i class="mp-cursor" id="mpCursor"></i>
-              </div>
-            </div>
-            <div class="mp-dock"><span class="mp-play">▶</span><span id="mpWhere">Ready to play</span><span class="mp-pill" id="mpSpeed">100%</span><span class="mp-pill" id="mpLoop">⟲ Loop</span></div>
+          <div class="m-song">
+            <div class="m-song-h"><span>The whole song</span><b><span id="mPct">50%</span><small>by heart</small></b></div>
+            <div class="m-strip" id="mStrip"></div>
           </div>
         </div>
 
-        <!-- 4. Compasso aberto -->
-        <div class="zoom" id="zoom">
-          <div class="z-head"><span class="z-chord">G</span><span><b>Bar 14 · Chorus</b><small>4/4 · guitar · count: eighth notes</small></span><span class="z-rep">Repeat <b id="zRep">1</b></span></div>
-          <div class="z-staff" id="zStaff">
-            <!-- Cordas e notas desenhadas pelo script (guitarra, 6 cordas) -->
+        <!-- 3. Juntar à secção anterior -->
+        <div class="layer l-join">
+          <div class="j-row">
+            <div class="j-card" id="jA"><p>Verse <span>✓</span></p><div class="j-tiles"></div></div>
+            <i class="j-link" id="jLink"></i>
+            <div class="j-card now" id="jB"><p>Chorus <span>✓</span></p><div class="j-tiles"></div></div>
           </div>
-          <div class="z-count" id="zCount"><span>1</span><span>&amp;</span><span>2</span><span>&amp;</span><span>3</span><span>&amp;</span><span>4</span><span>&amp;</span></div>
+          <p class="j-cap">Verse → Chorus · no tab</p>
         </div>
 
-        <!-- Cursor do rato (mostra onde se clica) -->
-        <div class="ptr" id="ptr"><svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10 19z"/></svg><i></i></div>
+        <!-- 4. A música toda de cor -->
+        <div class="layer l-heart">
+          <p class="h-pct"><span id="hPct">83</span>%</p>
+          <p class="h-cap">The whole song, no reading</p>
+          <div class="m-strip big" id="hStrip"></div>
+          <div class="h-tiles" id="hTiles"></div>
+        </div>
       </div>
     </figure>
-    <span class="vert r">Guitar · Bass</span>
+    <span class="vert r">Learn · Recall · Join</span>
   </section>
+
   <footer class="bottom">
     <section class="how" id="how" aria-labelledby="howTitle">
-      <p class="eyebrow caps" id="howTitle">How it works</p>
+      <p class="eyebrow caps" id="howTitle">The method in 4 moves</p>
       <ol class="steps" id="steps">
-        <li><button type="button" data-step="0"><b>01</b><span><strong>Import your tab</strong><em class="d">Guitar Pro 3–8 or MusicXML, read right in your browser.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
-        <li><button type="button" data-step="1"><b>02</b><span><strong>See the sections</strong><em class="d">Every bar in the colour of its chord, with your own notes.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
-        <li><button type="button" data-step="2"><b>03</b><span><strong>Practise with the tab</strong><em class="d">Loop a section and slow it down: the tab follows along.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
-        <li><button type="button" data-step="3"><b>04</b><span><strong>Open any bar</strong><em class="d">Expand a bar to see its notes and how to count them.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="0"><b>01</b><span><strong>Learn it with the tab</strong><em class="d">One section on loop, as slow as you need.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="1"><b>02</b><span><strong>Play it without</strong><em class="d">The tab hides. Three clean runs and it’s yours.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="2"><b>03</b><span><strong>Join it up</strong><em class="d">Play it straight after the sections you already know.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="3"><b>04</b><span><strong>Know it by heart</strong><em class="d">The whole song, start to finish, no reading.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
       </ol>
     </section>
-    <div class="legal"><span>© 2026 ChordTile</span><a href="/help">Help</a><a href="/contact">Contact</a><a href="/licenses">Terms &amp; privacy</a></div>
   </footer>
 </main>
 
+<div class="more">
+  <!-- Porque funciona -->
+  <section class="why" id="method" aria-labelledby="whyTitle">
+    <div class="why-intro">
+      <p class="eyebrow caps">Why it works</p>
+      <h2 id="whyTitle">Reading a tab isn’t knowing a song.</h2>
+      <p>If your eyes are on the tab, the song lives on the screen and not in your hands. Tile by Tile hides the tab step by step, until it’s all in your head.</p>
+    </div>
+    <div class="why-cards">
+      <article>
+        <div class="wv" aria-hidden="true"><i class="r"></i><i></i><i></i><i></i></div>
+        <h3>Small pieces</h3>
+        <p>One section at a time, never the whole song at once. It’s split for you from the file.</p>
+      </article>
+      <article>
+        <div class="wv" aria-hidden="true"><i data-n="5"></i><i data-n="7"></i><i data-n="0"></i><i data-n="9"></i></div>
+        <h3>Remember, don’t read</h3>
+        <p>The tab hides and only the coloured tiles stay. You play it from memory, and it sticks.</p>
+      </article>
+      <article>
+        <div class="wv join" aria-hidden="true"><i class="r w"></i><b class="r"></b><i class="r w"></i><b></b><i></i></div>
+        <h3>Build the whole</h3>
+        <p>Each new section is joined to the ones before, so the song grows in one piece.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- O progresso -->
+  <section class="progress" aria-labelledby="progTitle">
+    <div>
+      <p class="eyebrow caps">See yourself get there</p>
+      <h2 id="progTitle">Every song shows how much you know by heart.</h2>
+      <p>Your progress is saved to your account. Pick up where you stopped, on any device.</p>
+    </div>
+    <div class="pg-strip" role="img" aria-label="Example: 3 of 6 sections known by heart, 47% of the song">
+      <span class="pg-icon" aria-hidden="true"></span>
+      <strong>Tile by Tile</strong>
+      <span class="pg-segs"><i class="k" style="flex:16">Intro/Verse 1</i><i class="k" style="flex:10">Chorus 1</i><i class="k" style="flex:8">Band enters</i><i class="n" style="flex:16">Verse 2</i><i style="flex:10">Chorus 2</i><i style="flex:12">Bridge</i></span>
+      <span class="pg-pct"><b>47%</b> by heart</span>
+    </div>
+  </section>
+
+  <!-- O leitor continua -->
+  <section class="player" aria-labelledby="playerTitle">
+    <div class="pl-head">
+      <div>
+        <p class="eyebrow caps muted">And a full player for every day</p>
+        <h2 id="playerTitle">Just want to read the tab? It’s all still here.</h2>
+      </div>
+      <a class="pill-black" href="/player">Open the player</a>
+    </div>
+    <ul class="features">
+      <li><strong>Synced tab</strong><span>Follows the sound, bar by bar.</span></li>
+      <li><strong>Colour chart</strong><span>Every bar in its chord’s colour.</span></li>
+      <li><strong>Loops</strong><span>A section or a single bar.</span></li>
+      <li><strong>Speed</strong><span>From 25% to 125%.</span></li>
+      <li><strong>Metronome</strong><span>With count-in.</span></li>
+      <li><strong>PDF export</strong><span>The whole chart on one page.</span></li>
+    </ul>
+  </section>
+
+  <!-- Chamada final -->
+  <section class="final">
+    <h2>Pick the song you’ve always wanted to play by heart.</h2>
+    <button class="pill-white big" type="button" data-pick>Start Tile by Tile</button>
+  </section>
+
+  <footer class="legal"><span>© 2026 ChordTile</span><a href="/help">Help</a><a href="/contact">Contact</a><a href="/licenses">Terms &amp; privacy</a></footer>
+</div>
 
 <script type="module" src="/src/landing.ts"></script>
 </body>

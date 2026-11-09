@@ -137,11 +137,13 @@
     <aside class="learn-cta" id="learnCta" aria-labelledby="learnCtaTitle">
       <span class="lc-icon" aria-hidden="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M14 17.5l2.2 2.2L21 15"/></svg></span>
       <div class="lc-text">
-        <p class="lc-kicker">Tile by Tile <span class="lc-tag">Learning method</span></p>
-        <h2 id="learnCtaTitle">Learn this song by heart</h2>
-        <p id="learnCtaText">Learn a section with the tab, play it without, then join it to the ones before. Section by section, until you play the whole song without reading.</p>
+        <h2 id="learnCtaTitle">Tile by Tile</h2>
+        <p id="learnCtaText">Learn it by heart, section by section</p>
       </div>
-      <button class="btn primary lc-btn" id="learnCtaBtn" data-gate="learn" type="button">Start Tile by Tile</button>
+      <div class="lc-track" id="learnCtaTrack" role="img" aria-label="Sections you know by heart"></div>
+      <span class="lc-pct" id="learnCtaPct"><strong>0%</strong> by heart</span>
+      <button class="btn primary lc-btn" id="learnCtaBtn" data-gate="learn" type="button"><span id="learnCtaBtnText">Start</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      <button class="ibtn lc-fold" id="learnCtaFold" type="button" aria-expanded="true" aria-controls="learnCtaTrack" aria-label="Collapse Tile by Tile" title="Collapse"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
     </aside>
     <div class="viewswitch" role="tablist">
       <button role="tab" id="vTab" aria-selected="true">Tab</button>

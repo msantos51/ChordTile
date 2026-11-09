@@ -59,9 +59,9 @@ describe('PDF do esquema', () => {
     expect(buildPdf(jsPDF, withNote).output()).toContain('palm mute');
   });
 
-  it('passa para a página seguinte quando a música é longa', () => {
+  it('uma música longa cabe toda numa página (os quadrados encolhem)', () => {
     const long: PdfChart = { ...chart, sections: Array.from({ length: 12 }, (_, k) => ({ name: 'S' + k, range: '', bars: bars(1, Array(16).fill('C')) })) };
-    expect(buildPdf(jsPDF, long).getNumberOfPages()).toBeGreaterThan(1);
+    expect(buildPdf(jsPDF, long).getNumberOfPages()).toBe(1);
   });
 
   it('usa as cores do tema do site no fundo da página', () => {

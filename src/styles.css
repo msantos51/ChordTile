@@ -847,15 +847,15 @@ label.set-item { cursor: pointer; }
 .learn-path { list-style: none; margin: 0; padding: 2px 0 6px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: thin; }
 .lp-item { position: relative; flex: 1 0 112px; min-width: 0; }
 .lp-item.link::after { content: ""; position: absolute; top: 50%; right: -9px; width: 10px; height: 3px; border-radius: 2px; background: var(--accent); z-index: 1; }
-.lp-item button { width: 100%; height: 100%; display: grid; align-content: start; gap: 7px; padding: 8px 10px; border-radius: var(--r-item, 10px); border: 1px solid var(--line-2);
+.lp-item button { width: 100%; height: 100%; display: grid; grid-template-rows: auto 1fr auto; gap: 7px; padding: 8px 10px; border-radius: var(--r-item, 10px); border: 1px solid var(--line-2);
   background: transparent; color: var(--ink-soft); text-align: left; cursor: pointer; font: inherit; transition: border-color .2s, background .2s; }
 .lp-item button:hover { background: var(--panel-2); }
 .lp-item.now button { border-color: var(--accent); color: var(--ink); background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .lp-item.known button { color: var(--ink); }
 .lp-name { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lp-item.known .lp-name::before { content: "✓ "; color: var(--accent-text); }
-.lp-tiles { display: flex; flex-wrap: wrap; gap: 3px; }
-.lp-tiles i { width: 9px; height: 9px; border-radius: 2px; background: var(--line-2); transition: background .35s; }
+.lp-tiles { align-self: start; display: grid; grid-template-columns: repeat(var(--per, 4), minmax(0, 9px)); gap: 3px; }
+.lp-tiles i { width: 100%; aspect-ratio: 1; height: auto; border-radius: 2px; background: var(--line-2); transition: background .35s; }
 .lp-item.known .lp-tiles i { background: var(--ink-soft); }
 .lp-item.known .lp-tiles i[data-pc] { background: var(--nc); }
 .lp-item.known .lp-tiles i.two { background: linear-gradient(90deg, var(--nc) 50%, var(--nc2) 50%); }

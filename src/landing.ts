@@ -15,8 +15,8 @@ document.querySelectorAll<HTMLButtonElement>('[data-pick]').forEach(b => b.addEv
 
 // ---------- Animação: o método Tile by Tile, em 4 cenas ----------
 // 1. Learn: a tab do refrão aparece e o cursor percorre-a em loop; o quadrado de cada compasso acende.
-// 2. Play it without: a tab desaparece; toca-se só pelos quadrados, 3 voltas, e na última cada quadrado
-//    vira para a cor da nota. O refrão passa a estar "de cor" e a percentagem sobe.
+// 2. Play it without: a tab desaparece e toca-se só pelos quadrados (com a cor e o acorde, como no leitor),
+//    3 voltas. No fim o refrão fica "de cor" (✓) e a percentagem sobe.
 // 3. Join it up: o refrão junta-se ao verso (já sabido) e um só cursor percorre os dois seguidos.
 // 4. Know it by heart: as secções que faltam acendem, a percentagem chega a 100% e os quadrados fazem uma onda.
 // Os passos de baixo acompanham e saltam para a cena ao clicar. Só se animam transform/opacity/filter
@@ -53,8 +53,8 @@ const tile = (chord: string, n: number, cls: string) => {
   const t = document.createElement('div'); t.className = cls; t.dataset.n = String(n);
   const c = document.createElement('span'); c.textContent = chord; t.append(c); return t;
 };
-// O refrão: 8 quadrados (2 linhas de 4, como no leitor)
-const chorusTiles = SECTIONS[CHORUS].chords.map(([c, n]) => tile(c, n, 'mq'));
+// O refrão: 8 quadrados (2 linhas de 4), com a cor e o acorde desde o início, como no esquema do leitor
+const chorusTiles = SECTIONS[CHORUS].chords.map(([c, n]) => tile(c, n, 'mq known'));
 $('mTiles').append(...chorusTiles);
 // A tab do refrão: 2 sistemas de 4 compassos
 const tabBars: HTMLElement[] = [];
@@ -110,11 +110,11 @@ const POP = spring(0.55, 11, 'cubic-bezier(.34,1.56,.64,1)');
 const anim = (el: Element, k: Keyframe[], o: KeyframeAnimationOptions) => el.animate(k, { fill: 'forwards', easing: EASE, ...o });
 
 /** Tempos das cenas (ms). As barras dos passos usam as mesmas contas, por isso acabam com a cena. */
-const T = { enter: 450, bar1: 260, bar2: 200, hide: 650, run: 190, flip: 220, join: 140, wave: 28, hold: 800, count: 14, tick: 40 };
+const T = { enter: 450, bar1: 260, bar2: 200, hide: 650, run: 210, join: 140, wave: 28, hold: 800, count: 14, tick: 40 };
 const COUNT_MS = T.count * T.tick;
 const DUR = [
   T.enter + 8 * T.bar1 + 8 * T.bar2 + 250,
-  T.hide + 16 * T.run + 8 * T.flip + COUNT_MS + T.hold,
+  T.hide + 24 * T.run + COUNT_MS + T.hold,
   T.enter + 250 + 550 + 400 + 16 * T.join + T.hold,
   T.enter + 200 + COUNT_MS + 250 + 600 + 24 * T.wave + T.hold,
 ];
@@ -151,7 +151,8 @@ function resetAll() {
   canvas.querySelectorAll('*').forEach(e => e.getAnimations().forEach(a => a.cancel()));
   canvas.classList.remove('fade');
   $('mTab').classList.remove('gone'); $('mCur').classList.remove('on');
-  chorusTiles.forEach(t => t.classList.remove('on', 'known'));
+  chorusTiles.forEach(t => t.classList.remove('on'));
+  $('mOk').classList.remove('on');
   setRuns(0, 'Loop · 75%');
   setStrip(segs, CHORUS); setStrip(bigSegs, CHORUS + 1);
   $('mPct').textContent = pctOf(CHORUS) + '%'; $('hPct').textContent = String(pctOf(CHORUS + 1));
@@ -161,7 +162,7 @@ function resetAll() {
 /** Estado no fim da cena 2 (o refrão já de cor), para saltar para as cenas 3 e 4. */
 function chorusKnown() {
   $('mTab').classList.add('gone');
-  chorusTiles.forEach(t => t.classList.add('known'));
+  $('mOk').classList.add('on');
   setRuns(3, 'By heart'); setStrip(segs, CHORUS + 1); $('mPct').textContent = pctOf(CHORUS + 1) + '%';
 }
 
@@ -197,19 +198,15 @@ async function sceneRecall() {
     setRuns(r, 'Run ' + (r + 1) + ' of 3 · no tab', r);
     for (let i = 0; i < 8; i++) {
       light(chorusTiles, i);
-      if (r === 2) {
-        // Última volta: cada quadrado vira e aparece na cor da nota
-        const t = chorusTiles[i];
-        anim(t, [{ transform: 'perspective(300px) rotateX(0)' }, { transform: 'perspective(300px) rotateX(90deg)' }], { duration: T.flip / 2, easing: 'ease-in' });
-        await wait(T.flip / 2); t.classList.add('known');
-        anim(t, [{ transform: 'perspective(300px) rotateX(-90deg)' }, { transform: 'none' }], { duration: 420, easing: POP });
-        await wait(T.flip / 2);
-      } else await wait(T.run);
+      await wait(T.run);
     }
     setRuns(r + 1, 'Run ' + (r + 1) + ' of 3 · no tab');
   }
   light(chorusTiles, -1);
   setRuns(3, 'By heart');
+  // O refrão já se toca de cor: ✓ e um pequeno salto em cascata nos quadrados
+  $('mOk').classList.add('on');
+  chorusTiles.forEach((t, j) => anim(t, [{ transform: 'none' }, { transform: 'translateY(-6px) scale(1.06)', offset: 0.4 }, { transform: 'none' }], { duration: 500, delay: j * 35, easing: EASE_IO, fill: 'none' }));
   // O refrão passa a estar de cor na faixa da música e a percentagem sobe
   setStrip(segs, CHORUS + 1);
   anim(segs[CHORUS], [{ transform: 'scaleY(1.5)' }, { transform: 'none' }], { duration: 500, easing: POP });

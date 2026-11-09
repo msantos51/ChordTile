@@ -44,7 +44,7 @@ const PALETTES = {
 const PX = 180 / 520;
 const pt = (px: number) => px * PX * 72 / 25.4;
 
-/** Desenha o esquema num A4 vertical, com o aspeto do site: fundo do tema, legenda das notas, secções e quadrados. */
+/** Desenha o esquema num A4 vertical (a música inteira numa folha), com o aspeto do site: fundo do tema, legenda das notas, secções e quadrados. */
 export function buildPdf(JsPdf: typeof JsPDF, chart: PdfChart, fonts?: PdfFonts): JsPDF {
   const doc = new JsPdf({ unit: 'mm', format: 'a4', orientation: 'portrait' });
   const P = PALETTES[chart.theme ?? 'dark'];
@@ -126,18 +126,30 @@ export function buildPdf(JsPdf: typeof JsPDF, chart: PdfChart, fonts?: PdfFonts)
   }
 
   const newPage = () => { doc.addPage(); paintPage(); y = M; };
-  const per = Math.max(1, chart.perRow);
-  const gap = 4 * PX;
+
+  // A música inteira numa só folha: escolhem-se as colunas e a escala (k) dos quadrados para caberem no espaço que sobra.
+  const { per, k } = fitLayout(chart, bottom - y, contentW, (text, px) => { font(SANS, 'medium', px, P.soft); return doc.getTextWidth(text); });
+  const u = PX * k;
+  const gap = 4 * u;
   const tileW = (contentW - gap * (per - 1)) / per;
-  const R = 10 * PX;
+  const R = Math.min(10 * u, tileW / 4);
+  const kcap = (px: number) => cap(px * k);
+  const kfont = (family: string, style: 'normal' | 'medium' | 'bold', px: number, color: Rgb) => font(family, style, px * k, color);
 
   /** "‖" desenhado com dois traços (as fontes Roboto não têm este sinal). Devolve o x a seguir. */
   const dbl = (x: number, base: number, px: number, color: Rgb) => {
-    const h = cap(px) * 1.25, w = 0.09 * px * PX;
+    const h = kcap(px) * 1.25, w = 0.09 * px * u;
     doc.setFillColor(...color);
-    doc.rect(x + 0.6 * px * PX * 0.18, base - h + cap(px) * 0.1, w, h, 'F');
-    doc.rect(x + 0.6 * px * PX * 0.18 + 2.2 * w, base - h + cap(px) * 0.1, w, h, 'F');
-    return x + 0.6 * px * PX * 0.7;
+    doc.rect(x + 0.6 * px * u * 0.18, base - h + kcap(px) * 0.1, w, h, 'F');
+    doc.rect(x + 0.6 * px * u * 0.18 + 2.2 * w, base - h + kcap(px) * 0.1, w, h, 'F');
+    return x + 0.6 * px * u * 0.7;
+  };
+  /** Linhas do texto pessoal de um compasso (até 2), na largura do quadrado. */
+  const noteLines = (note: string) => {
+    kfont(SANS, 'medium', 10.5, P.soft);
+    const all = doc.splitTextToSize(note, tileW - 12 * u) as string[], lines = all.slice(0, 2);
+    if (all.length > 2) lines[1] = lines[1].replace(/\s*\S?$/, '…');
+    return lines;
   };
 
   /** Um quadrado do esquema, como .bar no site. */
@@ -154,62 +166,64 @@ export function buildPdf(JsPdf: typeof JsPDF, chart: PdfChart, fonts?: PdfFonts)
     } else {
       // Gradiente vertical: um pouco mais claro em cima, a cor cheia em baixo
       const top = mix(c1, WHITE, 0.82), steps = 24, sh = th / steps;
-      for (let k = 0; k < steps; k++) {
-        doc.setFillColor(...mix(c1, top, k / (steps - 1)));
-        doc.rect(x, ty + k * sh, tileW, sh + 0.05, 'F');
+      for (let j = 0; j < steps; j++) {
+        doc.setFillColor(...mix(c1, top, j / (steps - 1)));
+        doc.rect(x, ty + j * sh, tileW, sh + 0.05, 'F');
       }
     }
-    if (c1) { doc.setFillColor(...mix(c1, BLACK, 0.72)); doc.rect(x, ty + th - 3 * PX, tileW, 3 * PX, 'F'); }
+    if (c1) { doc.setFillColor(...mix(c1, BLACK, 0.72)); doc.rect(x, ty + th - 3 * u, tileW, 3 * u, 'F'); }
     doc.restoreGraphicsState();
-    if (!c1) { doc.setDrawColor(...P.line); doc.setLineWidth(1 * PX); doc.roundedRect(x + PX / 2, ty + PX / 2, tileW - PX, th - PX, R, R, 'S'); }
+    if (!c1) { doc.setDrawColor(...P.line); doc.setLineWidth(1 * u); doc.roundedRect(x + u / 2, ty + u / 2, tileW - u, th - u, R, R, 'S'); }
 
     const back = c1 ?? P.panel;
     const numInk = c1 ? mix(NOTE_INK, back, 0.6) : P.soft;
-    font(MONO, 'normal', 9, numInk);
-    let nx = x + 6 * PX;
-    const ny = ty + 4 * PX + cap(9);
+    kfont(MONO, 'normal', 9, numInk);
+    let nx = x + 6 * u;
+    const ny = ty + 4 * u + kcap(9);
     if (bar.repeatStart) { nx = dbl(nx, ny, 9, numInk); doc.text(':', nx, ny); nx += doc.getTextWidth(': '); }
     doc.text(String(bar.n), nx, ny);
 
-    const chordPx = per > 6 ? 15 : 17;
-    font(SANS, 'bold', chordPx, c1 ? NOTE_INK : P.strong);
-    const chordY = bar.note ? ty + 10 * PX + cap(chordPx) : ty + th / 2 + cap(chordPx) / 2;
-    doc.text(bar.text, x + tileW / 2, chordY, { align: 'center', maxWidth: tileW - 8 * PX });
+    // O acorde numa só linha: se não couber na largura do quadrado, a letra encolhe
+    let chordPx = per > 6 ? 15 : 17;
+    kfont(SANS, 'bold', chordPx, c1 ? NOTE_INK : P.strong);
+    const room = tileW - 8 * u, tw = doc.getTextWidth(bar.text);
+    if (tw > room) { chordPx *= Math.max(0.5, room / tw); kfont(SANS, 'bold', chordPx, c1 ? NOTE_INK : P.strong); }
+    const chordY = bar.note ? ty + 10 * u + kcap(chordPx) : ty + th / 2 + kcap(chordPx) / 2;
+    doc.text(bar.text, x + tileW / 2, chordY, { align: 'center' });
     if (bar.note) {
-      font(SANS, 'medium', 10.5, c1 ? mix(NOTE_INK, back, 0.78) : P.soft);
-      const all = doc.splitTextToSize(bar.note, tileW - 12 * PX) as string[], lines = all.slice(0, 2);
-      if (all.length > 2) lines[1] = lines[1].replace(/\s*\S?$/, '…');
-      lines.forEach((l, k) => doc.text(l, x + tileW / 2, chordY + 8 * PX + cap(10.5) + k * 13 * PX, { align: 'center' }));
+      const lines = noteLines(bar.note);
+      kfont(SANS, 'medium', 10.5, c1 ? mix(NOTE_INK, back, 0.78) : P.soft);
+      lines.forEach((l, j) => doc.text(l, x + tileW / 2, chordY + 8 * u + kcap(10.5) + j * 13 * u, { align: 'center' }));
     }
     if (bar.repeats) {
       const ink = c1 ? NOTE_INK : P.strong, t = ' ×' + bar.repeats;
-      font(MONO, 'medium', 9, ink);
+      kfont(MONO, 'medium', 9, ink);
       const colon = doc.getTextWidth(':');
-      const bw = colon + 4 * PX + doc.getTextWidth(t) + 8 * PX, bh = 13 * PX, bx = x + tileW - 5 * PX - bw, by = ty + th - 4 * PX - bh;
+      const bw = colon + 4 * u + doc.getTextWidth(t) + 8 * u, bh = 13 * u, bx = x + tileW - 5 * u - bw, by = ty + th - 4 * u - bh;
       // Fundo do sinal como --rep-bg (branco a 12% no escuro, preto a 8% no claro)
       const light = chart.theme === 'light';
-      doc.setFillColor(...mix(light ? NOTE_INK : WHITE, back, light ? 0.08 : 0.12)); doc.roundedRect(bx, by, bw, bh, 3 * PX, 3 * PX, 'F');
-      const ry = by + bh / 2 + cap(9) / 2;
-      doc.text(':', bx + 4 * PX, ry);
-      doc.text(t, dbl(bx + 4 * PX + colon, ry, 9, ink), ry);
+      doc.setFillColor(...mix(light ? NOTE_INK : WHITE, back, light ? 0.08 : 0.12)); doc.roundedRect(bx, by, bw, bh, 3 * u, 3 * u, 'F');
+      const ry = by + bh / 2 + kcap(9) / 2;
+      doc.text(':', bx + 4 * u, ry);
+      doc.text(t, dbl(bx + 4 * u + colon, ry, 9, ink), ry);
     }
   };
 
-  const headH = 12 * PX + 8 * PX;
+  const headH = 20 * u;
+  // Como no site, a linha cresce com o texto pessoal (até 2 linhas)
+  const rowH = (row: PdfBar[]) => {
+    const lines = Math.max(0, ...row.map(b => (b.note ? noteLines(b.note).length : 0)));
+    return (lines ? 44 + lines * 13 : 44) * u;
+  };
   chart.sections.forEach((sec, si) => {
-    if (si > 0) y += 18 * PX;
-    // Como no site, a linha cresce com o texto pessoal (até 2 linhas)
-    const rowH = (row: PdfBar[]) => {
-      font(SANS, 'medium', 10.5, P.soft);
-      const lines = Math.max(0, ...row.map(b => (b.note ? Math.min(2, (doc.splitTextToSize(b.note, tileW - 12 * PX) as string[]).length) : 0)));
-      return (lines ? 44 + lines * 13 : 44) * PX;
-    };
+    if (si > 0) y += 18 * u;
     const firstRow = sec.bars.slice(0, per);
     // O nome da secção nunca fica sozinho no fim de uma página.
     if (y + headH + rowH(firstRow) > bottom) newPage();
-    const w = label(sec.name.toUpperCase(), M, y + cap(12), 12, P.strong, 0.1, SANS, 'bold');
+    const hy = y + kcap(12);
+    const w = label(sec.name.toUpperCase(), M, hy, 12 * k, P.strong, 0.1, SANS, 'bold');
     const meta = sec.range + (sec.bars.length ? ' · ' + sec.bars.length + ' bar' + (sec.bars.length === 1 ? '' : 's') : '');
-    if (sec.range) { font(MONO, 'normal', 11, P.soft); doc.text(meta, M + w + 10 * PX, y + cap(12)); }
+    if (sec.range) { kfont(MONO, 'normal', 11, P.soft); doc.text(meta, M + w + 10 * u, hy); }
     y += headH;
 
     for (let r = 0; r < sec.bars.length; r += per) {
@@ -238,6 +252,50 @@ export function buildPdf(JsPdf: typeof JsPDF, chart: PdfChart, fonts?: PdfFonts)
     doc.text(p + ' / ' + pages, W - M, H - M + 2, { align: 'right' });
   }
   return doc;
+}
+
+/**
+ * Colunas e escala dos quadrados para a música inteira caber em `avail` mm de altura (uma folha A4).
+ * Experimenta múltiplos das colunas do site (até 16) e fica com a que deixa os quadrados maiores;
+ * com espaço de sobra fica no tamanho normal (k = 1) e nas colunas do site.
+ * `noteWidth(text, px)`: largura do texto pessoal numa dada letra, para contar as linhas que ocupa.
+ */
+export function fitLayout(chart: Pick<PdfChart, 'sections' | 'perRow'>, avail: number, contentW: number,
+  noteWidth?: (text: string, px: number) => number): { per: number; k: number } {
+  const base = Math.max(1, chart.perRow);
+  const height = (per: number, k: number) => {
+    const u = PX * k, gap = 4 * u, tileW = (contentW - gap * (per - 1)) / per;
+    let h = 0;
+    chart.sections.forEach((sec, si) => {
+      if (si > 0) h += 18 * u;
+      h += 20 * u;
+      for (let r = 0; r < sec.bars.length; r += per) {
+        const lines = Math.max(0, ...sec.bars.slice(r, r + per).map(b => {
+          if (!b.note || !noteWidth) return b.note ? 1 : 0;
+          return Math.min(2, Math.ceil(noteWidth(b.note, 10.5 * k) / Math.max(1, tileW - 12 * u)));
+        }));
+        h += (lines ? 44 + lines * 13 : 44) * u + gap;
+      }
+      if (sec.bars.length) h -= gap;
+    });
+    return h;
+  };
+  const scaleFor = (per: number) => {
+    let k = 1;
+    // A altura é quase proporcional a k (só o texto pessoal muda de linhas): poucas aproximações chegam
+    for (let i = 0; i < 4; i++) { const h = height(per, k); if (h <= avail) break; k *= avail / h; }
+    return Math.max(0.2, Math.min(1, k));
+  };
+  const options: number[] = [];
+  for (let per = base; per <= Math.max(base, 16); per += base) options.push(per);
+  let best = { per: base, k: scaleFor(base) };
+  if (best.k >= 1) return best;
+  for (const per of options.slice(1)) {
+    const k = scaleFor(per);
+    if (k > best.k + 0.01) best = { per, k };
+    if (k >= 1) break;
+  }
+  return best;
 }
 
 /** Nome de ficheiro seguro a partir do título da música. */

@@ -1879,14 +1879,47 @@ select('learnSpeed').addEventListener('change', () => {
 new MutationObserver(() => { $('learnStatus').textContent = $('status').textContent; }).observe($('status'), { childList: true, subtree: true, characterData: true });
 $('learnBtn').addEventListener('click', enterLearn);
 $('learnCtaBtn').addEventListener('click', enterLearn);
-/** Cartão do Tile by Tile por cima do esquema: "Start", "Continue · 40% by heart" ou, no fim, "Practise again". */
+// A faixa pode ficar recolhida (num chip pequeno) para quem só quer ler a tab; a escolha fica guardada.
+const setCtaFolded = (folded: boolean) => {
+  $('learnCta').classList.toggle('folded', folded);
+  const fold = $('learnCtaFold');
+  fold.setAttribute('aria-expanded', String(!folded));
+  fold.setAttribute('aria-label', folded ? 'Expand Tile by Tile' : 'Collapse Tile by Tile');
+  fold.title = folded ? 'Expand' : 'Collapse';
+};
+setCtaFolded(storage.get<boolean>('mapa:learnCtaFolded') === true);
+$('learnCtaFold').addEventListener('click', () => {
+  const folded = !$('learnCta').classList.contains('folded');
+  storage.set('mapa:learnCtaFolded', folded); setCtaFolded(folded);
+});
+/**
+ * Faixa do Tile by Tile por cima do esquema: um segmento por secção (largura = compassos, com o nome lá dentro),
+ * a vermelho as que já se sabem de cor e com contorno a próxima; o botão diz o que vem a seguir.
+ */
 function updateLearnCta() {
   if (!st.score) return;
   const steps = learnSteps(), saved = storage.get<SavedLearn>(learnKey());
   const step = restoreStep(saved, steps, st.sections.length);
-  const pct = byHeartPct(knownSections(steps, step), secBars());
-  $('learnCtaBtn').textContent = saved?.done ? 'Practise again' : step > 0 ? 'Continue · ' + pct + '% by heart' : 'Start Tile by Tile';
-  $('learnCtaTitle').textContent = saved?.done ? 'You know this song by heart' : 'Learn this song by heart';
+  const bars = secBars();
+  const known = saved?.done ? bars.map(() => true) : knownSections(steps, step);
+  // A próxima secção a aprender: a primeira que ainda não se sabe de cor
+  const next = saved?.done ? -1 : known.indexOf(false);
+  const pct = byHeartPct(known, bars);
+  const track = $('learnCtaTrack');
+  track.replaceChildren(...st.sections.map((sec, k) => {
+    const seg = document.createElement('span');
+    seg.className = 'lc-seg' + (known[k] ? ' known' : k === next ? ' next' : '');
+    seg.style.flex = String(Math.max(1, bars[k]));
+    seg.title = sec.name + ' · ' + bars[k] + ' bar' + (bars[k] === 1 ? '' : 's') + (known[k] ? ' · by heart' : k === next ? ' · next' : '');
+    const name = document.createElement('span'); name.textContent = sec.name; seg.append(name);
+    return seg;
+  }));
+  const count = known.filter(Boolean).length;
+  track.setAttribute('aria-label', count + ' of ' + st.sections.length + ' sections by heart');
+  $('learnCtaPct').querySelector('strong')!.textContent = pct + '%';
+  const nextName = next >= 0 ? st.sections[next]?.name : '';
+  $('learnCtaBtnText').textContent = saved?.done ? 'Practise again' : step > 0 ? 'Continue' + (nextName ? ' · ' + nextName : '') : 'Start' + (nextName ? ' · ' + nextName : '');
+  $('learnCtaTitle').textContent = saved?.done ? 'You know it by heart' : 'Tile by Tile';
 }
 $('learnExit').addEventListener('click', exitLearn);
 $('learnText').addEventListener('click', () => $('learnText').classList.toggle('open'));

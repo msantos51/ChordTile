@@ -555,6 +555,7 @@ function openBarModal(i: number) {
   if (!st.score || !gateOk('expand')) return;
   // A música a tocar seguida não continua por trás da janela (aqui estuda-se um compasso); um loop de compasso continua.
   if (st.api?.playerState === PLAYING && st.loopBar < 0) st.api.pause();
+  if (learn.on) { cancelLearnCount(); hideLearnDone(); } // a contagem do passo não arranca a música por trás da janela
   modal.open = true;
   syncModalToggles();
   $('barModal').hidden = false; $('bmScrim').hidden = false;
@@ -571,6 +572,10 @@ function closeBarModal() {
     st.api?.pause(); clearLoop();
     if (st.ready) setStatus('Paused');
   }
+  // Tile by Tile: o leitor volta a ficar com o trecho do passo (o loop do compasso tinha-o substituído),
+  // parado no início, com as voltas já feitas como estavam.
+  const step = learn.on ? learnSteps()[learn.step] : null;
+  if (step) { const [from, to] = stepRange(step); setLearnLoop(from, to); syncLearnPlay(); }
   if (st.tabSel >= 0) placeTabSel();
 }
 function setModalBar(i: number) {
@@ -804,7 +809,9 @@ function initApi() {
     if (pendingScroll && st.playingBar >= 0) { pendingScroll = false; requestAnimationFrame(() => scrollTabToBar(st.playingBar, false)); }
   });
   // Tile by Tile: o trecho toca uma vez e pára; no fim conta-se a volta e vem a contagem (ou o fim do passo)
-  a.playerFinished.on(() => { if (learn.on) learnRunEnded(); });
+  // (O loop de um compasso expandido também "acaba" a cada volta: essas não são voltas do passo. Contá-las
+  // fazia vir a contagem e tocar a secção inteira com a janela de um só compasso ainda aberta.)
+  a.playerFinished.on(() => { if (learn.on && !modal.open && st.loopBar < 0) learnRunEnded(); });
   a.playerStateChanged.on(e => {
     const playing = e.state === PLAYING;
     if (!playing) { delay.clear(); releaseAudio(); practice.lastAt = 0; flushProgress(); }

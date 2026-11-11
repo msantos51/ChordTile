@@ -164,7 +164,8 @@ const CAPTURE = () => {
     await p.goto(BASE + 'player.html?learn'); await waitReady(); await p.waitForTimeout(800);
     if (gated) { ok(await p.locator('dialog[open]').count() === 1, 'no gate shown for guest'); await p.keyboard.press('Escape'); return 'guest: sign-up prompt shown (gated, as designed)'; }
     if (!(await p.locator('#learnPanel').isVisible())) return 'SKIP/INFO: panel not visible (gated or needs a song) — ' + (await p.evaluate(() => document.body.className));
-    const t = await p.textContent('#learnCount'); await p.click('#learnNext'); await p.waitForTimeout(500); const t2 = await p.textContent('#learnCount');
+    if (await p.locator('#learnIntro').isVisible()) await p.click('#learnIntroStart');
+    const t = await p.textContent('#learnTitle'); await p.click('#learnNext'); await p.waitForTimeout(500); const t2 = await p.textContent('#learnTitle');
     ok(t !== t2, 'next did nothing'); return `${t.trim()} → ${t2.trim()}`;
   });
   await test('Help, licenses and account pages load', async () => {

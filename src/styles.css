@@ -829,86 +829,98 @@ label.set-item { cursor: pointer; }
   .set-item:has(.set-inline) .set-label small { display: none; }
 }
 
-/* ---------- Tile by Tile (aprender de cor, secção a secção) ---------- */
+/* ---------- Tile by Tile (aprender sem a tab, secção a secção) ----------
+   De cima para baixo: as secções da música · os passos da secção de agora · o que fazer (uma frase) e as voltas ·
+   tocar / espreitar / velocidade / mais opções · voltar e passo seguinte. */
 .learn-btn { border-color: color-mix(in srgb, var(--accent) 55%, var(--line-2)); }
 .learn-btn .i { width: 15px; height: 15px; }
-.learn-panel { max-width: 1440px; margin: 0 auto 18px; padding: 16px 18px; border-radius: var(--r-card); background: var(--panel); border: 1px solid var(--line-2); display: grid; gap: 12px; }
-.learn-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.learn-heading { min-width: 0; }
-.learn-kicker { margin: 0 0 2px; font: 600 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-text); }
-.learn-panel h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
-.learn-text { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-soft); max-width: 70ch; }
-.learn-text strong { color: var(--ink); }
-.learn-pct { margin-left: auto; display: grid; justify-items: end; line-height: 1.1; }
+.learn-panel { max-width: 1440px; margin: 0 auto 18px; padding: 18px 22px; border-radius: var(--r-card); background: var(--panel); border: 1px solid var(--line-2);
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+/* Em cima: "Tile by Tile" · as secções · % sem tab, "?" e sair */
+.learn-head { display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; }
+.learn-kicker { font: 600 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-text); white-space: nowrap; }
+.learn-head-end { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.learn-pct { display: flex; align-items: baseline; gap: 5px; white-space: nowrap; }
 .learn-pct strong { font: 700 20px var(--f-mono); color: var(--accent-text); }
-.learn-pct span { font-size: 11px; color: var(--ink-soft); }
-/* Percurso: a música em miniatura. Uma peça por secção, um quadrado por compasso: cinzento até se saber de cor,
-   depois com a cor da nota. As secções já tocadas seguidas ficam ligadas por um traço. */
-.learn-path { list-style: none; margin: 0; padding: 2px 0 6px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: thin; }
-.lp-item { position: relative; flex: 1 0 112px; min-width: 0; }
-.lp-item.link::after { content: ""; position: absolute; top: 50%; right: -9px; width: 10px; height: 3px; border-radius: 2px; background: var(--accent); z-index: 1; }
-.lp-item button { width: 100%; height: 100%; display: grid; grid-template-rows: auto 1fr auto; gap: 7px; padding: 8px 10px; border-radius: var(--r-item, 10px); border: 1px solid var(--line-2);
-  background: transparent; color: var(--ink-soft); text-align: left; cursor: pointer; font: inherit; transition: border-color .2s, background .2s; }
-.lp-item button:hover { background: var(--panel-2); }
-.lp-item.now button { border-color: var(--accent); color: var(--ink); background: color-mix(in srgb, var(--accent) 10%, transparent); }
-.lp-item.known button { color: var(--ink); }
-.lp-name { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lp-item.known .lp-name::before { content: "✓ "; color: var(--accent-text); }
-.lp-tiles { align-self: start; display: grid; grid-template-columns: repeat(var(--per, 4), minmax(0, 9px)); gap: 3px; }
-.lp-tiles i { width: 100%; aspect-ratio: 1; height: auto; border-radius: 2px; background: var(--line-2); transition: background .35s; }
-.lp-item.known .lp-tiles i { background: var(--ink-soft); }
-.lp-item.known .lp-tiles i[data-pc] { background: var(--nc); }
-.lp-item.known .lp-tiles i.two { background: linear-gradient(90deg, var(--nc) 50%, var(--nc2) 50%); }
-/* Acabou de se saber de cor: os quadrados acendem-se um a um */
-.lp-item.lit .lp-tiles i { animation: lp-light .5s var(--d, 0ms) both cubic-bezier(.2, .9, .3, 1.4); }
+.learn-pct span { font-size: 12px; color: var(--ink-soft); }
+.learn-how { font-weight: 700; }
+/* As secções: ✓ já sem tab · cheia a de agora · as outras com contorno */
+.learn-path { list-style: none; margin: 0; padding: 2px; display: flex; gap: 6px; flex: 1 1 320px; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
+.lp-item { flex: none; }
+.lp-item button { height: 34px; padding: 0 13px; border-radius: var(--r-pill); border: 1px solid var(--line-2); background: transparent; color: var(--ink-soft);
+  font: 500 13px var(--f-body); white-space: nowrap; cursor: pointer; transition: background .2s, border-color .2s, color .2s; }
+.lp-item button:hover { border-color: var(--hover-line); color: var(--ink); }
+.lp-item.known button { border-color: transparent; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent-text); font-weight: 700; }
+.lp-item.known button::before { content: "✓ "; }
+.lp-item.now button { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.lp-item.now button[aria-current]::before { content: "● "; }
+.lp-item.now.known button::before { content: "✓ "; }
+/* Acabou de se tocar sem a tab: a etiqueta brilha */
 .lp-item.lit button { animation: lp-glow 1.4s ease-out; }
 @keyframes lp-light { from { transform: scale(.2); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes lp-glow { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); } 100% { box-shadow: 0 0 0 14px transparent; } }
-.lp-pips { display: flex; gap: 3px; }
-.lp-pips i { flex: 1; height: 4px; border-radius: var(--r-pill); background: var(--line-2); }
-.lp-pips i.done { background: color-mix(in srgb, var(--accent) 55%, var(--line-2)); }
-.lp-pips i.now { background: var(--accent); }
-/* A etapa atual */
-.learn-stage { display: grid; gap: 4px; }
-.learn-phase { margin: 0; font-size: 13px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.learn-phase .lp-n { font: 600 10.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: var(--r-pill);
-  background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent-text); }
-.learn-phase .lp-n.final { background: var(--accent); color: var(--accent-ink); }
-/* Voltas deste passo: ●●○ 2 of 3 */
-.learn-runs { margin: 4px 0 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-soft); }
+/* Os passos da secção de agora */
+.learn-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
+.learn-steps li { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px 14px; border-radius: var(--r-item, 12px); background: var(--bg); color: var(--ink-soft); font-size: 14px; }
+.learn-steps li span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.learn-steps b { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; border: 2px solid var(--line-2); box-sizing: border-box; }
+.learn-steps li.done b { border: 0; background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent-text); }
+.learn-steps li.now { outline: 2px solid var(--accent); outline-offset: -2px; color: var(--ink); font-weight: 700; }
+.learn-steps li.now b { border: 0; background: var(--accent); color: var(--accent-ink); }
+/* O que fazer agora, numa frase · as voltas */
+.learn-stage { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 40px; }
+.learn-what { flex: 1 1 420px; min-width: 0; display: grid; gap: 6px; }
+.learn-panel h2 { margin: 0; font-size: clamp(20px, 2vw, 26px); line-height: 1.2; font-weight: 800; letter-spacing: -.01em; text-wrap: balance; }
+.learn-text { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--ink-soft); max-width: 75ch; }
+.learn-text strong { color: var(--ink); }
+.learn-runs { margin: 0; display: flex; align-items: center; gap: 12px; }
 .learn-runs:empty { display: none; }
-.lr-pips { display: inline-flex; gap: 6px; }
-.lr-pips i { width: 14px; height: 14px; border-radius: 4px; border: 2px solid var(--line-2); transition: background .25s, border-color .25s, transform .25s; }
-.lr-pips i.on { background: var(--accent); border-color: var(--accent); transform: scale(1.08); animation: lp-light .45s both cubic-bezier(.2, .9, .3, 1.4); }
-.lr-count { font: 700 12.5px var(--f-mono); color: var(--ink); }
+.lr-pips { display: inline-flex; gap: 8px; }
+.lr-pips i { width: 38px; height: 38px; border-radius: 50%; border: 2px dashed var(--line-2); box-sizing: border-box; display: grid; place-items: center;
+  font: 800 16px var(--f-body); font-style: normal; color: var(--accent-ink); transition: background .25s, border-color .25s; }
+.lr-pips i.on { border: 0; background: var(--accent); animation: lp-light .45s both cubic-bezier(.2, .9, .3, 1.4); }
+.lr-count { font: 700 14px var(--f-mono); color: var(--ink); white-space: nowrap; }
 .learn-runs.met .lr-count { color: var(--accent-text); }
 /* Peek: só nos passos sem a tab */
 .learn-peek { display: none; user-select: none; -webkit-user-select: none; touch-action: none; -webkit-touch-callout: none; }
 body.learn-tiles .learn-peek { display: inline-flex; }
 .learn-peek[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, transparent); }
-/* O passo seguinte acende-se quando se fizeram as voltas */
-.learn-next.ready { animation: ln-ready 1.6s ease-in-out infinite; }
-@keyframes ln-ready { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); } 60% { box-shadow: 0 0 0 10px transparent; } }
-@media (prefers-reduced-motion: reduce) { .lp-item.lit .lp-tiles i, .lp-item.lit button, .lr-pips i.on, .learn-next.ready { animation: none; } }
-/* Comandos do leitor (a barra de baixo esconde-se enquanto se aprende): tocar e velocidade · opções, na mesma linha */
-.learn-panel { grid-template-columns: auto minmax(0, 1fr); column-gap: 0; }
-.learn-panel > *, .learn-nav { grid-column: 1 / -1; }
-.learn-dock { display: contents; }
-.learn-controls { order: 4; grid-column: 1; display: flex; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
-.learn-tools { order: 5; grid-column: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 0 0 12px; border-top: 1px solid var(--line); }
+.learn-more[aria-expanded="true"] { border-color: var(--accent); }
+/* Comandos (a barra de baixo esconde-se enquanto se aprende): tocar, espreitar, velocidade, mais opções · voltar e seguinte */
+.learn-dock { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-top: 16px; border-top: 1px solid var(--line); }
+.learn-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.learn-controls .learn-play { min-height: var(--h-ctl-lg); padding: 0 22px; }
+.learn-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px; border-radius: var(--r-item, 12px); background: var(--bg); }
 .learn-tools .tbtn:disabled { opacity: .5; }
 .learn-status { flex: 1 1 140px; min-width: 0; font-size: 12px; color: var(--ink-soft); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* Navegação: voltar · o próximo passo, bem à vista */
-.learn-nav { order: 6; display: flex; align-items: stretch; gap: 10px; }
+.learn-nav { margin-left: auto; display: flex; align-items: stretch; gap: 10px; }
 .learn-back { height: auto; min-height: var(--h-ctl-lg); }
 .learn-back .i { width: 16px; height: 16px; }
-.learn-next { margin-left: auto; display: inline-flex; align-items: center; gap: 14px; min-height: var(--h-ctl-lg); padding: 8px 14px 8px 18px;
-  border-radius: var(--r-item, 12px); border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); text-align: left; cursor: pointer; font: inherit; }
+/* O passo seguinte: discreto enquanto faltam voltas (pode-se saltar), vermelho quando estão feitas */
+.learn-next { display: inline-flex; align-items: center; gap: 14px; min-height: var(--h-ctl-lg); padding: 8px 14px 8px 18px;
+  border-radius: var(--r-item, 12px); border: 1px solid var(--line-2); background: var(--panel-2); color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
+.learn-next.ready { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); animation: ln-ready 1.6s ease-in-out infinite; }
 .learn-next:hover { filter: brightness(1.08); }
 .learn-next .ln-text { display: grid; line-height: 1.2; min-width: 0; }
-.learn-next small { font-size: 11px; font-weight: 500; opacity: .85; }
+.learn-next small { font-size: 11.5px; font-weight: 500; opacity: .85; }
 .learn-next strong { font-size: 14.5px; font-weight: 700; }
 .learn-next .i { width: 20px; height: 20px; flex: none; }
+@keyframes ln-ready { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); } 60% { box-shadow: 0 0 0 10px transparent; } }
+@media (prefers-reduced-motion: reduce) { .lp-item.lit button, .lr-pips i.on, .learn-next.ready { animation: none; } }
+/* "How it works": o método numa janela */
+.learn-intro { position: fixed; z-index: 31; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(720px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg, 16px); box-shadow: var(--shadow); padding: 28px 24px 22px; display: grid; gap: 16px; }
+#learnIntroScrim { z-index: 30; }
+.learn-intro h2 { margin: 0; font-size: 24px; line-height: 1.2; }
+.learn-intro p { margin: 0; }
+.li-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.li-steps li { display: flex; flex-direction: column; gap: 6px; padding: 16px; border-radius: var(--r-item, 12px); background: var(--bg); }
+.li-steps b { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 800; }
+.li-steps strong { font-size: 16px; }
+.li-steps span { font-size: 13.5px; line-height: 1.45; color: var(--ink-soft); }
+.li-steps em { font: 500 12px var(--f-mono); font-style: normal; color: var(--accent-text); margin-top: auto; }
+.li-end { font-size: 14px; color: var(--ink-soft); padding: 12px 16px; border-radius: var(--r-item, 12px); background: var(--bg); }
+.li-start { justify-self: end; min-height: var(--h-ctl-lg); padding: 0 24px; }
 body.learning .dock, body.learning .barbar { display: none !important; }
 /* Etapa "tab": só a tablatura, numa coluna */
 body.learning .viewswitch { display: none !important; }
@@ -927,39 +939,43 @@ body.learning.learn-tiles.peeking .tabcol { visibility: visible; opacity: 1; tra
 body.learning .sbtn[aria-label^="Practise"], body.learning .learn-btn { display: none; }
 @media (max-width: 600px) {
   /* Painel compacto: o que se está a aprender (tab ou quadrados) tem de caber no ecrã */
-  .learn-panel { padding: 12px; margin-bottom: 12px; gap: 10px; }
-  .learn-head { align-items: center; gap: 10px; }
-  .learn-kicker { font-size: 10px; letter-spacing: .06em; }
-  .learn-panel h2 { font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .learn-panel { padding: 12px; margin-bottom: 12px; gap: 12px; }
+  .learn-head { gap: 10px; }
+  .learn-path { order: 3; flex-basis: 100%; }
+  .lp-item button { height: 32px; padding: 0 11px; font-size: 12.5px; }
   .learn-pct strong { font-size: 16px; }
-  .learn-pct span { font-size: 10px; }
-  .lp-item { flex-basis: 84px; }
-  .lp-item button { padding: 6px 8px; gap: 5px; }
-  .lp-name { font-size: 12px; }
-  .learn-phase { font-size: 12.5px; }
-  /* A explicação em duas linhas; toca para ler tudo */
-  .learn-text { font-size: 13px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
-  .learn-text.open { display: block; }
-  .learn-tools { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 10px 0 0; }
+  .learn-steps { gap: 6px; }
+  .learn-steps li { flex-direction: column; gap: 5px; padding: 8px 4px; font-size: 12px; text-align: center; }
+  .learn-steps li span { white-space: normal; }
+  .learn-steps b { width: 24px; height: 24px; font-size: 12px; }
+  .learn-panel h2 { font-size: 19px; }
+  .learn-text { font-size: 13px; line-height: 1.45; }
+  .lr-pips i { width: 32px; height: 32px; font-size: 14px; }
+  .learn-tools { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 8px; }
   .learn-tools .tbtn { width: auto; min-width: 0; min-height: 44px; padding: 4px; }
   .learn-tools .tbtn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .learn-status { display: none; }
-  /* Tocar, velocidade e passo seguinte fixos em baixo, como a barra do leitor */
+  /* Tocar, espreitar, opções e passo seguinte fixos em baixo, como a barra do leitor */
   .learn-dock { display: grid; gap: 8px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 8; background: var(--dock);
     border-top: 1px solid var(--line-2); box-shadow: 0 -10px 40px rgba(0, 0, 0, .3);
     padding: 8px max(12px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
   .learn-panel[hidden] .learn-dock { display: none; }
-  .learn-controls { display: flex; gap: 8px; padding: 0; border: 0; }
-  .learn-controls .learn-play { flex: 1; justify-content: center; min-height: 44px; }
-  .learn-controls .learn-play span { display: inline; }
+  .learn-controls { flex-wrap: nowrap; gap: 8px; }
+  .learn-controls .learn-play { flex: 1; justify-content: center; min-height: 48px; }
+  .learn-controls .learn-play span { display: inline; white-space: nowrap; }
+  .learn-controls .learn-play { padding: 0 14px; min-width: 0; }
   .learn-controls .speed { flex: none; width: auto; }
-  .learn-nav { gap: 8px; }
+  .learn-controls .speed > .i { display: none; }
+  .learn-peek span, .learn-more span { display: none; }
+  .learn-peek, .learn-more { width: 48px; min-height: 48px; padding: 0; justify-content: center; flex: none; }
+  .learn-nav { margin: 0; gap: 8px; }
   .learn-back { width: 48px; padding: 0; justify-content: center; }
   .learn-back span { display: none; }
   .learn-next { flex: 1; min-width: 0; min-height: 48px; padding: 6px 12px 6px 14px; gap: 10px; justify-content: space-between; }
   .learn-next small { font-size: 10.5px; }
   .learn-next strong { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .learn-btn span { display: none; }
+  .li-start { justify-self: stretch; }
   /* Menos distrações: sem o cabeçalho "Chart / Export PDF"; tab sem espaço vazio por baixo */
   body.learning .chartcol > .panel-head { display: none; }
   body.learning #tab { min-height: 0; }

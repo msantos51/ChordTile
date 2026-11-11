@@ -89,29 +89,25 @@
     <div class="content-main">
     <div id="err" hidden class="error"></div>
     <section class="learn-panel" id="learnPanel" hidden aria-labelledby="learnTitle">
+      <!-- Em cima: as secções da música (✓ já sem tab · ● a de agora), quanto já se toca sem a tab e sair -->
       <div class="learn-head">
-        <div class="learn-heading">
-          <p class="learn-kicker"><span id="learnName">Tile by Tile</span> · <span id="learnCount">Step 1 of 9</span></p>
-          <h2 id="learnTitle">Intro</h2>
+        <span class="learn-kicker" id="learnName">Tile by Tile</span>
+        <ol class="learn-path" id="learnTrack" aria-label="Sections of the song"></ol>
+        <div class="learn-head-end">
+          <div class="learn-pct" title="How much of the song you can already play without the tab"><strong id="learnPct">0%</strong><span>no tab</span></div>
+          <button class="ibtn learn-how" id="learnHow" type="button" aria-label="How Tile by Tile works" title="How it works">?</button>
+          <button class="btn sm" id="learnExit" type="button">Exit</button>
         </div>
-        <div class="learn-pct" title="How much of the song you can already play without the tab"><strong id="learnPct">0%</strong><span>no tab</span></div>
-        <button class="btn sm" id="learnExit" type="button">Exit</button>
       </div>
-      <!-- O percurso é a música: uma peça por secção, com um quadrado por compasso, que ganha cor quando se sabe de cor -->
-      <ol class="learn-path" id="learnTrack" aria-label="Your progress"></ol>
+      <!-- Os passos da secção de agora: com a tab · sem a tab · juntar às anteriores -->
+      <ol class="learn-steps" id="learnSteps" aria-label="Steps for this section"></ol>
+      <!-- O que fazer agora, numa frase, e as voltas que faltam -->
       <div class="learn-stage">
-        <p class="learn-phase" id="learnPhase"></p>
-        <p class="learn-text" id="learnText"></p>
-        <!-- Voltas do loop neste passo (sem espreitar a tab) -->
+        <div class="learn-what">
+          <h2 id="learnTitle">Intro</h2>
+          <p class="learn-text" id="learnText"></p>
+        </div>
         <p class="learn-runs" id="learnRuns" aria-live="polite"></p>
-      </div>
-      <!-- Opções do leitor (metrónomo, contagem, tocar por cima, solo) -->
-      <div class="learn-tools" role="group" aria-label="Player options">
-        <button class="tbtn" type="button" data-for="metroBtn" data-gate="tools" aria-pressed="false" title="Metronome"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l3.5 18h-13z"/><path d="M12 16l6-8"/></svg><span>Metronome</span></button>
-        <button class="tbtn" type="button" data-for="countBtn" data-gate="tools" aria-pressed="false" title="Count-in"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg><span>Count-in</span></button>
-        <button class="tbtn" type="button" data-for="muteBtn" data-gate="playalong" aria-pressed="false" title="Mute my instrument and play along"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg><span>Play along</span></button>
-        <button class="tbtn" type="button" data-for="soloBtn" data-gate="solo" aria-pressed="false" title="Only my instrument: mutes the rest of the band"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><span>Solo</span></button>
-        <span class="learn-status" id="learnStatus" aria-live="polite"></span>
       </div>
       <!-- Os comandos do leitor ficam aqui enquanto se aprende (a barra de baixo esconde-se).
            No telemóvel ficam fixos em baixo, sempre à mão, para a tab e os quadrados caberem no ecrã. -->
@@ -123,6 +119,7 @@
             <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 14l4-5"/></svg>
             <select id="learnSpeed" aria-label="Speed"><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="100" selected>100%</option><option value="125">125%</option></select>
           </label>
+          <button class="btn learn-more" id="learnMore" type="button" aria-expanded="false" aria-controls="learnTools"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="18" r="2"/></svg><span>More options</span></button>
         </div>
         <div class="learn-nav">
           <button class="btn learn-back" id="learnBack" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Back</span></button>
@@ -131,6 +128,14 @@
             <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
         </div>
+      </div>
+      <!-- Opções do leitor (metrónomo, contagem, tocar por cima, solo), escondidas até se pedirem -->
+      <div class="learn-tools" id="learnTools" role="group" aria-label="More options" hidden>
+        <button class="tbtn" type="button" data-for="metroBtn" data-gate="tools" aria-pressed="false" title="Metronome"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l3.5 18h-13z"/><path d="M12 16l6-8"/></svg><span>Metronome</span></button>
+        <button class="tbtn" type="button" data-for="countBtn" data-gate="tools" aria-pressed="false" title="Count-in"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg><span>Count-in</span></button>
+        <button class="tbtn" type="button" data-for="muteBtn" data-gate="playalong" aria-pressed="false" title="Mute my instrument and play along"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg><span>Play along</span></button>
+        <button class="tbtn" type="button" data-for="soloBtn" data-gate="solo" aria-pressed="false" title="Only my instrument: mutes the rest of the band"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><span>Solo</span></button>
+        <span class="learn-status" id="learnStatus" aria-live="polite"></span>
       </div>
     </section>
     <!-- Destaque do método Tile by Tile (escondido enquanto se aprende) -->
@@ -390,6 +395,20 @@
   </div>
 </aside>
 
+<div class="scrim" id="learnIntroScrim" hidden></div>
+<section class="learn-intro" id="learnIntro" role="dialog" aria-modal="true" aria-labelledby="liTitle" hidden>
+  <button class="ibtn pw-close" id="learnIntroClose" type="button" aria-label="Close">✕</button>
+  <p class="pw-kicker">Tile by Tile</p>
+  <h2 id="liTitle">You’ll learn this song in 5 sections.</h2>
+  <p class="pw-lead">Each section goes through the same steps. The song plays on loop and counts every run for you.</p>
+  <ol class="li-steps">
+    <li><b>1</b><strong>With the tab</strong><span>Read the tab and play along, as slow as you need.</span><em>3 runs</em></li>
+    <li><b>2</b><strong>Without the tab</strong><span>The tab hides and only the chord tiles stay. Play it from memory.</span><em>3 runs · no peeking</em></li>
+    <li><b>3</b><strong>Join it</strong><span>Play it right after the sections you already know, still with no tab.</span><em>2 runs</em></li>
+  </ol>
+  <p class="li-end">After the last section you play the whole song once, start to finish, with no tab.</p>
+  <button class="btn primary li-start" id="learnIntroStart" type="button">Start</button>
+</section>
 <div class="scrim" id="pwScrim" hidden></div>
 <section class="paywall" id="paywall" role="dialog" aria-modal="true" aria-labelledby="pwTitle" hidden>
   <button class="ibtn pw-close" id="pwClose" type="button" aria-label="Close">✕</button>

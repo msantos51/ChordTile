@@ -141,6 +141,19 @@ const BAR = 3840;
     await p.click('#learnPlay'); await p.waitForTimeout(300); // cancela a contagem da volta seguinte
     await pause();
   });
+  await test('Tile by Tile: an expanded bar loops only itself, its loops are not runs of the step', async () => {
+    const runs = () => p.evaluate(() => document.getElementById('learnRuns').textContent);
+    const before = await runs();
+    await clickTab(1); await p.click('#tsExpand'); await p.waitForTimeout(400);
+    await p.click('#bmPlay');
+    let min = Infinity, max = 0; const t0 = Date.now();
+    while (Date.now() - t0 < 7000) { const c = await S(); min = Math.min(min, c.tick); max = Math.max(max, c.tick); await p.waitForTimeout(80); } // 3 ou mais voltas
+    ok(min >= BAR - 30 && max <= 2 * BAR + 30, 'left the bar: ticks ' + min + '…' + max);
+    ok((await runs()) === before, 'bar loops counted as runs: ' + await runs());
+    ok(await p.evaluate(() => document.getElementById('learnOverlay').hidden), 'count-in/overlay shown over the window');
+    await p.click('#bmClose'); await p.waitForTimeout(500);
+    const c = await S(); ok(c.state === 0 && c.range && c.range[0] === 0 && c.range[1] === 4 * BAR && !c.looping, 'step range not restored: ' + JSON.stringify(c));
+  });
   await test('Opening another (shorter) song while in Tile by Tile works', async () => {
     await loadRepeats();
     ok(await p.locator('#chart .bar').count() === 8, 'bars: ' + await p.locator('#chart .bar').count());

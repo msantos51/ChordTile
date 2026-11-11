@@ -30,6 +30,14 @@ npm run dev        # servidor local em http://localhost:5173
 | `npm run build` | Gera o site em `dist/` |
 | `npm run preview` | Serve o `dist/` localmente |
 
+Testes no browser (Playwright), com o site a correr:
+
+| Comando | O que verifica |
+|---|---|
+| `node qa/e2e.cjs http://localhost:4173/ prod` | Percursos principais (depois de `npm run build && npm run preview`) |
+| `node qa/tab-sync.cjs http://localhost:5173/` | Leitor, tablatura e esquema em sintonia: loop + clique na tablatura, repetições, Stop e fim da música, Tile by Tile, troca de música (com `npm run dev`) |
+| `node qa/account-sync.cjs http://localhost:5174/` | Conta e sincronização dos dados, com um Supabase simulado (o comando para servir o site está no cabeçalho do ficheiro) |
+
 ## Estrutura
 
 ```
@@ -111,6 +119,19 @@ públicos do alphaTab (se não os encontrar, volta ao método antigo). O som "Cl
 Para confirmar, compara-se, no mesmo fluxo, o clique do alphaTab (volume 1) com o som do site: coincidem na mesma
 amostra em todas as batidas (a velocidades diferentes, com contagem, a meio da música, depois de pausar e em loop).
 
+### O trecho a tocar (loop, Tile by Tile) e a tablatura
+
+O loop de uma secção ou de um compasso e os passos do Tile by Tile são um **trecho** (`playbackRange`) pedido ao alphaTab.
+O alphaTab também mexe nesse trecho por conta própria: um clique na tablatura tira-o e arrastar cria outro. Por isso o site
+guarda o trecho que pediu (`ownRange`, em `src/main.ts`) e repõe-o depois de cada clique na tablatura (`beatMouseUp`); a posição
+clicada mantém-se se estiver dentro do trecho. Sem loop, arrastar na tablatura não deixa nenhum trecho escondido.
+
+- Os limites do trecho vêm da ordem real de reprodução (`tickCache.masterBars`): com **repetições**, o loop de um compasso é só
+  esse compasso, e o de uma secção inclui as suas repetições (`barEndTick`, `barsRange`).
+- **Stop** e o fim da música levam o leitor ao início do trecho (ou da música); o esquema e a barra de progresso acompanham.
+- No Tile by Tile, as setas e os cliques não saem da secção do passo.
+- Largar o botão do rato fora da tablatura acaba o clique na mesma (entrega-se à tablatura o "largar" que ela esperava).
+
 ### alphaTab
 
 A leitura dos ficheiros, a tablatura e o som usam o [alphaTab](https://alphatab.net) (MPL-2.0). É servido como
@@ -129,6 +150,13 @@ Tudo fica na conta (Supabase): cada música é um ficheiro no bucket privado `so
 id título | artista | nº de compassos) e uma linha na tabela `songs`; as alterações (secções, notas, instrumento), o progresso,
 o passo do Tile by Tile e as preferências ficam na tabela `user_data` (chave → valor). O site guarda tudo em memória enquanto a
 página está aberta e envia as alterações a cada 1,5 s (`src/app/user-store.ts`). **No browser só fica a sessão de login.**
+
+- Os envios vão um de cada vez e por ordem; ao fechar a página (ou ao passá-la para segundo plano), o que falta segue logo num
+  pedido `keepalive`, que o browser acaba mesmo depois de a página fechar.
+- Ao voltar ao separador (e quando a rede volta), o site lê outra vez os dados da conta e mostra o que mudou noutro dispositivo
+  (notas, secções, instrumento, progresso, Tile by Tile, preferências). O que foi alterado aqui e ainda não seguiu nunca é substituído.
+- Se a página abrir sem rede, nada é enviado até se conseguir ler a conta (senão os valores por defeito escreviam por cima dos guardados).
+
 Na primeira vez que alguém entra num browser onde uma versão antiga deixou músicas (IndexedDB) ou dados (`localStorage`),
 o site passa-os para a conta e apaga-os do browser (`src/app/library.ts`). O tutorial abre sozinho na primeira vez numa
 conta (`mapa:tour-visto` em `user_data`) e pode ser revisto no menu "?" ou em Settings.
@@ -159,7 +187,7 @@ Cada PR corre os testes, a verificação de tipos e o build (`.github/workflows/
 Quem cria conta (email e palavra-passe, com "Forgot your password?" por email) pode carregar as suas músicas, que ficam na conta e aparecem em qualquer dispositivo. Sem configuração, o site funciona sem contas (tudo desbloqueado) e a secção de conta não aparece.
 
 1. Cria um projeto em [supabase.com](https://supabase.com) (o plano grátis chega para começar).
-2. No **SQL Editor**, corre por ordem os ficheiros de `supabase/migrations/` (001 a 004: músicas, bucket privado, planos, experiência de 7 dias, limite por conta e `user_data`).
+2. No **SQL Editor**, corre por ordem os ficheiros de `supabase/migrations/` (001 a 006: músicas, bucket privado, planos, experiência de 7 dias, limite por conta e `user_data`, contacto, e substituir o ficheiro de uma música já guardada sem contar para o limite).
 3. Em **Authentication → URL Configuration**, põe `https://www.chordtile.com/` em *Site URL* e acrescenta `https://www.chordtile.com/player` e `https://www.chordtile.com/account` e `http://localhost:5173/player.html` em *Redirect URLs*.
 4. Põe a *Project URL* e a chave pública (*publishable* ou *anon*) em `.env.production`. Esse ficheiro já tem o projeto do site e é usado no build (`npm run build` e o deploy). Para testar com outro projeto em `npm run dev`, cria um `.env.local` a partir de `.env.example`.
 
@@ -168,7 +196,8 @@ A chave *anon* é pública por natureza; quem protege os dados são as regras RL
 Como funciona "My songs" (`src/app/cloud.ts`):
 - carregar uma música envia logo o ficheiro e a linha; abrir uma atualiza a data (para abrir a última em qualquer dispositivo);
 - apagar apaga a linha, o ficheiro e os dados dela em `user_data`;
-- o limite de músicas é imposto no servidor (`supabase/migrations/004_account_only.sql`): Gratuito 3, Premium sem limite.
+- o limite de músicas é imposto no servidor (`supabase/migrations/004_account_only.sql` e `006_replace_file.sql`): Gratuito 3, Premium sem limite;
+- voltar a carregar uma música que já está na conta substitui o ficheiro (não conta para o limite); apagar a música que está aberta abre a seguinte.
 
 ## Premium
 
@@ -196,7 +225,7 @@ A tabela, as regras e a função `stripe-webhook` já estão no projeto Supabase
 2. Cria um **Payment Link** para cada preço. Em *After payment*, escolhe "Don't show confirmation page" e redireciona para `https://www.chordtile.com/player?checkout=success`. Ativa a recolha de morada/IVA se usares o Stripe Tax.
 3. Em **Settings → Billing → Customer portal**, ativa o portal e copia o *link de login*.
 4. Põe os 3 links e o do portal em `.env.production` (`VITE_STRIPE_LINK_*` e `VITE_STRIPE_PORTAL_URL`).
-5. Em **Developers → Webhooks**, adiciona o endpoint `https://dgxmxzhkbbosiadexayy.supabase.co/functions/v1/stripe-webhook` com os eventos `checkout.session.completed`, `customer.subscription.updated` e `customer.subscription.deleted`.
-6. No Supabase, em **Edge Functions → Secrets**, cria `STRIPE_SECRET_KEY` (chave secreta da Stripe, `sk_...` ou uma *restricted key* com leitura de subscrições) e `STRIPE_WEBHOOK_SECRET` (o `whsec_...` do passo 5).
+5. Em **Developers → Webhooks**, adiciona o endpoint `https://dgxmxzhkbbosiadexayy.supabase.co/functions/v1/stripe-webhook` com os eventos `checkout.session.completed`, `customer.subscription.updated` e `customer.subscription.deleted` (e `checkout.session.async_payment_succeeded`, se ativares métodos de pagamento que só confirmam mais tarde).
+6. No Supabase, em **Edge Functions → Secrets**, cria `STRIPE_SECRET_KEY` (chave secreta da Stripe, `sk_...` ou uma *restricted key* com leitura **e escrita** de subscrições: a função cancela a subscrição de quem compra a vitalícia ou apaga a conta) e `STRIPE_WEBHOOK_SECRET` (o `whsec_...` do passo 5).
 
 O site junta o id da conta a cada link (`client_reference_id`); a função recebe o pagamento e ativa o Premium dessa conta. Ao voltar do pagamento (`?checkout=success`), o site espera uns segundos até o Premium aparecer.

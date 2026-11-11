@@ -1,5 +1,5 @@
 // Página inicial: apresenta o método Tile by Tile (e o leitor, em segundo plano). Não guarda nada no browser:
-// "Learn a song by heart" leva ao leitor, onde a música é carregada e guardada na conta (sem conta, pede primeiro para criar uma grátis).
+// "Pick a song to learn" leva ao leitor, onde a música é carregada e guardada na conta (sem conta, pede primeiro para criar uma grátis).
 import './fonts';
 import './landing.css';
 import { accountsEnabled, storedAccount } from './app/session-hint';
@@ -18,7 +18,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-pick]').forEach(b => b.addEv
 // 2. Play it without: a tab desaparece e toca-se só pelos quadrados (com a cor e o acorde, como no leitor),
 //    3 voltas. No fim o refrão fica "de cor" (✓) e a percentagem sobe.
 // 3. Join it up: o refrão junta-se ao verso (já sabido) e um só cursor percorre os dois seguidos.
-// 4. Know it by heart: as secções que faltam acendem, a percentagem chega a 100% e os quadrados fazem uma onda.
+// 4. Play it all, no tab: as secções que faltam acendem, a percentagem chega a 100% e os quadrados fazem uma onda.
 // Os passos de baixo acompanham e saltam para a cena ao clicar. Só se animam transform/opacity/filter
 // (Web Animations); pára fora do ecrã e, com "reduzir movimento", cada passo mostra o seu resultado parado.
 type Note = { s: number; l: number; f: number };
@@ -118,7 +118,7 @@ const DUR = [
   T.enter + 250 + 550 + 400 + 16 * T.join + T.hold,
   T.enter + 200 + COUNT_MS + 250 + 600 + 24 * T.wave + T.hold,
 ];
-const NAMES = ['Learn it with the tab', 'Play it without', 'Join it up', 'Know it by heart'];
+const NAMES = ['Learn it with the tab', 'Play it without', 'Join it up', 'Play it all, no tab'];
 const SCENE_IDS = ['learn', 'recall', 'join', 'heart'];
 function setStep(k: number) {
   const no = $('sceneNo'), name = $('sceneName');
@@ -163,7 +163,7 @@ function resetAll() {
 function chorusKnown() {
   $('mTab').classList.add('gone');
   $('mOk').classList.add('on');
-  setRuns(3, 'By heart'); setStrip(segs, CHORUS + 1); $('mPct').textContent = pctOf(CHORUS + 1) + '%';
+  setRuns(3, 'No tab'); setStrip(segs, CHORUS + 1); $('mPct').textContent = pctOf(CHORUS + 1) + '%';
 }
 
 /** Conta de `from` até `to` num elemento (a percentagem a subir). */
@@ -203,7 +203,7 @@ async function sceneRecall() {
     setRuns(r + 1, 'Run ' + (r + 1) + ' of 3 · no tab');
   }
   light(chorusTiles, -1);
-  setRuns(3, 'By heart');
+  setRuns(3, 'No tab');
   // O refrão já se toca de cor: ✓ e um pequeno salto em cascata nos quadrados
   $('mOk').classList.add('on');
   chorusTiles.forEach((t, j) => anim(t, [{ transform: 'none' }, { transform: 'translateY(-6px) scale(1.06)', offset: 0.4 }, { transform: 'none' }], { duration: 500, delay: j * 35, easing: EASE_IO, fill: 'none' }));

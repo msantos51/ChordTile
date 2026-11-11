@@ -38,7 +38,7 @@ async function render(a: Account | null, recovery = false) {
           : paid ? 'Renews or ends on ' + new Date(p.until!).toLocaleDateString() + '.'
             : 'Free plan.';
     $('accFeats').innerHTML = (p.premium
-      ? ['Unlimited songs in your account', 'Tile by Tile: learn songs by heart', 'Loop, play along and solo', 'Expand any bar up close', 'PDF charts', 'Progress per section']
+      ? ['Unlimited songs in your account', 'Tile by Tile: learn songs without the tab', 'Loop, play along and solo', 'Expand any bar up close', 'PDF charts', 'Progress per section']
       : ['Up to ' + FREE_SONG_LIMIT + ' songs in your account, on every device', 'Speed, metronome and count-in', 'Notes on the bars', '🔒 Tile by Tile, loop, play along, solo, expand, PDF and progress are Premium'])
       .map(t => '<li>' + t + '</li>').join('');
     show('accUpgrade', !paid);

@@ -1474,7 +1474,7 @@ type PaywallReason = 'upgrade' | 'library' | 'sync' | 'progress' | 'expand' | 'p
 const PAYWALL_COPY: Record<PaywallReason, [string, string]> = {
   upgrade: ['Practise like you mean it', 'Premium unlocks loop, Tile by Tile, play along, solo, every bar up close, PDF charts and unlimited songs.'],
   loop: ['Loop the hard part', 'Premium loops the whole song, a section or a single bar, as many times as you need.'],
-  learn: ['Learn songs by heart', 'Tile by Tile is Premium: learn each section with the tab, play it without, then join it to the ones before, until you play the whole song by heart.'],
+  learn: ['Learn songs without the tab', 'Tile by Tile is Premium: learn each section with the tab, play it without, then join it to the ones before, until you play the whole song with no tab.'],
   playalong: ['Play along with the band', 'Premium mutes your instrument so you play your part with the rest of the band.'],
   solo: ['Hear only your part', 'Premium plays your instrument alone, so you can hear exactly what to play.'],
   library: ['Keep all your songs', 'The free plan keeps ' + FREE_SONG_LIMIT + ' songs in your account. Premium keeps as many as you like.'],
@@ -1731,8 +1731,8 @@ function renderLearnPath(steps: LearnStep[], i: number) {
     li.className = 'lp-item' + (known[k] ? ' known' : '') + (k >= from && k <= to ? ' now' : '')
       + (k < linked ? ' link' : '') + (k === learn.lit ? ' lit' : '');
     const b = document.createElement('button'); b.type = 'button';
-    b.title = sec.name + (known[k] ? ': you can play it by heart' : ': learn it with the tab, then play it without');
-    b.setAttribute('aria-label', sec.name + (known[k] ? ', by heart' : ''));
+    b.title = sec.name + (known[k] ? ': you can play it with no tab' : ': learn it with the tab, then play it without');
+    b.setAttribute('aria-label', sec.name + (known[k] ? ', no tab' : ''));
     if (k === here) b.setAttribute('aria-current', 'step');
     const name = document.createElement('span'); name.className = 'lp-name'; name.textContent = sec.name;
     // Os quadrados em linhas como no esquema (o mesmo n.º por linha), e não todos seguidos
@@ -1789,8 +1789,8 @@ function learnLoopDone() {
     if (step.kind === 'recall') {
       learn.lit = step.sec;
       const pct = byHeartPct(knownSections(steps, i, true), secBars());
-      toast('“' + sec.name + '” is yours, no tab needed! ' + pct + '% of the song by heart.');
-    } else if (isFinal(steps, i)) toast('The whole song, by heart. Amazing!');
+      toast('“' + sec.name + '” is yours, no tab needed! ' + pct + '% of the song with no tab.');
+    } else if (isFinal(steps, i)) toast('The whole song, no tab. Amazing!');
     else if (step.kind === 'join') toast(joinName(step.from, step.to) + ' in a row, no tab. Great!');
     else toast('You’ve got “' + sec.name + '” with the tab. Now try it without.');
     renderLearnPath(steps, i);
@@ -1912,23 +1912,23 @@ function updateLearnCta() {
     const seg = document.createElement('span');
     seg.className = 'lc-seg' + (known[k] ? ' known' : k === next ? ' next' : '');
     seg.style.flex = String(Math.max(1, bars[k]));
-    seg.title = sec.name + ' · ' + bars[k] + ' bar' + (bars[k] === 1 ? '' : 's') + (known[k] ? ' · by heart' : k === next ? ' · next' : '');
+    seg.title = sec.name + ' · ' + bars[k] + ' bar' + (bars[k] === 1 ? '' : 's') + (known[k] ? ' · no tab' : k === next ? ' · next' : '');
     const name = document.createElement('span'); name.textContent = sec.name; seg.append(name);
     return seg;
   }));
   const count = known.filter(Boolean).length;
-  track.setAttribute('aria-label', count + ' of ' + st.sections.length + ' sections by heart');
+  track.setAttribute('aria-label', count + ' of ' + st.sections.length + ' sections with no tab');
   $('learnCtaPct').querySelector('strong')!.textContent = pct + '%';
   const nextName = next >= 0 ? st.sections[next]?.name : '';
   $('learnCtaBtnText').textContent = saved?.done ? 'Practise again' : step > 0 ? 'Continue' + (nextName ? ' · ' + nextName : '') : 'Start' + (nextName ? ' · ' + nextName : '');
-  $('learnCtaTitle').textContent = saved?.done ? 'You know it by heart' : 'Tile by Tile';
+  $('learnCtaTitle').textContent = saved?.done ? 'You can play it with no tab' : 'Tile by Tile';
 }
 $('learnExit').addEventListener('click', exitLearn);
 $('learnText').addEventListener('click', () => $('learnText').classList.toggle('open'));
 $('learnBack').addEventListener('click', () => goLearnStep(learn.step - 1));
 $('learnNext').addEventListener('click', () => {
   if (learn.step >= learnSteps().length - 1) {
-    toast('You can play “' + ($('songTitle').textContent || 'the song') + '” by heart. Well done!');
+    toast('You can play “' + ($('songTitle').textContent || 'the song') + '” with no tab. Well done!');
     storage.set(learnKey(), { v: 2, step: 0, done: true } satisfies SavedLearn); exitLearn(); return;
   }
   goLearnStep(learn.step + 1);

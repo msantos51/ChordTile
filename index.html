@@ -9,13 +9,13 @@
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#c8102e">
-<title>ChordTile · Learn any song by heart, tile by tile</title>
-<meta name="description" content="Learn any song by heart with the Tile by Tile method: one section with the tab, then without, then joined to the rest. Works with Guitar Pro (.gp, .gp5, .gpx) and MusicXML tabs. Free to try.">
+<title>ChordTile · Learn songs without memorising the tab</title>
+<meta name="description" content="Struggling to memorise tabs? Learn your favourite bands’ songs section by section with the Tile by Tile method: one section with the tab, then without, then joined to the rest. Works with Guitar Pro (.gp, .gp5, .gpx) and MusicXML tabs. Free to try.">
 <link rel="canonical" href="https://www.chordtile.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ChordTile">
-<meta property="og:title" content="ChordTile · Learn any song by heart, tile by tile">
-<meta property="og:description" content="Learn any song by heart with the Tile by Tile method: one section with the tab, then without, then joined to the rest. Works with Guitar Pro (.gp, .gp5, .gpx) and MusicXML tabs. Free to try.">
+<meta property="og:title" content="ChordTile · Learn songs without memorising the tab">
+<meta property="og:description" content="Struggling to memorise tabs? Learn your favourite bands’ songs section by section with the Tile by Tile method: one section with the tab, then without, then joined to the rest. Works with Guitar Pro (.gp, .gp5, .gpx) and MusicXML tabs. Free to try.">
 <meta property="og:url" content="https://www.chordtile.com/">
 <meta property="og:image" content="https://www.chordtile.com/og-image.png">
 <meta property="og:image:width" content="1200">
@@ -52,7 +52,7 @@
    "applicationCategory": "MusicApplication",
    "operatingSystem": "Any (web browser)",
    "browserRequirements": "Requires JavaScript and a modern browser",
-   "description": "Open Guitar Pro (.gp, .gp5, .gpx) and MusicXML tabs online and learn songs by heart: chords coloured by note, synced tablature, section loops, adjustable speed and a bar-by-bar count, for guitar and bass.",
+   "description": "Open Guitar Pro (.gp, .gp5, .gpx) and MusicXML tabs online and learn songs until you can play them with no tab: chords coloured by note, synced tablature, section loops, adjustable speed and a bar-by-bar count, for guitar and bass.",
    "image": "https://www.chordtile.com/og-image.png",
    "featureList": [
     "Opens Guitar Pro 3 to 8 and MusicXML files",
@@ -62,7 +62,7 @@
     "Section and bar loops",
     "Speed from 25% to 125%",
     "Metronome and count-in",
-    "Tile by Tile method to learn songs by heart",
+    "Tile by Tile method to learn songs without memorising the tab",
     "PDF export of the chord chart"
    ],
    "publisher": {
@@ -108,11 +108,11 @@
     </header>
 
     <div class="copy">
-      <p class="kicker caps">The Tile by Tile method · guitar &amp; bass</p>
-      <h1><span class="ln"><span>Learn any song</span></span><span class="ln"><span>by heart.</span></span><em><span class="ln"><span>Tile by tile.</span></span></em></h1>
-      <p class="lead">Learn one section with the tab. Play it without. Join it to the ones before. Section by section, until you play the whole song without reading a note.</p>
+      <p class="kicker caps">For guitar &amp; bass players who struggle to memorise tabs</p>
+      <h1><span class="ln"><span>Can’t memorise</span></span><span class="ln"><span>tabs?</span></span><em><span class="ln"><span>Learn the song anyway.</span></span></em></h1>
+      <p class="lead">If tabs never stick, you’re not the problem, the method is. ChordTile breaks any song into small sections: learn one with the tab, play it without, join it to the rest. Before you notice, you’re playing the whole song with no tab at all.</p>
       <div class="buy">
-        <button class="btn" type="button" data-pick>Learn a song by heart<svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <button class="btn" type="button" data-pick>Pick a song to learn<svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
         <a class="link" href="/player?sample">Try it on the sample</a>
       </div>
       <p class="also"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Works with your Guitar Pro &amp; MusicXML files · full tab player, loops, speed and metronome included</p>
@@ -125,7 +125,7 @@
       <a class="pill-white" href="/player">Open the player</a>
     </div>
 
-    <figure class="stage" id="stage" aria-label="Animation of the Tile by Tile method: a section is learnt with the tab, played without it until its tiles light up in colour, joined to the section before, and finally the whole song is known by heart">
+    <figure class="stage" id="stage" aria-label="Animation of the Tile by Tile method: a section is learnt with the tab, played without it until its tiles light up in colour, joined to the section before, and finally the whole song is played with no tab">
       <div class="canvas" id="canvas" data-scene="learn" aria-hidden="true">
         <p class="scene-label"><span id="sceneNo">01</span><span id="sceneName">Learn it with the tab</span></p>
 
@@ -134,11 +134,11 @@
           <div class="m-tab" id="mTab"><div id="mSystems"></div><i class="m-cur" id="mCur"></i></div>
           <div class="m-hid" id="mHid">Tab hidden</div>
           <div class="m-card">
-            <div class="m-head"><span class="m-name">Chorus <small>8 bars</small><span class="m-ok" id="mOk">✓ by heart</span></span><span class="m-runs" id="mRuns"><span id="mRunText">Loop · 75%</span><i></i><i></i><i></i></span></div>
+            <div class="m-head"><span class="m-name">Chorus <small>8 bars</small><span class="m-ok" id="mOk">✓ no tab</span></span><span class="m-runs" id="mRuns"><span id="mRunText">Loop · 75%</span><i></i><i></i><i></i></span></div>
             <div class="m-tiles" id="mTiles"></div>
           </div>
           <div class="m-song">
-            <div class="m-song-h"><span>The whole song</span><b><span id="mPct">50%</span><small>by heart</small></b></div>
+            <div class="m-song-h"><span>The whole song</span><b><span id="mPct">50%</span><small>no tab</small></b></div>
             <div class="m-strip" id="mStrip"></div>
           </div>
         </div>
@@ -172,7 +172,7 @@
         <li><button type="button" data-step="0"><b>01</b><span><strong>Learn it with the tab</strong><em class="d">One section on loop, as slow as you need.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
         <li><button type="button" data-step="1"><b>02</b><span><strong>Play it without</strong><em class="d">The tab hides. Three clean runs and it’s yours.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
         <li><button type="button" data-step="2"><b>03</b><span><strong>Join it up</strong><em class="d">Play it straight after the sections you already know.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
-        <li><button type="button" data-step="3"><b>04</b><span><strong>Know it by heart</strong><em class="d">The whole song, start to finish, no reading.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
+        <li><button type="button" data-step="3"><b>04</b><span><strong>Play it all, no tab</strong><em class="d">The whole song, start to finish, no reading.</em></span><i class="prog" aria-hidden="true"><i></i></i></button></li>
       </ol>
     </section>
   </footer>
@@ -183,7 +183,7 @@
   <section class="why" id="method" aria-labelledby="whyTitle">
     <div class="why-intro">
       <p class="eyebrow caps">Why it works</p>
-      <h2 id="whyTitle">Reading a tab isn’t knowing a song.</h2>
+      <h2 id="whyTitle">Reading a tab isn’t the same as playing the song.</h2>
       <p>If your eyes are on the tab, the song lives on the screen and not in your hands. Tile by Tile hides the tab step by step, until it’s all in your head.</p>
     </div>
     <div class="why-cards">
@@ -209,14 +209,14 @@
   <section class="progress" aria-labelledby="progTitle">
     <div>
       <p class="eyebrow caps">See yourself get there</p>
-      <h2 id="progTitle">Every song shows how much you know by heart.</h2>
+      <h2 id="progTitle">See how much of each song you can play without the tab.</h2>
       <p>Your progress is saved to your account. Pick up where you stopped, on any device.</p>
     </div>
-    <div class="pg-strip" role="img" aria-label="Example: 3 of 6 sections known by heart, 47% of the song">
+    <div class="pg-strip" role="img" aria-label="Example: 3 of 6 sections played with no tab, 47% of the song">
       <span class="pg-icon" aria-hidden="true"></span>
       <strong>Tile by Tile</strong>
       <span class="pg-segs"><i class="k" style="flex:16">Intro/Verse 1</i><i class="k" style="flex:10">Chorus 1</i><i class="k" style="flex:8">Band enters</i><i class="n" style="flex:16">Verse 2</i><i style="flex:10">Chorus 2</i><i style="flex:12">Bridge</i></span>
-      <span class="pg-pct"><b>47%</b> by heart</span>
+      <span class="pg-pct"><b>47%</b> no tab</span>
     </div>
   </section>
 
@@ -241,7 +241,7 @@
 
   <!-- Chamada final -->
   <section class="final">
-    <h2>Pick the song you’ve always wanted to play by heart.</h2>
+    <h2>Which band’s song have you always wanted to play?</h2>
     <button class="pill-white big" type="button" data-pick>Start Tile by Tile</button>
   </section>
 

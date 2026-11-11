@@ -1,6 +1,7 @@
 /* Página inicial — estática, sem animação. Vermelho, branco e bege; começa pelo problema de quem não consegue
    decorar tabs e depois mostra a solução:
-   hero (a promessa) → "Sound familiar?" (o problema) → o método em 4 passos → o leitor → chamada final (vermelho).
+   hero (a promessa) → o método em 4 passos (visível logo no primeiro ecrã, sem scroll) → "Sound familiar?" (o problema)
+   → o leitor → chamada final (vermelho).
    Só esta página usa estes estilos; o leitor e as páginas de texto usam src/styles.css. */
 /* Fontes de recurso com as medidas da Roboto (sem saltos do layout quando a Roboto chega) */
 @font-face { font-family: "Roboto Fallback"; src: local("Arial"), local("Helvetica"), local("Liberation Sans"); size-adjust: 100.3%; ascent-override: 92.4%; descent-override: 24.3%; line-gap-override: 0%; }
@@ -42,13 +43,15 @@ h1, h2, h3, p, ul, ol { margin: 0; }
   font: 700 11.5px var(--f-body); letter-spacing: .16em; text-transform: uppercase; text-decoration: none; white-space: nowrap; }
 
 /* Hero: a promessa */
-.hero { padding-block: clamp(32px, 7vw, 88px) clamp(56px, 8vw, 96px); display: flex; flex-direction: column; align-items: flex-start; gap: 28px; }
+/* Hero em duas colunas (título à esquerda, texto e botões à direita) para o método caber no primeiro ecrã */
+.hero { padding-block: clamp(16px, 3.5vh, 44px) clamp(32px, 5vh, 56px); display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px clamp(32px, 5vw, 72px); align-items: end; }
+.hero-head, .hero-side { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; min-width: 0; }
 .kicker { color: var(--red); }
-h1 { font: 900 clamp(46px, 8.4vw, 120px)/.9 var(--f-body); letter-spacing: -.03em; text-transform: uppercase; max-width: 11em; text-wrap: balance; }
+h1 { font: 900 clamp(34px, min(4.4vw, 7.4vh), 64px)/.95 var(--f-body); letter-spacing: -.025em; text-transform: uppercase; text-wrap: balance; }
 h1 em { font-style: normal; color: var(--red); }
-.lead { font-size: clamp(16px, 1.4vw, 19px); color: var(--ink-2); max-width: 36em; }
+.lead { font-size: clamp(16px, 1.25vw, 18px); color: var(--ink-2); max-width: 36em; }
 .buy { display: flex; align-items: center; gap: 24px 40px; flex-wrap: wrap; }
-.btn { display: inline-flex; align-items: center; gap: 12px; height: 58px; padding: 0 32px; border-radius: 999px; border: 0;
+.btn { display: inline-flex; align-items: center; gap: 12px; height: 54px; padding: 0 32px; border-radius: 999px; border: 0;
   background: var(--red); color: #fff; font: 700 13px var(--f-body); letter-spacing: .14em; text-transform: uppercase;
   cursor: pointer; white-space: nowrap; transition: background .15s, transform .15s; }
 .btn:hover { background: var(--red-2); }
@@ -67,21 +70,23 @@ h1 em { font-style: normal; color: var(--red); }
 .pain-list li { font: 500 clamp(21px, 2vw, 26px)/1.3 var(--f-body); }
 .pain-fix { font-size: clamp(16px, 1.4vw, 18px); color: var(--ink-2); max-width: 40em; }
 
-/* Os 4 passos */
+/* Os 4 passos: logo a seguir ao hero e compactos, para caberem no primeiro ecrã */
+.method { padding-block: clamp(28px, 4vh, 44px) clamp(48px, 7vw, 80px); }
+.method .h2 { font-size: clamp(24px, 2.4vw, 32px); max-width: none; }
 .h2 { font: 900 clamp(32px, 4vw, 52px)/1.04 var(--f-body); letter-spacing: -.01em; max-width: 16em; text-wrap: balance; }
 .h2.sm { font-size: clamp(28px, 3.2vw, 40px); }
-.moves { list-style: none; padding: 0; margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
-.moves li { display: flex; flex-direction: column; gap: 10px; background: var(--off); border-radius: 20px; padding: 24px; min-width: 0; }
+.moves { list-style: none; padding: 0; margin-top: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+.moves li { display: flex; flex-direction: column; gap: 6px; background: var(--white); border-radius: 20px; padding: 20px; min-width: 0; }
 .moves strong { font-size: 20px; line-height: 1.25; }
-.moves span { font-size: 15px; color: var(--ink-2); }
-.no { font: 500 13px var(--f-mono); color: var(--red); margin-top: 8px; }
-.vis { height: 96px; background: #fff; border-radius: 12px; padding: 14px; margin: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; }
-.tab { display: block; font: 500 12px/1.45 var(--f-mono); color: #333; white-space: pre; }
+.moves span { font-size: 14.5px; line-height: 1.45; color: var(--ink-2); }
+.no { font: 500 13px var(--f-mono); color: var(--red); margin-top: 4px; }
+.vis { height: 80px; background: var(--off); border-radius: 12px; padding: 14px; margin: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; }
+.tab { display: block; padding: 10px 14px; font: 500 11px/1.35 var(--f-mono); color: #333; white-space: pre; }
 .tiles i { flex: 1; height: 100%; border-radius: 8px; background: var(--c); display: grid; place-items: center; font: 700 15px var(--f-body); font-style: normal; color: var(--black); }
 .tiles i[data-n="9"] { color: #fff; }
 [data-n="0"] { --c: var(--n0); } [data-n="5"] { --c: var(--n5); } [data-n="7"] { --c: var(--n7); } [data-n="9"] { --c: var(--n9); }
 .join i { flex: 1; height: 100%; border-radius: 8px; background: var(--red); color: #fff; display: grid; place-items: center; font: 700 12px var(--f-body); font-style: normal; letter-spacing: .06em; text-transform: uppercase; }
-.join i.new { background: #fff; color: var(--red); border: 2px solid var(--red); }
+.join i.new { background: var(--white); color: var(--red); border: 2px solid var(--red); }
 .join b { font: 900 20px var(--f-body); color: var(--red); }
 .song { gap: 4px; }
 .song i { height: 100%; border-radius: 8px; background: var(--red); }
@@ -103,6 +108,7 @@ h1 em { font-style: normal; color: var(--red); }
 
 @media (max-width: 860px) {
   .nav { display: none; }
+  .hero { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 520px) {
   .btn { width: 100%; justify-content: center; }

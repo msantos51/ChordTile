@@ -100,85 +100,121 @@
 </script>
 </head>
 <body>
+<!-- Menu de cima, por cima do topo escuro -->
 <header class="top wrap">
   <a class="brand" href="/"><svg class="logo" viewBox="16 16 224 224" aria-hidden="true"><path fill-rule="evenodd" d="M76 16H180A60 60 0 0 1 240 76V180A60 60 0 0 1 180 240H76A60 60 0 0 1 16 180V76A60 60 0 0 1 76 16ZM199 104A43 43 0 0 0 156 61H108A43 43 0 0 0 65 104V152A43 43 0 0 0 108 195H156A43 43 0 0 0 199 152H169A13 13 0 0 1 156 165H108A13 13 0 0 1 95 152V104A13 13 0 0 1 108 91H156A13 13 0 0 1 169 104Z"/></svg>ChordTile</a>
   <nav class="nav" aria-label="Site"><a href="#method">The method</a><a href="/player#songs">My songs</a><a href="/help">Help</a><a href="/account" id="navAccount">Sign in</a></nav>
-  <a class="pill" href="/player">Open the player</a>
+  <a class="btn pill" href="/player">Open the player<svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
 </header>
 
 <main>
-  <!-- A promessa -->
-  <section class="hero wrap">
-    <div class="hero-head">
+  <!-- Topo escuro: a promessa e o leitor num tablet -->
+  <section class="hero-bg">
+  <div class="strings" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="hero wrap">
+    <div class="hero-copy">
       <p class="kicker caps">For guitar &amp; bass players who struggle to memorise tabs</p>
       <h1>Can’t memorise tabs? <em>Learn the song anyway.</em></h1>
+      <p class="lead">ChordTile breaks any song into small sections: learn one with the tab, play it without, join it to the rest. Before you notice, you’re playing the whole song with no tab at all.</p>
+      <div class="buy">
+        <button class="btn" type="button" data-pick>Pick a song to learn<svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <a class="link watch" href="/player?sample"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l14 8-14 8z"/></svg></i>Try it on the sample</a>
+      </div>
+      <p class="also">Works with your Guitar Pro (.gp, .gp5, .gpx) &amp; MusicXML files</p>
     </div>
-    <div class="hero-side">
-    <p class="lead">ChordTile breaks any song into small sections: learn one with the tab, play it without, join it to the rest. Before you notice, you’re playing the whole song with no tab at all.</p>
-    <div class="buy">
-      <button class="btn" type="button" data-pick>Pick a song to learn<svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-      <a class="link" href="/player?sample">Try it on the sample</a>
+
+    <div class="device" aria-hidden="true">
+      <div class="tablet">
+        <div class="screen">
+          <div class="s-bar">
+            <span class="t"><svg class="logo" viewBox="16 16 224 224" aria-hidden="true"><path fill-rule="evenodd" d="M76 16H180A60 60 0 0 1 240 76V180A60 60 0 0 1 180 240H76A60 60 0 0 1 16 180V76A60 60 0 0 1 76 16ZM199 104A43 43 0 0 0 156 61H108A43 43 0 0 0 65 104V152A43 43 0 0 0 108 195H156A43 43 0 0 0 199 152H169A13 13 0 0 1 156 165H108A13 13 0 0 1 95 152V104A13 13 0 0 1 108 91H156A13 13 0 0 1 169 104Z"/></svg>ChordTile</span>
+            <span class="chip">Loop · Chorus</span><span class="chip">75%</span><span class="chip">1·2·3·4</span>
+          </div>
+          <div class="s-track"><span>0:42</span><span class="rail"></span><span>3:18</span></div>
+          <div class="s-tab"><pre>e|---1-----|-----0---|---------|-0-------|
+B|-1---1---|---1---1-|-3---3---|---1---1-|
+G|-------2-|-0-------|-------0-|-------2-|
+D|-3-------|---------|-0-------|-2-------|
+A|---------|-3-------|---------|-0-------|
+E|-1-------|---------|-3-------|---------|</pre><span class="head"></span></div>
+          <div class="s-tiles">
+            <i data-n="5" class="dim">F</i><i data-n="0" class="dim">C</i><i data-n="7" class="on">G</i><i data-n="9">Am</i>
+            <i data-n="5">F</i><i data-n="0">C</i><i data-n="7">G</i><i data-n="0">C</i>
+          </div>
+          <div class="s-secs"><b style="--f:2">Intro</b><b style="--f:4">Verse</b><b class="on" style="--f:4">Chorus</b><b style="--f:3">Bridge</b></div>
+        </div>
+      </div>
     </div>
-    <p class="also">Works with your Guitar Pro (.gp, .gp5, .gpx) &amp; MusicXML files</p>
+  </div>
+  </section>
+
+  <!-- O leitor: faixa branca por cima do fundo do topo -->
+  <section class="strip-wrap wrap" aria-labelledby="playerTitle">
+    <div class="strip">
+      <div class="strip-head">
+        <h2 id="playerTitle">Just want to read the tab? It’s all still here.</h2>
+        <a href="/player">Open the player<svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+      <ul class="features">
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 10h18M3 14h18M3 18h18M12 3v18"/></svg><strong>Synced tab</strong><span>Follows the sound, bar by bar.</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg><strong>Colour chart</strong><span>Every bar in its chord’s colour.</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><strong>Loops</strong><span>A section or a single bar.</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14l4-6"/><path d="M3.5 18a9 9 0 1 1 17 0"/></svg><strong>Speed</strong><span>From 25% to 125%.</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l4 18H5z"/><path d="M12 15l5-8"/></svg><strong>Metronome</strong><span>With count-in.</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4"/><path d="M12 11v6M9 14l3 3 3-3"/></svg><strong>PDF export</strong><span>The whole chart on one page.</span></li>
+      </ul>
     </div>
   </section>
 
   <!-- O método -->
-  <section class="band off method" id="method" aria-labelledby="methodTitle">
+  <section class="method" id="method" aria-labelledby="methodTitle">
     <div class="wrap">
-      <h2 class="h2" id="methodTitle">The Tile by Tile method, in 4 moves.</h2>
+      <div class="sec-head">
+        <p class="kicker caps">The method</p>
+        <h2 class="h2" id="methodTitle">The Tile by Tile method, <em>in 4 moves.</em></h2>
+        <p>One section at a time, until the whole song stays with you.</p>
+      </div>
       <ol class="moves">
         <li>
-          <pre class="vis tab" aria-hidden="true">e|---1-----|
-B|-1---1---|
-G|-------2-|
-D|-3-------|</pre>
-          <b class="no">01</b><strong>Learn it with the tab</strong><span>One section on loop, as slow as you need.</span>
+          <b class="no">1</b>
+          <pre class="vis tab" aria-hidden="true">e|---<b>1</b>-----|
+B|-<b>1</b>---<b>1</b>---|
+G|-------<b>2</b>-|
+D|-<b>3</b>-------|</pre>
+          <strong>Learn it with the tab</strong><span>One section on loop, as slow as you need.</span>
         </li>
         <li>
+          <b class="no">2</b>
           <div class="vis tiles" aria-hidden="true"><i data-n="5">F</i><i data-n="7">G</i><i data-n="0">C</i><i data-n="9">Am</i></div>
-          <b class="no">02</b><strong>Play it without</strong><span>The tab hides and only the chords stay. Three clean runs and it’s yours.</span>
+          <strong>Play it without</strong><span>The tab hides and only the chords stay. Three clean runs and it’s yours.</span>
         </li>
         <li>
+          <b class="no">3</b>
           <div class="vis join" aria-hidden="true"><i>Verse</i><b>+</b><i class="new">Chorus</i></div>
-          <b class="no">03</b><strong>Join it up</strong><span>Play it straight after the sections you already know.</span>
+          <strong>Join it up</strong><span>Play it straight after the sections you already know.</span>
         </li>
         <li>
+          <b class="no">4</b>
           <div class="vis song" aria-hidden="true"><i style="flex:4"></i><i style="flex:8"></i><i style="flex:8"></i><i style="flex:6"></i></div>
-          <b class="no">04</b><strong>Play it all, no tab</strong><span>The whole song, start to finish, no reading.</span>
+          <strong>Play it all, no tab</strong><span>The whole song, start to finish, no reading.</span>
         </li>
       </ol>
     </div>
   </section>
 
   <!-- O problema -->
-  <section class="band" aria-labelledby="painTitle">
+  <section class="band dark" aria-labelledby="painTitle">
     <div class="wrap pains">
-      <h2 class="caps eyebrow" id="painTitle">Sound familiar?</h2>
+      <div class="sec-head">
+        <p class="kicker caps">The problem</p>
+        <h2 class="h2" id="painTitle">Sound <em>familiar?</em></h2>
+      </div>
       <ul class="pain-list">
         <li>You can play the riff while the tab is open. Close it and it’s gone.</li>
         <li>You know the intro of fifty songs and the whole of none.</li>
         <li>You learn a song in a weekend and forget it by Friday.</li>
       </ul>
-      <p class="pain-fix">You’re not bad at memorising. You’re trying to remember the whole tab at once. ChordTile gives you the song in pieces small enough to keep.</p>
-    </div>
-  </section>
-
-  <!-- O leitor continua -->
-  <section class="band off" aria-labelledby="playerTitle">
-    <div class="wrap">
-      <div class="pl-head">
-        <h2 class="h2 sm" id="playerTitle">Just want to read the tab? It’s all still here.</h2>
-        <a class="link" href="/player">Open the player</a>
-      </div>
-      <ul class="features">
-        <li><strong>Synced tab</strong><span>Follows the sound, bar by bar.</span></li>
-        <li><strong>Colour chart</strong><span>Every bar in its chord’s colour.</span></li>
-        <li><strong>Loops</strong><span>A section or a single bar.</span></li>
-        <li><strong>Speed</strong><span>From 25% to 125%.</span></li>
-        <li><strong>Metronome</strong><span>With count-in.</span></li>
-        <li><strong>PDF export</strong><span>The whole chart on one page.</span></li>
-      </ul>
+      <p class="pain-fix"><b>You’re not bad at memorising.</b> You’re trying to remember the whole tab at once. ChordTile gives you the song in pieces small enough to keep.</p>
     </div>
   </section>
 
@@ -191,7 +227,7 @@ D|-3-------|</pre>
   </section>
 </main>
 
-<footer class="legal wrap"><span>© 2026 ChordTile</span><a href="/help">Help</a><a href="/contact">Contact</a><a href="/licenses">Terms &amp; privacy</a></footer>
+<footer class="legal"><div class="wrap"><span>© 2026 ChordTile</span><a href="/help">Help</a><a href="/contact">Contact</a><a href="/licenses">Terms &amp; privacy</a></div></footer>
 
 <script type="module" src="/src/landing.ts"></script>
 </body>

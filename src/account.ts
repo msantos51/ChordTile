@@ -33,7 +33,7 @@ async function render(a: Account | null, recovery = false) {
     const badge = $('accPlanBadge'); badge.textContent = planLabel(p); badge.classList.toggle('premium', p.premium);
     const paid = p.kind === 'monthly' || p.kind === 'yearly' || p.kind === 'lifetime';
     $('accPlanInfo').textContent =
-      p.kind === 'trial' ? 'Your free Premium trial ends in ' + daysLeft(p.until!) + ' days. After that you keep the free plan.'
+      p.kind === 'trial' ? 'Your free Premium trial ends in ' + (daysLeft(p.until!) === 1 ? '1 day' : daysLeft(p.until!) + ' days') + '. After that you keep the free plan.'
         : p.kind === 'lifetime' ? 'Premium forever. Thank you!'
           : paid ? 'Renews or ends on ' + new Date(p.until!).toLocaleDateString() + '.'
             : 'Free plan.';

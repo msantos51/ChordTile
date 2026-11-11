@@ -20,11 +20,12 @@ export function currentTheme(): Theme {
   return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
 }
 
-export function applyTheme(theme: Theme): void {
+/** `keep` false: só aplica (ao ler as preferências da conta não se volta a escrevê-las). */
+export function applyTheme(theme: Theme, keep = true): void {
   document.documentElement.dataset.theme = theme;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#f4f2f0' : '#1f2024');
   document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', theme);
-  store.set(THEME_KEY, theme);
+  if (keep) store.set(THEME_KEY, theme);
 }
 
 /** Tema guardado na conta (ou null se a pessoa nunca escolheu). */

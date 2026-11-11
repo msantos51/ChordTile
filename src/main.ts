@@ -14,7 +14,7 @@ import { autoSub, beatInfo, countLabels, slotOf, type Sub } from './app/count';
 import { VisualDelay } from './app/sync';
 import { releaseAudio, unlockAudio } from './app/audio-unlock';
 import { TOUR_STEPS, markTourSeen, tourSeen, visibleTarget } from './app/tour';
-import { SongLimitError, addAccountSong, cloudEnabled, deleteAccountSong, fetchEntitlement, getAccountSong, listAccountSongs, loadUserData, saveUserData, songDataKeys, touchAccountSong, watchAccount, type Account } from './app/cloud';
+import { SongLimitError, addAccountSong, cloudEnabled, deleteAccountSong, fetchEntitlement, getAccountSong, listAccountSongs, loadUserData, saveUserData, saveUserDataOnExit, songDataKeys, touchAccountSong, watchAccount, type Account } from './app/cloud';
 import { openAuthDialog } from './app/auth-ui';
 import { FREE_SONG_LIMIT, GUEST, access, canSaveSong, planLabel, planState, songLimit, type Feature, type PlanState } from './app/plan';
 import { OFFERS, checkoutUrl, paymentsEnabled } from './app/billing';
@@ -22,7 +22,7 @@ import { addLoop, addTime, isMastered, progressText, type SongProgress } from '.
 import { buildSteps, byHeartPct, firstStepOf, isFinal, knownSections, restoreStep, runsGoal, stepRange, stepSection, type LearnStep, type SavedLearn } from './app/learn-path';
 import { readLegacyData, readLegacySongs, relativeDay, wipeLegacy, type SongMeta } from './app/library';
 import { TAB_COLORS, applyTheme, currentTheme, savedTheme, type Theme } from './app/theme';
-import { attachAccount, detachAccount, flush, store } from './app/user-store';
+import { attachAccount, detachAccount, flush, flushOnExit, isHydrated, mergeRemote, store } from './app/user-store';
 
 type Score = AlphaTab.model.Score;
 type Track = AlphaTab.model.Track;
@@ -124,13 +124,14 @@ new ResizeObserver(() => document.documentElement.style.setProperty('--top-h', d
 
 // ---------- Sincronização ----------
 const delay = new VisualDelay(() => st.syncMs, () => !!st.api && st.api.playerState === PLAYING);
-function setSync(v: number) {
-  st.syncMs = Math.max(0, Math.min(500, Math.round(v / 10) * 10));
+/** `keep` false: só mostra o valor (o valor por defeito não se escreve na conta de quem nunca o escolheu). */
+function setSync(v: number, keep = true) {
+  st.syncMs = Math.max(0, Math.min(500, Math.round((Number(v) || 0) / 10) * 10));
   input('syncMs').value = String(st.syncMs);
   $('syncOut').textContent = st.syncMs + ' ms';
-  storage.set('mapa:sync', st.syncMs);
+  if (keep) storage.set('mapa:sync', st.syncMs);
 }
-setSync(storage.get<number>('mapa:sync') ?? 0);
+setSync(storage.get<number>('mapa:sync') ?? 0, false);
 { const saved = storage.get<number>('mapa:tabPerRow'); tabPerRow = typeof saved === 'number' && saved >= 0 && saved <= 6 ? Math.round(saved) : 0; select('tabPerRow').value = String(tabPerRow); }
 input('syncMs').addEventListener('input', () => setSync(+input('syncMs').value));
 $('syncMinus').addEventListener('click', () => setSync(st.syncMs - 10));
@@ -146,26 +147,36 @@ function loadBytes(bytes: Uint8Array, name: string, isSample: boolean): boolean 
     return false;
   }
   showErr('');
+  // Ainda com a música anterior: sai do Tile by Tile, fecha o compasso expandido e guarda o progresso dela.
+  // (Feito depois de trocar, o esquema da música antiga era desenhado com os compassos da nova.)
+  if (learn.on) exitLearn(false);
+  closeBarModal(); flushProgress(); practice.dirty = false;
   st.score = s; st.isSample = isSample;
   st.fileKey = (s.title || name) + '|' + (s.artist || '') + '|' + s.masterBars.length;
-  const pitched = s.tracks.map((_, i) => i).filter(i => !isPercussion(s.tracks[i]));
-  const bassIdx = pitched.find(i => isBassTrack(s.tracks[i]));
-  st.loopSection = -1; st.loopBar = -1; st.tabSel = -1; st.selBar = -1; st.playingBar = -1;
-  $('tabSel').hidden = true; closeBarModal();
-  if (learn.on) exitLearn();
-
-  const saved = storage.get<SavedSong>('mapa:' + st.fileKey);
-  // Instrumento: o último escolhido para esta música; senão o baixo; senão o primeiro com notas.
-  const savedOk = saved?.track != null && s.tracks[saved.track] && !isPercussion(s.tracks[saved.track]);
-  st.viewTrack = savedOk ? saved!.track! : bassIdx ?? pitched[0] ?? 0;
-  st.sections = saved?.sections?.length ? saved.sections : sectionsFromScore(s);
-  st.overridesByTrack = saved?.overridesByTrack ?? (saved?.overrides ? { [st.viewTrack]: saved.overrides } : {});
-  st.texts = saved?.texts ?? {};
-  if (saved?.perRow) { st.perRow = saved.perRow; select('perRow').value = String(saved.perRow); }
+  st.loopSection = -1; st.loopBar = -1; ownRange = null; st.tabSel = -1; st.selBar = -1; st.playingBar = -1;
+  $('tabSel').hidden = true; $('barbar').hidden = true;
+  restoreSong(storage.get<SavedSong>('mapa:' + st.fileKey));
 
   practice.progress = storage.get<SongProgress>('mapa:progress:' + st.fileKey) ?? {}; practice.lastTick = -1; practice.lastAt = 0;
   renderInfo(name); renderTrackControls(); detect(); renderChart(); renderTab(); updateNow(-1, 0); updateLearnCta();
   return true;
+}
+/** Aplica à música aberta o que está guardado para ela (secções, correções, notas, instrumento). */
+function restoreSong(saved: SavedSong | null, keepTrack = false) {
+  const s = score();
+  const pitched = s.tracks.map((_, i) => i).filter(i => !isPercussion(s.tracks[i]));
+  const bassIdx = pitched.find(i => isBassTrack(s.tracks[i]));
+  // Instrumento: o último escolhido para esta música; senão o baixo; senão o primeiro com notas.
+  const savedOk = saved?.track != null && s.tracks[saved.track] && !isPercussion(s.tracks[saved.track]);
+  if (!keepTrack) st.viewTrack = savedOk ? saved!.track! : bassIdx ?? pitched[0] ?? 0;
+  // Secções guardadas só valem se couberem nesta música (compassos que existem, por ordem)
+  const n = s.masterBars.length;
+  const secs = (saved?.sections ?? []).filter(x => x && typeof x.name === 'string' && Number.isInteger(x.start) && x.start >= 0 && x.start < n)
+    .sort((a, b) => a.start - b.start).filter((x, k, all) => k === 0 || x.start !== all[k - 1].start);
+  st.sections = secs.length ? secs : sectionsFromScore(s);
+  st.overridesByTrack = saved?.overridesByTrack ?? (saved?.overrides ? { [st.viewTrack]: saved.overrides } : {});
+  st.texts = saved?.texts ?? {};
+  if (saved?.perRow && select('perRow').querySelector('option[value="' + saved.perRow + '"]')) { st.perRow = saved.perRow; select('perRow').value = String(saved.perRow); }
 }
 
 function renderInfo(name: string) {
@@ -406,7 +417,7 @@ $('progress').addEventListener('click', e => {
   if (!st.ready || !st.score) return;
   const r = $('progress').getBoundingClientRect();
   const i = Math.floor(((e.clientX - r.left) / r.width) * st.score.masterBars.length);
-  goBar(i, true);
+  goBar(i); // (o esquema também rola até lá: o compasso podia ficar fora do ecrã)
 });
 
 // ---------- Exportar para PDF ----------
@@ -441,8 +452,8 @@ $('pdfBtn').addEventListener('click', async () => {
 });
 
 // ---------- Tema claro / escuro ----------
-function setTheme(theme: Theme) {
-  applyTheme(theme);
+function setTheme(theme: Theme, keep = true) {
+  applyTheme(theme, keep);
   input('optLight').checked = theme === 'light';
   const next = theme === 'light' ? 'dark' : 'light';
   $('themeBtn').setAttribute('aria-label', 'Switch to ' + next + ' theme');
@@ -542,6 +553,8 @@ const LINE_GAP = 44;
 
 function openBarModal(i: number) {
   if (!st.score || !gateOk('expand')) return;
+  // A música a tocar seguida não continua por trás da janela (aqui estuda-se um compasso); um loop de compasso continua.
+  if (st.api?.playerState === PLAYING && st.loopBar < 0) st.api.pause();
   modal.open = true;
   syncModalToggles();
   $('barModal').hidden = false; $('bmScrim').hidden = false;
@@ -739,12 +752,18 @@ for (const ev of ['pointerdown', 'keydown'] as const) {
 // ---------- Leitor (alphaTab) ----------
 // O alphaTab só dá o clique na tablatura por terminado se o botão for largado em cima dela. Largado noutro
 // sítio (ou por cima da barra do compasso), ficava "preso" e a tablatura deixava de acompanhar a música.
-for (const ev of ['mouseup', 'pointerup', 'pointercancel', 'touchend', 'blur'] as const) {
-  addEventListener(ev, () => setTimeout(() => {
-    const a = st.api as unknown as { _isBeatMouseDown?: boolean; _isNoteMouseDown?: boolean } | null;
-    if (a) { a._isBeatMouseDown = false; a._isNoteMouseDown = false; }
-  }), { capture: true });
+// Por isso, sempre que o botão é largado fora dela, entrega-se à tablatura um "largar" igual ao que ela esperava
+// (se não havia clique por acabar, o alphaTab ignora-o).
+let tabPress = false;
+function endTabPress(e?: Event) {
+  if (!tabPress) return;
+  const surface = document.querySelector<HTMLElement>('#tab .at-surface');
+  if (!surface || (e && e.target instanceof Node && surface.contains(e.target))) return; // largado na tablatura: ela trata
+  tabPress = false;
+  const m = e instanceof MouseEvent ? e : null;
+  surface.dispatchEvent(new MouseEvent('mouseup', { button: 0, clientX: m?.clientX ?? -1, clientY: m?.clientY ?? -1 }));
 }
+for (const ev of ['mouseup', 'pointercancel', 'blur'] as const) addEventListener(ev, endTabPress, { capture: true });
 function initApi() {
   const a = new at.AlphaTabApi($('tab'), {
     core: { fontDirectory: vendor + 'font/', scriptFile: vendor + 'alphaTab.min.js', engine: 'svg' },
@@ -789,6 +808,9 @@ function initApi() {
   a.playerStateChanged.on(e => {
     const playing = e.state === PLAYING;
     if (!playing) { delay.clear(); releaseAudio(); practice.lastAt = 0; flushProgress(); }
+    // Parou (botão Stop, ou a música chegou ao fim): o leitor voltou ao início do trecho, ou da música.
+    // O esquema e a barra de progresso acompanham, senão ficavam no último compasso tocado.
+    if (!playing && e.stopped) showStopped();
     // Contagem inicial: os primeiros avisos do metrónomo (um compasso) são a contagem
     metro.last = null;
     metro.countInLeft = playing && !learn.on && $('countBtn').getAttribute('aria-pressed') === 'true' ? curNumerator() : 0;
@@ -821,12 +843,26 @@ function initApi() {
   }));
   // Clicar numa nota da tablatura leva o esquema para esse compasso.
   a.beatMouseDown.on(beat => {
+    tabPress = true;
     const i = beat.voice.bar.masterBar.index;
     $('barbar').hidden = true;
     showTabSel(i, true);
     if (i === st.playingBar) return;
     leaveLoopIfOutside(i);
+    delay.clear();
     st.playingBar = i; markPlaying(i); updateNow(i, 0);
+  });
+  // Ao largar, o alphaTab leva o leitor para a nota clicada e MUDA o trecho a tocar: tira-o (clique simples) ou
+  // troca-o pelo que se arrastou. O loop da secção/compasso e o passo do Tile by Tile ficavam desfeitos no leitor
+  // (a música seguia até ao fim) com o site ainda a dizer "looping". Aqui repõe-se o trecho do site; a posição
+  // clicada mantém-se se estiver dentro dele.
+  a.beatMouseUp.on(() => {
+    tabPress = false;
+    const pos = a.tickPosition;
+    if (!ownRange) { if (a.playbackRange) a.playbackRange = null; return; }
+    a.playbackRange = { ...ownRange } as AlphaTab.synth.PlaybackRange; // (repor o trecho leva o leitor ao início dele)
+    if (pos > ownRange.startTick && pos < ownRange.endTick) a.tickPosition = pos;
+    practice.lastTick = -1;
   });
   // Ao rodar o telemóvel ou mudar o tamanho da janela, ajusta a densidade da tablatura.
   let lastLayout = JSON.stringify(tabLayout());
@@ -838,6 +874,13 @@ function initApi() {
     a.updateSettings(); a.render();
   });
   a.error.on(e => { $('status').textContent = 'Player error: ' + (e?.message ?? e); });
+}
+/** Depois de parar: o esquema mostra onde o leitor ficou (início do trecho em loop, ou nada = início da música). */
+function showStopped() {
+  delay.clear(); practice.lastTick = -1;
+  const i = ownRange ? barAtTick(ownRange.startTick)?.i ?? -1 : -1;
+  st.playingBar = i; markPlaying(i, false); updateNow(i, 0);
+  if (i >= 0) scrollTabToBar(i);
 }
 /** Compasso (e fração já tocada) num tempo do leitor; conta com as repetições. */
 function barAtTick(tick: number): { i: number; frac: number } | null {
@@ -988,21 +1031,57 @@ function barTick(i: number) {
   try { const t = api().tickCache?.getMasterBarStart(mb); if (t != null) return t; } catch { /* sem cache ainda */ }
   return mb.start;
 }
+/** Fim do compasso i, da primeira vez que se toca (num compasso repetido, o seguinte só vem depois da repetição). */
 function barEndTick(i: number) {
-  if (i + 1 < score().masterBars.length) return barTick(i + 1);
-  return barTick(i) + score().masterBars[i].calculateDuration();
+  const start = barTick(i);
+  const hit = st.api?.tickCache?.masterBars.find(m => m.masterBar.index === i && m.start === start);
+  return hit ? hit.end : start + score().masterBars[i].calculateDuration();
+}
+/**
+ * Trecho do leitor para os compassos first…last (inclusive). Acaba onde começa o compasso seguinte: se o trecho
+ * tiver repetições, tocam-se; depois do último compasso da música, vai até ao fim (com as repetições finais).
+ */
+function barsRange(first: number, last: number): TickRange {
+  const startTick = barTick(first), list = st.api?.tickCache?.masterBars;
+  let endTick = barEndTick(last);
+  if (last + 1 < score().masterBars.length) { const next = barTick(last + 1); if (next > endTick) endTick = next; }
+  else if (list?.length) endTick = Math.max(endTick, list[list.length - 1].end);
+  return { startTick, endTick };
+}
+interface TickRange { startTick: number; endTick: number }
+/**
+ * O trecho que o site pediu ao leitor (loop de uma secção ou de um compasso, ou o passo do Tile by Tile);
+ * null = a música toda. Guarda-se aqui porque o alphaTab também mexe no trecho (cliques na tablatura).
+ */
+let ownRange: TickRange | null = null;
+function setRange(r: TickRange | null) {
+  ownRange = r;
+  if (st.api && st.ready) st.api.playbackRange = r ? ({ ...r } as AlphaTab.synth.PlaybackRange) : null;
+}
+/** Compassos [primeiro, último] a que o Tile by Tile limita o leitor no passo atual (null fora dele). */
+function learnBars(): [number, number] | null {
+  const step = learn.on ? learnSteps()[learn.step] : null;
+  if (!step) return null;
+  const [from, to] = stepRange(step);
+  return [st.sections[from].start, secEnd(to) - 1];
 }
 function leaveLoopIfOutside(i: number) {
+  if (learn.on) return; // o trecho do passo não se desfaz: goBar fica dentro dele
+  const was = st.loopBar >= 0 || st.loopSection >= 0;
   if (st.loopBar >= 0 && i !== st.loopBar && !modal.open) { clearLoop(); if (st.tabSel >= 0) placeTabSel(); }
-  if (st.loopSection < 0) return;
-  const s = st.sections[st.loopSection];
-  if (i < s.start || i >= secEnd(st.loopSection)) { clearLoop(); renderChart(); }
+  if (st.loopSection >= 0) {
+    const s = st.sections[st.loopSection];
+    if (i < s.start || i >= secEnd(st.loopSection)) { clearLoop(); renderChart(); }
+  }
+  // O estado deixa de dizer "looping …"
+  if (was && st.loopBar < 0 && st.loopSection < 0 && st.ready) setStatus(api().playerState === PLAYING ? 'Playing' : 'Paused');
 }
 /** Leva o leitor, a tablatura e o esquema para o compasso i. `fromChart`: não mexe no scroll do esquema. */
 function goBar(i: number, fromChart = false) {
   if (!st.ready) return;
   practice.lastTick = -1;
-  i = Math.max(0, Math.min(score().masterBars.length - 1, i));
+  const lim = learnBars() ?? [0, score().masterBars.length - 1];
+  i = Math.max(lim[0], Math.min(lim[1], i));
   leaveLoopIfOutside(i);
   delay.clear();
   api().tickPosition = barTick(i);
@@ -1053,18 +1132,18 @@ function practiceSection(k: number) {
   if (st.loopSection === k) { clearLoop(); renderChart(); setStatus(api().playerState === PLAYING ? 'Playing' : 'Paused'); return; }
   st.loopSection = k; st.loopBar = -1; practice.lastTick = -1;
   const s = st.sections[k], end = secEnd(k);
-  api().playbackRange = { startTick: barTick(s.start), endTick: barEndTick(end - 1) } as AlphaTab.synth.PlaybackRange;
+  setRange(barsRange(s.start, end - 1));
   api().isLooping = true; setPressed('loopBtn', true);
   renderChart();
   delay.clear();
   api().tickPosition = barTick(s.start);
   if (api().playerState !== PLAYING) api().play(); else setStatus('Playing');
 }
-/** Loop de um só compasso (sem mudar a posição de reprodução). */
+/** Loop de um só compasso (o leitor vai para o início dele). */
 function setLoopBar(i: number) {
   if (st.loopSection >= 0) { st.loopSection = -1; renderChart(); }
   st.loopBar = i;
-  api().playbackRange = { startTick: barTick(i), endTick: barEndTick(i) } as AlphaTab.synth.PlaybackRange;
+  setRange({ startTick: barTick(i), endTick: barEndTick(i) });
   api().isLooping = true; setPressed('loopBtn', true);
   setStatus(api().playerState === PLAYING ? 'Playing' : 'Paused');
 }
@@ -1080,7 +1159,8 @@ function practiceBar(i: number) {
 }
 function clearLoop() {
   st.loopSection = -1; st.loopBar = -1;
-  if (st.api && st.ready) { st.api.playbackRange = null; st.api.isLooping = false; }
+  setRange(null);
+  if (st.api && st.ready) st.api.isLooping = false;
   setPressed('loopBtn', false);
 }
 const setPressed = (id: string, v: boolean) => $(id).setAttribute('aria-pressed', v ? 'true' : 'false');
@@ -1094,7 +1174,7 @@ $('moreBtn').addEventListener('click', () => {
 });
 $('stopBtn').addEventListener('click', () => {
   if (!st.api) return;
-  delay.clear(); st.api.stop(); st.playingBar = -1; markPlaying(-1); updateNow(-1, 0);
+  st.api.stop(); showStopped();
 });
 $('prevBtn').addEventListener('click', () => goBar((st.playingBar < 0 ? 0 : st.playingBar) - 1));
 $('nextBtn').addEventListener('click', () => goBar((st.playingBar < 0 ? -1 : st.playingBar) + 1));
@@ -1107,6 +1187,7 @@ select('speed').addEventListener('change', () => {
 $('loopBtn').addEventListener('click', () => {
   const v = toggle('loopBtn'); api().isLooping = v;
   if (!v && (st.loopSection >= 0 || st.loopBar >= 0)) { clearLoop(); renderChart(); if (st.tabSel >= 0) placeTabSel(); }
+  setStatus(api().playerState === PLAYING ? 'Playing' : 'Paused');
 });
 $('metroBtn').addEventListener('click', () => { toggle('metroBtn'); clicker.ensure(); applyMetronome(); });
 $('countBtn').addEventListener('click', () => { toggle('countBtn'); clicker.ensure(); applyMetronome(); });
@@ -1127,7 +1208,10 @@ addEventListener('keydown', e => {
   if (e.key === 'Escape' && !$('library').hidden) { openLibrary(false); $('libraryBtn').focus(); return; }
   if (e.key === 'Escape' && modal.open) { closeBarModal(); return; }
   const t = e.target as HTMLElement;
-  if (t.isContentEditable || /^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(t.tagName) || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (t.isContentEditable || /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName) || e.metaKey || e.ctrlKey || e.altKey) return;
+  // Num botão ou numa ligação, o espaço é desse botão; as setas continuam a andar pelos compassos
+  // (senão, depois de clicar em Play com o rato, as setas deixavam de funcionar).
+  if (/^(BUTTON|A|SUMMARY)$/.test(t.tagName) && e.key === ' ') return;
   if (!st.ready) return;
   if (e.key === ' ' && !modal.open) { e.preventDefault(); if (learn.on) $('learnPlay').click(); else api().playPause(); }
   if (modal.open) {
@@ -1205,6 +1289,7 @@ function openImported(bytes: Uint8Array, name: string): Promise<boolean> {
     let id = '';
     try { const sc = parseScore(at, bytes); id = (sc.title || name) + '|' + (sc.artist || '') + '|' + sc.masterBars.length; } catch { /* loadBytes mostra o erro */ }
     if (id && !canSaveSong(plan, saved.map(x => x.id), id)) { songLimitReached(() => void openImported(bytes, name)); return false; }
+    openTurn++; // um ficheiro escolhido agora ganha a qualquer música que ainda esteja a chegar da conta
     st.api?.stop(); clearLoop();
     if (!loadBytes(bytes, name, false)) return false;
     saveImported(bytes, name);
@@ -1214,6 +1299,8 @@ function openImported(bytes: Uint8Array, name: string): Promise<boolean> {
 }
 /** Ficheiro que um visitante tentou abrir: abre-se sozinho assim que entrar numa conta. */
 let afterSignIn: (() => void) | null = null;
+/** Acabou de se abrir (depois de entrar na conta) o ficheiro que a pessoa tinha escolhido. */
+let openedAfterSignIn = false;
 function songLimitReached(retry?: () => void) {
   if (plan.kind === 'guest') {
     afterSignIn = retry ?? null;
@@ -1276,8 +1363,18 @@ async function renderLibrary() {
       const yes = document.createElement('button'); yes.type = 'button'; yes.className = 'danger'; yes.textContent = 'Delete';
       const no = document.createElement('button'); no.type = 'button'; no.textContent = 'Cancel';
       yes.addEventListener('click', async () => {
+        yes.disabled = true;
+        const wasOpen = song.id === st.fileKey && !st.isSample;
+        // A música aberta: o progresso por guardar não volta a ser escrito depois de apagada
+        if (wasOpen) { st.api?.pause(); practice.dirty = false; }
         try { await lib.remove(song.id); toast('“' + song.title + '” deleted from your account.'); }
-        catch { toast('Couldn’t delete it. Check your connection and try again.'); }
+        catch { toast('Couldn’t delete it. Check your connection and try again.'); renderLibrary(); return; }
+        // Apagou a que estava aberta: abre a seguinte da conta (ou a de exemplo), para não ficar no ecrã uma
+        // música que já não existe (e cujas alterações voltariam a ser guardadas).
+        if (wasOpen) {
+          const rest = await lib.list().catch(() => [] as SongMeta[]);
+          if (rest[0]) await openSaved(rest[0].id, true); else await openSample();
+        }
         renderLibrary();
       });
       no.addEventListener('click', () => renderLibrary());
@@ -1287,17 +1384,23 @@ async function renderLibrary() {
     li.append(open, del); list.append(li);
   }
 }
-async function openSaved(id: string) {
+/** Abre uma música da conta. `keepLibrary`: não fecha "My songs" (ao abrir a seguinte depois de apagar uma). */
+async function openSaved(id: string, keepLibrary = false) {
+  const turn = ++openTurn;
   let song: Awaited<ReturnType<typeof lib.get>> = null;
   try { song = await lib.get(id); } catch { toast('Couldn’t open the song. Check your connection and try again.'); return; }
+  if (turn !== openTurn) return; // entretanto pediu-se outra música: essa é que fica
   if (!song) { toast('That song isn’t in your account any more.'); renderLibrary(); return; }
   st.api?.stop(); clearLoop();
-  if (loadBytes(song.bytes, song.fileName, false)) { lib.touch(id).catch(() => {}); openLibrary(false); }
+  if (loadBytes(song.bytes, song.fileName, false)) { lib.touch(id).catch(() => {}); if (!keepLibrary) openLibrary(false); }
 }
+/** Conta os pedidos de abrir uma música: se chegarem fora de ordem (rede), só o último pedido conta. */
+let openTurn = 0;
 function openSample() {
+  const turn = ++openTurn;
   return fetch(base + 'sample.gp5')
     .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.arrayBuffer(); })
-    .then(b => { st.api?.stop(); clearLoop(); loadBytes(new Uint8Array(b), 'Sample', true); })
+    .then(b => { if (turn !== openTurn) return; st.api?.stop(); clearLoop(); loadBytes(new Uint8Array(b), 'Sample', true); })
     .catch(() => { $('songTitle').textContent = 'Load a Guitar Pro file to get started'; });
 }
 input('fileInput').addEventListener('change', e => {
@@ -1324,8 +1427,9 @@ function plural(n: number, w: string) { return n + ' ' + w + (n === 1 ? '' : 's'
 
 /** Preferências guardadas na conta: tema, atraso do áudio, compassos por linha na tab, som do metrónomo. */
 function applyPrefs() {
-  setTheme(savedTheme() ?? 'dark');
-  setSync(storage.get<number>('mapa:sync') ?? 0);
+  const theme = savedTheme();
+  if (theme !== currentTheme() || !theme) setTheme(theme ?? 'dark', false);
+  setSync(storage.get<number>('mapa:sync') ?? 0, false);
   const rows = storage.get<number>('mapa:tabPerRow');
   const next = typeof rows === 'number' && rows >= 0 && rows <= 6 ? Math.round(rows) : 0;
   if (next !== tabPerRow) { tabPerRow = next; select('tabPerRow').value = String(next); if (st.score) renderTab(); }
@@ -1353,13 +1457,81 @@ async function migrateLegacy() {
   if (moved || left) toast((moved ? plural(moved, 'song') + ' moved to your account.' : '') + (left ? ' The free plan keeps ' + FREE_SONG_LIMIT + '; ' + plural(left, 'older song') + ' wasn’t moved.' : ''));
 }
 
-/** Liga a conta: carrega os dados dela, passa o que estava no browser e aplica as preferências. */
+/**
+ * Liga a conta: carrega os dados dela, passa o que estava no browser e aplica as preferências.
+ * Sem rede, os dados ficam por ler: nada é enviado até se conseguir (enviar já escreveria por cima do que está
+ * na conta, por exemplo o tema por defeito por cima do escolhido) e volta-se a tentar sozinho.
+ */
 async function connectAccount() {
-  let data: Record<string, unknown> = {};
+  const failed = () => setSyncStatus('Couldn’t save your changes to your account yet. ChordTile will try again automatically.');
+  let data: Record<string, unknown> | null = null;
   try { data = await loadUserData(); } catch { setSyncStatus('Couldn’t reach your account. Check your connection.'); }
-  attachAccount(data, saveUserData, () => setSyncStatus('Couldn’t save your changes to your account yet. ChordTile will try again automatically.'));
+  attachAccount(data, saveUserData, failed);
+  if (!data) { retryPull(); return; }
+  pulledAt = Date.now();
   await migrateLegacy().catch(() => {});
   applyPrefs();
+}
+/** Quando se leram os dados da conta pela última vez. */
+let pulledAt = 0;
+let pulling = false;
+let pullTimer: ReturnType<typeof setTimeout> | undefined;
+function retryPull(ms = 5000) {
+  clearTimeout(pullTimer);
+  pullTimer = setTimeout(() => void pullAccount().then(ok => { if (!ok && account) retryPull(Math.min(ms * 2, 60000)); }), ms);
+}
+/**
+ * Volta a ler os dados da conta e aplica o que mudou noutro dispositivo (ou noutro separador): notas, secções,
+ * instrumento, progresso, passo do Tile by Tile e preferências. O que foi alterado aqui e ainda não seguiu
+ * é enviado primeiro e nunca é substituído.
+ */
+async function pullAccount(): Promise<boolean> {
+  if (!account || pulling) return false;
+  pulling = true;
+  const who = account.id, first = !isHydrated();
+  try {
+    await flush();
+    const data = await loadUserData();
+    if (account?.id !== who) return false;
+    const changed = mergeRemote(data);
+    pulledAt = Date.now(); clearTimeout(pullTimer); setSyncStatus('');
+    if (first) {
+      await migrateLegacy().catch(() => {}); applyPrefs();
+      // A página abriu sem rede e ficou na música de exemplo: agora abre a última da conta
+      renderLibrary();
+      if (st.isSample) { const songs = await lib.list().catch(() => [] as SongMeta[]); if (songs[0] && st.isSample) void openSaved(songs[0].id); }
+    }
+    applyRemote(changed, first);
+    return true;
+  } catch { return false; }
+  finally { pulling = false; }
+}
+const PREF_KEYS = ['mapa:theme', 'mapa:sync', 'mapa:tabPerRow', 'mapa:metroSound'];
+function applyRemote(changed: string[], first: boolean) {
+  if (!changed.length) return;
+  if (!first && changed.some(k => PREF_KEYS.includes(k))) applyPrefs();
+  if (changed.includes('mapa:learnCtaFolded')) setCtaFolded(storage.get<boolean>('mapa:learnCtaFolded') === true);
+  if (!st.score || !st.fileKey) return;
+  // A música aberta. Não se mexe no ecrã a meio de uma coisa: Tile by Tile, compasso expandido ou a escrever.
+  const busy = learn.on || modal.open || !!(document.activeElement as HTMLElement | null)?.isContentEditable;
+  if (changed.includes('mapa:progress:' + st.fileKey) && !practice.dirty) {
+    practice.progress = storage.get<SongProgress>('mapa:progress:' + st.fileKey) ?? {}; renderProgress();
+  }
+  if (changed.includes('mapa:' + st.fileKey) && !busy) {
+    const playing = st.api?.playerState === PLAYING, track = st.viewTrack;
+    const before = JSON.stringify(st.sections.map(x => x.start));
+    restoreSong(storage.get<SavedSong>('mapa:' + st.fileKey), playing); // a tocar, o instrumento não muda
+    if (JSON.stringify(st.sections.map(x => x.start)) !== before && (st.loopSection >= 0 || st.loopBar >= 0)) clearLoop();
+    renderTrackControls(); detect(); renderChart();
+    if (st.viewTrack !== track) renderTab();
+    if (st.selBar >= 0) selectBar(st.selBar);
+  }
+  if ((changed.includes('mapa:learn:' + st.fileKey) || changed.includes('mapa:' + st.fileKey)) && !learn.on) updateLearnCta();
+}
+/** A página vai fechar (ou ficar em segundo plano): o que ainda não seguiu vai já, num pedido que o browser acaba mesmo depois de ela fechar. */
+function saveOnExit() {
+  flushProgress();
+  flushOnExit(saveUserDataOnExit);
 }
 
 let firstAccount!: () => void;
@@ -1379,6 +1551,7 @@ function showAccount(a: Account | null) {
   $('pwTrial').hidden = !!a;
   updateSyncRow(); applyLocks();
   if (!a) {
+    clearTimeout(pullTimer); practice.dirty = false;
     detachAccount(); setPlan(GUEST);
     if (was) { renderLibrary(); if (!st.isSample) openSample(); } // saiu: nada fica no ecrã nem no browser
     if (!connected) { connected = true; firstAccount(); }
@@ -1389,19 +1562,24 @@ function showAccount(a: Account | null) {
   void connectAccount().then(() => refreshPlan()).then(async () => {
     if (!connected) { connected = true; firstAccount(); return; }
     renderLibrary();
-    // Entrou com a música de exemplo aberta: abre a última da conta
-    if (signingIn && st.isSample) { const songs = await lib.list().catch(() => [] as SongMeta[]); if (songs[0]) openSaved(songs[0].id); }
+    // Entrou com a música de exemplo aberta: abre a última da conta. (Não, se entrou para carregar um ficheiro:
+    // esse já está a abrir, e a música da conta chegava depois e ficava por cima dele.)
+    const importing = openedAfterSignIn; openedAfterSignIn = false;
+    if (signingIn && st.isSample && !importing) { const songs = await lib.list().catch(() => [] as SongMeta[]); if (songs[0] && st.isSample) openSaved(songs[0].id); }
   });
 }
 if (cloudEnabled) {
   watchAccount(showAccount).catch(() => { connected = true; firstAccount(); });
   // Ao voltar ao separador: o plano pode ter mudado (pagamento) e as músicas podem ter mudado noutro dispositivo
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') { void flush(); return; }
-    if (account) { refreshPlan(); if (!$('library').hidden) renderLibrary(); }
+    if (document.visibilityState === 'hidden') { saveOnExit(); return; }
+    if (!account) return;
+    refreshPlan(); if (!$('library').hidden) renderLibrary();
+    // …e as notas, secções e progresso também: lê-os outra vez (no máximo de 10 em 10 s)
+    if (Date.now() - pulledAt > 10000) void pullAccount();
   });
-  addEventListener('pagehide', () => void flush());
-  addEventListener('online', () => void flush());
+  addEventListener('pagehide', saveOnExit);
+  addEventListener('online', () => { if (account) void pullAccount(); });
 } else queueMicrotask(() => { connected = true; firstAccount(); });
 const welcome = () => toast('You’re signed in. Welcome!');
 $('accountBtn').addEventListener('click', () => { if (account) location.href = '/account'; else openAuthDialog('signin', undefined, welcome); });
@@ -1446,7 +1624,7 @@ function applyLocks() {
 let plan: PlanState = GUEST;
 function setPlan(p: PlanState) {
   const was = plan.premium; plan = p;
-  if (p.kind !== 'guest' && afterSignIn) { const go = afterSignIn; afterSignIn = null; queueMicrotask(go); }
+  if (p.kind !== 'guest' && afterSignIn) { const go = afterSignIn; afterSignIn = null; openedAfterSignIn = true; queueMicrotask(go); }
   const btn = $('premiumBtn');
   btn.classList.toggle('on', p.premium);
   $('setPremiumText').textContent = p.premium ? planLabel(p) : 'Go Premium';
@@ -1578,7 +1756,7 @@ function renderProgress() {
     }
   });
 }
-addEventListener('pagehide', flushProgress);
+if (!cloudEnabled) addEventListener('pagehide', flushProgress); // (com conta: saveOnExit, que também envia)
 
 // ---------- Ajuda e tutorial ----------
 function openHelp(v: boolean) {
@@ -1675,14 +1853,14 @@ function setLearnStyle(css: string) {
   el.textContent = css;
 }
 /** A tablatura só com os compassos das secções from…to (null = a música toda). */
-function setTabRange(from: number | null, to: number | null = from) {
+function setTabRange(from: number | null, to: number | null = from, draw = true) {
   const a = st.api; if (!a) return;
   const d = a.settings.display;
   const start = from === null ? 1 : st.sections[from].start + 1;
   const count = from === null || to === null ? -1 : secEnd(to) - st.sections[from].start;
   if (d.startBar === start && d.barCount === count) return;
   d.startBar = start; d.barCount = count;
-  a.updateSettings(); a.render();
+  a.updateSettings(); if (draw) a.render();
 }
 /**
  * O trecho das secções from…to, pronto a tocar (sem começar sozinho). Não fica em loop no leitor: cada volta
@@ -1693,7 +1871,7 @@ function setLearnLoop(from: number, to: number) {
   if (api().playerState === PLAYING) api().pause();
   st.loopSection = from === to ? from : -1; st.loopBar = -1; practice.lastTick = -1;
   const s = st.sections[from];
-  api().playbackRange = { startTick: barTick(s.start), endTick: barEndTick(secEnd(to) - 1) } as AlphaTab.synth.PlaybackRange;
+  setRange(barsRange(s.start, secEnd(to) - 1));
   api().isLooping = false; setPressed('loopBtn', true);
   renderChart();
   delay.clear();
@@ -1712,7 +1890,8 @@ function enterLearn() {
   // Na primeira vez, explica o método antes de começar
   if (!storage.get<boolean>('mapa:learnIntroSeen')) openLearnIntro(true);
 }
-function exitLearn() {
+/** `redraw` false: a tablatura vai ser desenhada a seguir com outra música (dois desenhos seguidos atropelavam-se). */
+function exitLearn(redraw = true) {
   if (!learn.on) return;
   setPeek(false); closeLearnIntro(); setLearnMore(false); cancelLearnCount(); hideLearnDone();
   learn.on = false;
@@ -1721,7 +1900,7 @@ function exitLearn() {
   if (st.api && api().playerState === PLAYING) api().pause();
   // A tablatura volta a ter a música toda: ao acabar de a desenhar, mostra o compasso onde se ficou
   pendingScroll = true;
-  setTabRange(null); clearLoop(); renderChart(); updateLearnCta(); applyMetronome();
+  setTabRange(null, null, redraw); clearLoop(); renderChart(); updateLearnCta(); applyMetronome();
   history.replaceState(null, '', location.pathname + location.hash);
 }
 
@@ -1836,7 +2015,11 @@ function learnCountIn() {
   if (!step || !st.ready || learn.counting) return;
   hideLearnDone();
   const [from, to] = stepRange(step);
-  const startTick = barTick(st.sections[from].start), endTick = barEndTick(secEnd(to) - 1);
+  const { startTick, endTick } = barsRange(st.sections[from].start, secEnd(to) - 1);
+  // O trecho do passo tem de estar no leitor (por segurança: sem ele a volta não acabava no fim da secção)
+  const cur = api().playbackRange;
+  if (!cur || cur.startTick !== startTick || cur.endTick !== endTick) { const pos = api().tickPosition; setRange({ startTick, endTick }); if (pos > startTick && pos < endTick) api().tickPosition = pos; }
+  api().isLooping = false;
   // Volta nova (ou acabada): do início do trecho. Pausada a meio: continua de onde estava.
   const pos = api().tickPosition;
   if (pos <= startTick || pos >= endTick - 1) api().tickPosition = startTick;
@@ -2014,7 +2197,7 @@ function updateLearnCta() {
   $('learnCtaBtnText').textContent = saved?.done ? 'Practise again' : step > 0 ? 'Continue' + (nextName ? ' · ' + nextName : '') : 'Start' + (nextName ? ' · ' + nextName : '');
   $('learnCtaTitle').textContent = saved?.done ? 'You can play it with no tab' : 'Tile by Tile';
 }
-$('learnExit').addEventListener('click', exitLearn);
+$('learnExit').addEventListener('click', () => exitLearn());
 
 // "How it works": o método explicado numa janela (abre sozinha na primeira vez; depois, no botão "?")
 function openLearnIntro(first = false) {
@@ -2101,4 +2284,5 @@ boot()
   .then(() => { if (params.has('learn')) enterLearn(); })
   // Primeira vez numa conta: tutorial (depois de a música aparecer, para os destaques ficarem no sítio certo).
   // Sem conta não abre sozinho (não se guarda nada, por isso abriria em todas as visitas): fica no "?".
-  .finally(() => { if (account && !tourSeen()) setTimeout(startTour, 600); });
+  // (Nem quando os dados da conta ainda não se leram: não se sabe se já o viu.)
+  .finally(() => { if (account && isHydrated() && !tourSeen()) setTimeout(startTour, 600); });

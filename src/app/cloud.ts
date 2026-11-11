@@ -20,9 +20,23 @@ function sb(): Promise<SupabaseClient> {
   if (!cloudEnabled) return Promise.reject(new Error('Cloud sync is not configured'));
   client ??= import('@supabase/supabase-js').then(m => m.createClient(URL_!, KEY!, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' },
+    global: { fetch: keepaliveFetch },
   }));
   return client;
 }
+
+/**
+ * As gravações dos dados da pessoa (user_data) são pedidos "keepalive": se a página fechar com uma a meio,
+ * o browser acaba-a na mesma (um pedido normal era cancelado e a alteração perdia-se).
+ */
+const keepaliveFetch: typeof fetch = (input, init) => {
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+  const small = typeof init?.body === 'string' && init.body.length < KEEPALIVE_MAX / 2;
+  if (init?.method === 'POST' && small && url.includes('/rest/v1/user_data')) {
+    return fetch(input, { ...init, keepalive: true }).catch(() => fetch(input, init)); // (recusado pelo limite do browser: pedido normal)
+  }
+  return fetch(input, init);
+};
 
 export interface Account { id: string; email: string; name: string }
 const toAccount = (s: Session | null): Account | null =>
@@ -35,9 +49,12 @@ const toAccount = (s: Session | null): Account | null =>
 export async function watchAccount(cb: (a: Account | null, recovery?: boolean) => void): Promise<void> {
   const c = await sb();
   const { data } = await c.auth.getSession();
+  lastSession = data.session;
   cb(toAccount(data.session));
-  c.auth.onAuthStateChange((e, s) => cb(toAccount(s), e === 'PASSWORD_RECOVERY'));
+  c.auth.onAuthStateChange((e, s) => { lastSession = s; cb(toAccount(s), e === 'PASSWORD_RECOVERY'); });
 }
+/** A sessão mais recente (para o envio de última hora ao fechar a página, que não pode esperar por nada). */
+let lastSession: Session | null = null;
 
 const pageUrl = (page: string) => new URL(page, location.href).href.split('?')[0].split('#')[0];
 
@@ -151,9 +168,19 @@ export async function getAccountSong(id: string): Promise<(SongMeta & { bytes: U
 export async function addAccountSong(meta: Omit<SongMeta, 'addedAt' | 'openedAt'>, bytes: Uint8Array): Promise<void> {
   const c = await sb(); const u = await uid(c);
   const now = iso(Date.now());
-  const { data: existing } = await c.from('songs').select('id,deleted_at').eq('user_id', u).eq('id', meta.id).maybeSingle();
+  const { data: existing, error: readErr } = await c.from('songs').select('id,deleted_at').eq('user_id', u).eq('id', meta.id).maybeSingle();
+  if (readErr) throw readErr;
   const path = u + '/' + await storageKey(meta.id);
-  const up = await c.storage.from(BUCKET).upload(path, bytes, { upsert: true, contentType: 'application/octet-stream' });
+  const opts = { contentType: 'application/octet-stream' };
+  const files = c.storage.from(BUCKET);
+  // Música que já está na conta: substitui o ficheiro (uma substituição não conta para o limite do plano).
+  // Enviar como novo com "upsert" passava pela regra de criação e era recusado a quem já está no limite.
+  let up = existing ? await files.update(path, bytes, opts) : null;
+  if (!up || up.error) up = await files.upload(path, bytes, { ...opts, upsert: true });
+  if (up.error && isPolicyError(up.error as never) && await pruneOrphanFiles(c, u)) {
+    // Havia ficheiros sem música (um apagar que ficou a meio) a ocupar o limite: tenta outra vez
+    up = await files.upload(path, bytes, { ...opts, upsert: true });
+  }
   if (up.error) { if (isPolicyError(up.error as never)) throw new SongLimitError(); throw up.error; }
   const row = { user_id: u, id: meta.id, file_name: meta.fileName, title: meta.title, artist: meta.artist, bars: meta.bars, opened_at: now, deleted_at: null };
   const { error } = existing
@@ -165,6 +192,21 @@ export async function addAccountSong(meta: Omit<SongMeta, 'addedAt' | 'openedAt'
     throw error;
   }
   fileCache.set(meta.id, bytes);
+}
+
+/**
+ * Apaga da pasta da pessoa os ficheiros que já não pertencem a nenhuma música (ficam quando apagar uma música
+ * falha a meio, e contam para o limite do plano). Devolve true se apagou algum.
+ */
+async function pruneOrphanFiles(c: SupabaseClient, u: string): Promise<boolean> {
+  const rows = await c.from('songs').select('id').eq('user_id', u).is('deleted_at', null);
+  const list = await c.storage.from(BUCKET).list(u, { limit: 1000 });
+  if (rows.error || list.error || !list.data) return false; // sem certeza do que existe, não se apaga nada
+  const keep = new Set(await Promise.all((rows.data as { id: string }[]).map(r => storageKey(r.id))));
+  const orphans = list.data.filter(f => !keep.has(f.name)).map(f => u + '/' + f.name);
+  if (!orphans.length) return false;
+  const rm = await c.storage.from(BUCKET).remove(orphans);
+  return !rm.error;
 }
 
 /** Marca a música como aberta agora (para abrir a última da próxima vez, em qualquer dispositivo). */
@@ -203,6 +245,27 @@ export async function saveUserData(entries: Record<string, unknown>): Promise<vo
   const { error } = await c.from('user_data').upsert(keys.map(key => ({ user_id: u, key, value: entries[key], updated_at: now })));
   if (error) throw error;
 }
+
+/**
+ * Envio de última hora (a página vai fechar ou ficar em segundo plano): um pedido "keepalive", que o browser
+ * acaba mesmo depois de a página fechar, começado logo, sem esperar por nada. Devolve null se não o puder fazer.
+ */
+export function saveUserDataOnExit(entries: Record<string, unknown>): Promise<void> | null {
+  const keys = Object.keys(entries), s = lastSession;
+  if (!keys.length || !s || !cloudEnabled) return null;
+  if ((s.expires_at ?? Infinity) * 1000 < Date.now()) return null; // sessão por renovar: o servidor recusava
+  const now = iso(Date.now());
+  const body = JSON.stringify(keys.map(key => ({ user_id: s.user.id, key, value: entries[key], updated_at: now })));
+  if (new TextEncoder().encode(body).length > KEEPALIVE_MAX) return null;
+  try {
+    return fetch(URL_ + '/rest/v1/user_data?on_conflict=user_id%2Ckey', {
+      method: 'POST', keepalive: true, body,
+      headers: { apikey: KEY!, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+    }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); });
+  } catch { return null; }
+}
+/** Os pedidos keepalive de uma página não podem passar, todos juntos, de 64 KB: fica-se bem abaixo. */
+const KEEPALIVE_MAX = 30_000;
 
 /** Plano da conta (experiência, subscrição ou vitalícia). null se ainda não houver linha. */
 export async function fetchEntitlement(): Promise<Entitlement | null> {

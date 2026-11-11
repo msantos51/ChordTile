@@ -113,7 +113,7 @@
            No telemóvel ficam fixos em baixo, sempre à mão, para a tab e os quadrados caberem no ecrã. -->
       <div class="learn-dock" id="learnDock">
         <div class="learn-controls" role="group" aria-label="Player controls">
-          <button class="btn primary learn-play" id="learnPlay" type="button"><svg class="i f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Play on loop</span></button>
+          <button class="btn primary learn-play" id="learnPlay" type="button"><svg class="i f" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Play</span></button>
           <button class="btn learn-peek" id="learnPeek" type="button" aria-pressed="false" title="Hold to see the tab for a moment (that run won’t count)"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Peek</span></button>
           <label class="speed" for="learnSpeed" data-gate="tools" title="Speed">
             <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 14l4-5"/></svg>
@@ -132,7 +132,6 @@
       <!-- Opções do leitor (metrónomo, contagem, tocar por cima, solo), escondidas até se pedirem -->
       <div class="learn-tools" id="learnTools" role="group" aria-label="More options" hidden>
         <button class="tbtn" type="button" data-for="metroBtn" data-gate="tools" aria-pressed="false" title="Metronome"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l3.5 18h-13z"/><path d="M12 16l6-8"/></svg><span>Metronome</span></button>
-        <button class="tbtn" type="button" data-for="countBtn" data-gate="tools" aria-pressed="false" title="Count-in"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg><span>Count-in</span></button>
         <button class="tbtn" type="button" data-for="muteBtn" data-gate="playalong" aria-pressed="false" title="Mute my instrument and play along"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg><span>Play along</span></button>
         <button class="tbtn" type="button" data-for="soloBtn" data-gate="solo" aria-pressed="false" title="Only my instrument: mutes the rest of the band"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><span>Solo</span></button>
         <span class="learn-status" id="learnStatus" aria-live="polite"></span>
@@ -395,12 +394,25 @@
   </div>
 </aside>
 
+<!-- Tile by Tile: a contagem antes de cada volta, no meio do ecrã; e, no fim das voltas, repetir ou avançar -->
+<div class="learn-overlay" id="learnOverlay" hidden>
+  <div class="lo-count" id="loCount" hidden aria-live="assertive"><small id="loCountLab">Run 1 of 3</small><b id="loNum"></b></div>
+  <section class="lo-done" id="loDone" role="dialog" aria-labelledby="loTitle" hidden>
+    <span class="lo-tick" aria-hidden="true">✓</span>
+    <h2 id="loTitle">Done!</h2>
+    <p id="loText"></p>
+    <div class="lo-actions">
+      <button class="btn" id="loRepeat" type="button">Repeat 3 more times</button>
+      <button class="btn primary" id="loNext" type="button"><span id="loNextLabel">Next step</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+  </section>
+</div>
 <div class="scrim" id="learnIntroScrim" hidden></div>
 <section class="learn-intro" id="learnIntro" role="dialog" aria-modal="true" aria-labelledby="liTitle" hidden>
   <button class="ibtn pw-close" id="learnIntroClose" type="button" aria-label="Close">✕</button>
   <p class="pw-kicker">Tile by Tile</p>
   <h2 id="liTitle">You’ll learn this song in 5 sections.</h2>
-  <p class="pw-lead">Each section goes through the same steps. The song plays on loop and counts every run for you.</p>
+  <p class="pw-lead">Each section goes through the same steps. Every run starts with a count-in and is counted for you. After the last run it stops, so you can repeat it or move on.</p>
   <ol class="li-steps">
     <li><b>1</b><strong>With the tab</strong><span>Read the tab and play along, as slow as you need.</span><em>3 runs</em></li>
     <li><b>2</b><strong>Without the tab</strong><span>The tab hides and only the chord tiles stay. Play it from memory.</span><em>3 runs · no peeking</em></li>

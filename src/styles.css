@@ -907,6 +907,24 @@ body.learn-tiles .learn-peek { display: inline-flex; }
 .learn-next .i { width: 20px; height: 20px; flex: none; }
 @keyframes ln-ready { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); } 60% { box-shadow: 0 0 0 10px transparent; } }
 @media (prefers-reduced-motion: reduce) { .lp-item.lit button, .lr-pips i.on, .learn-next.ready { animation: none; } }
+/* Contagem antes de cada volta (números grandes no meio do ecrã) e fim das voltas (repetir ou avançar) */
+.learn-overlay { position: fixed; inset: 0; z-index: 25; display: grid; place-items: center; pointer-events: none; padding: 16px; }
+.learn-overlay[hidden] { display: none; }
+.lo-count { display: grid; justify-items: center; gap: 4px; min-width: 180px; padding: 22px 34px 26px; border-radius: 28px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line-2); box-shadow: var(--shadow); }
+.lo-count small { font: 600 12px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-text); }
+.lo-count b { font: 900 120px/1 var(--f-body); color: var(--ink-strong); min-height: 120px; font-variant-numeric: tabular-nums; }
+.lo-count b.pop { animation: lo-pop .35s cubic-bezier(.2, .9, .3, 1.4); }
+@keyframes lo-pop { from { transform: scale(.6); opacity: .3; } to { transform: none; opacity: 1; } }
+.lo-done { pointer-events: auto; width: min(460px, 100%); display: grid; justify-items: center; gap: 12px; text-align: center; padding: 28px 24px 22px;
+  border-radius: var(--r-lg, 16px); background: var(--panel); border: 1px solid var(--line-2); box-shadow: var(--shadow); }
+.lo-tick { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); font: 900 24px var(--f-body); }
+.lo-done h2 { margin: 0; font-size: 21px; line-height: 1.25; text-wrap: balance; }
+.lo-done p { margin: 0; font-size: 14px; color: var(--ink-soft); }
+.lo-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 6px; }
+.lo-actions .btn { min-height: var(--h-ctl-lg); padding: 0 20px; }
+@media (prefers-reduced-motion: reduce) { .lo-count b.pop { animation: none; } }
+@media (max-width: 600px) { .lo-count b { font-size: 96px; min-height: 96px; } .lo-actions .btn { flex: 1 1 100%; justify-content: center; } .lo-actions .btn span { display: inline; } }
 /* "How it works": o método numa janela */
 .learn-intro { position: fixed; z-index: 31; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(720px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow-y: auto;
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg, 16px); box-shadow: var(--shadow); padding: 28px 24px 22px; display: grid; gap: 16px; }

@@ -9,7 +9,7 @@ import { exportPdf } from './app/pdf';
 import { DYNAMIC_NAMES, TECH_NAMES, barView, techLegend, type BarView } from './analysis/bar';
 import { Clicker, METRO_SOUNDS, isMetroSound, nextTickTime, type MetroSound } from './app/metronome';
 import { MetroInjector, type GridSource } from './app/metro-inject';
-import type { GridEvent } from './app/metro-grid';
+import { stateAt, type GridEvent } from './app/metro-grid';
 import { autoSub, beatInfo, countLabels, slotOf, type Sub } from './app/count';
 import { VisualDelay } from './app/sync';
 import { releaseAudio, unlockAudio } from './app/audio-unlock';
@@ -784,12 +784,14 @@ function initApi() {
     // Ao mudar para a vista da tablatura (telemóvel), mostra logo o compasso onde está
     if (pendingScroll && st.playingBar >= 0) { pendingScroll = false; requestAnimationFrame(() => scrollTabToBar(st.playingBar, false)); }
   });
+  // Tile by Tile: o trecho toca uma vez e pára; no fim conta-se a volta e vem a contagem (ou o fim do passo)
+  a.playerFinished.on(() => { if (learn.on) learnRunEnded(); });
   a.playerStateChanged.on(e => {
     const playing = e.state === PLAYING;
     if (!playing) { delay.clear(); releaseAudio(); practice.lastAt = 0; flushProgress(); }
     // Contagem inicial: os primeiros avisos do metrónomo (um compasso) são a contagem
     metro.last = null;
-    metro.countInLeft = playing && $('countBtn').getAttribute('aria-pressed') === 'true' ? curNumerator() : 0;
+    metro.countInLeft = playing && !learn.on && $('countBtn').getAttribute('aria-pressed') === 'true' ? curNumerator() : 0;
     $('playIcon').innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
     $('playBtn').setAttribute('aria-label', playing ? 'Pause' : 'Play');
     setStatus(playing ? 'Playing' : 'Paused');
@@ -910,8 +912,9 @@ function applyMetronome() {
   const metroOn = $('metroBtn').getAttribute('aria-pressed') === 'true';
   const countOn = $('countBtn').getAttribute('aria-pressed') === 'true';
   st.api.metronomeVolume = metroOn && metro.sound === 'click' ? 1 : 0;
-  // A contagem inicial só acontece com volume > 0: com outro som fica quase muda e tocamos nós
-  st.api.countInVolume = countOn ? (metro.sound === 'click' ? 1 : 0.0001) : 0;
+  // A contagem inicial só acontece com volume > 0: com outro som fica quase muda e tocamos nós.
+  // No Tile by Tile a contagem é a do próprio passo (no meio do ecrã, antes de cada volta), por isso desliga-se aqui.
+  st.api.countInVolume = countOn && !learn.on ? (metro.sound === 'click' ? 1 : 0.0001) : 0;
 }
 const curNumerator = () => {
   const i = Math.max(0, st.playingBar);
@@ -954,7 +957,7 @@ function setupInjector(a: AlphaTab.AlphaTabApi) {
     countInVolume: () => a.countInVolume,
     sound: () => metro.sound,
     metroOn: () => $('metroBtn').getAttribute('aria-pressed') === 'true',
-    countInOn: () => $('countBtn').getAttribute('aria-pressed') === 'true',
+    countInOn: () => !learn.on && $('countBtn').getAttribute('aria-pressed') === 'true',
     samples: (sound, rate) => clicker.samples(sound, rate),
     resync: () => { a.tickPosition = a.tickPosition; },
   });
@@ -1126,7 +1129,7 @@ addEventListener('keydown', e => {
   const t = e.target as HTMLElement;
   if (t.isContentEditable || /^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(t.tagName) || e.metaKey || e.ctrlKey || e.altKey) return;
   if (!st.ready) return;
-  if (e.key === ' ' && !modal.open) { e.preventDefault(); api().playPause(); }
+  if (e.key === ' ' && !modal.open) { e.preventDefault(); if (learn.on) $('learnPlay').click(); else api().playPause(); }
   if (modal.open) {
     if (e.key === ' ') { e.preventDefault(); $('bmPlay').click(); }
     if (e.key === 'ArrowLeft') { e.preventDefault(); $('bmPrev').click(); }
@@ -1540,10 +1543,10 @@ function flushProgress() {
 function trackPractice(bar: number, tick: number) {
   const now = performance.now();
   // Fim de uma volta: o leitor voltou atrás no loop (no Tile by Tile o loop pode juntar várias secções)
-  const looping = st.loopSection >= 0 || st.loopBar >= 0 || (learn.on && !!st.api?.isLooping);
+  // (No Tile by Tile o trecho não fica em loop: cada volta acaba em playerFinished, ver learnRunEnded.)
+  const looping = !learn.on && (st.loopSection >= 0 || st.loopBar >= 0);
   const wrapped = looping && practice.lastTick >= 0 && tick < practice.lastTick;
   practice.lastTick = tick;
-  if (wrapped && learn.on) learnLoopDone();
   if (st.isSample) return;
   const k = secOf(bar), start = st.sections[k]?.start ?? 0;
   if (practice.lastAt) { practice.progress = addTime(practice.progress, start, now - practice.lastAt, Date.now()); practice.dirty = true; }
@@ -1644,7 +1647,13 @@ addEventListener('resize', () => { if (tour.open) placeTour(visibleTarget(TOUR_S
 // de cor (só os quadrados) e, a partir da 2.ª, junta-se a tudo o que já se sabe (1 → 2, 1 → 3…) até à música toda.
 // Cada volta do loop conta; espreitar a tab ("Peek") faz com que essa volta não conte. O passo fica guardado por música.
 const LEARN_NAME = 'Tile by Tile';
-const learn = { on: false, step: 0, runs: 0, peeked: false, peeking: false, lit: -1 };
+const learn = {
+  on: false, step: 0, runs: 0, peeked: false, peeking: false, lit: -1,
+  /** Até quantas voltas se toca antes de parar (o objetivo do passo, ou mais depois de "Repeat"). */
+  target: 0,
+  /** A contagem antes de uma volta (temporizadores), ou null. */
+  counting: null as number[] | null,
+};
 const learnKey = () => 'mapa:learn:' + st.fileKey;
 const learnSteps = () => buildSteps(st.sections.length);
 const secBars = () => st.sections.map((s, k) => secEnd(k) - s.start);
@@ -1675,14 +1684,17 @@ function setTabRange(from: number | null, to: number | null = from) {
   d.startBar = start; d.barCount = count;
   a.updateSettings(); a.render();
 }
-/** Loop das secções from…to, pronto a tocar (sem começar sozinho). */
+/**
+ * O trecho das secções from…to, pronto a tocar (sem começar sozinho). Não fica em loop no leitor: cada volta
+ * acaba e pára (playerFinished), e a seguinte só começa depois da contagem no meio do ecrã.
+ */
 function setLearnLoop(from: number, to: number) {
   if (!st.ready) return;
   if (api().playerState === PLAYING) api().pause();
   st.loopSection = from === to ? from : -1; st.loopBar = -1; practice.lastTick = -1;
   const s = st.sections[from];
   api().playbackRange = { startTick: barTick(s.start), endTick: barEndTick(secEnd(to) - 1) } as AlphaTab.synth.PlaybackRange;
-  api().isLooping = true; setPressed('loopBtn', true);
+  api().isLooping = false; setPressed('loopBtn', true);
   renderChart();
   delay.clear();
   api().tickPosition = barTick(s.start);
@@ -1695,21 +1707,21 @@ function enterLearn() {
   learn.step = restoreStep(storage.get<SavedLearn>(learnKey()), learnSteps(), st.sections.length);
   closeBarModal(); openLibrary(false); openSettings(false, false); $('barbar').hidden = true;
   history.replaceState(null, '', location.pathname + '?learn' + location.hash);
-  showLearnStep();
+  showLearnStep(); applyMetronome();
   scrollTo({ top: 0 });
   // Na primeira vez, explica o método antes de começar
   if (!storage.get<boolean>('mapa:learnIntroSeen')) openLearnIntro(true);
 }
 function exitLearn() {
   if (!learn.on) return;
-  setPeek(false); closeLearnIntro(); setLearnMore(false);
+  setPeek(false); closeLearnIntro(); setLearnMore(false); cancelLearnCount(); hideLearnDone();
   learn.on = false;
   document.body.classList.remove('learning', 'learn-tab', 'learn-tiles', 'learn-final');
   $('learnPanel').hidden = true; setLearnStyle('');
   if (st.api && api().playerState === PLAYING) api().pause();
   // A tablatura volta a ter a música toda: ao acabar de a desenhar, mostra o compasso onde se ficou
   pendingScroll = true;
-  setTabRange(null); clearLoop(); renderChart(); updateLearnCta();
+  setTabRange(null); clearLoop(); renderChart(); updateLearnCta(); applyMetronome();
   history.replaceState(null, '', location.pathname + location.hash);
 }
 
@@ -1790,28 +1802,102 @@ function renderRuns() {
   renderLearnSteps(steps, learn.step);
 }
 
-/** Fim de uma volta do loop (chamado pelo leitor). */
-function learnLoopDone() {
+/** Fim de uma volta (chamado pelo leitor). Devolve a mensagem de parabéns quando a volta completa o passo. */
+function learnLoopDone(): string {
   const steps = learnSteps(), i = learn.step, step = steps[i];
-  if (!step) return;
+  if (!step) return '';
   const peeked = learn.peeked;
   learn.peeked = learn.peeking; // quem ainda está a espreitar já estraga a volta seguinte
-  if (step.kind !== 'learn' && peeked) { toast('You peeked at the tab, so that run doesn’t count. Go again!'); return; }
+  if (step.kind !== 'learn' && peeked) { toast('You peeked at the tab, so that run doesn’t count. Go again!'); return ''; }
   const goal = runsGoal(steps, i), before = learn.runs;
   learn.runs++;
+  let msg = '';
   if (before < goal && learn.runs >= goal) {
     const sec = st.sections[stepSection(step)];
     if (step.kind === 'recall') {
       learn.lit = step.sec;
       const pct = byHeartPct(knownSections(steps, i, true), secBars());
-      toast('“' + sec.name + '” is yours, no tab needed! ' + pct + '% of the song with no tab.');
-    } else if (isFinal(steps, i)) toast('The whole song, no tab. Amazing!');
-    else if (step.kind === 'join') toast(joinName(step.from, step.to) + ' in a row, no tab. Great!');
-    else toast('You’ve got “' + sec.name + '” with the tab. Now try it without.');
+      msg = '“' + sec.name + '” is yours, no tab needed! ' + pct + '% of the song with no tab.';
+    } else if (isFinal(steps, i)) msg = 'The whole song, no tab. Amazing!';
+    else if (step.kind === 'join') msg = joinName(step.from, step.to) + ' in a row, no tab. Great!';
+    else msg = 'You’ve got “' + sec.name + '” with the tab. Now try it without.';
     renderLearnPath(steps, i);
-  } else if (step.kind !== 'learn' || learn.runs < goal) toast(learn.runs < goal ? 'Run ' + learn.runs + ' of ' + goal + '. Keep going!' : 'Another clean run!');
+  } else if (learn.runs < learn.target) toast(learn.runs < goal ? 'Run ' + learn.runs + ' of ' + goal + '. Keep going!' : 'Another clean run!');
   renderRuns();
+  return msg;
 }
+
+/**
+ * Contagem antes de cada volta: um compasso de tempos, ao andamento (e à velocidade) do início do trecho,
+ * em números grandes no meio do ecrã e com o som do metrónomo. Depois toca o trecho desde onde está.
+ */
+function learnCountIn() {
+  const steps = learnSteps(), step = steps[learn.step];
+  if (!step || !st.ready || learn.counting) return;
+  hideLearnDone();
+  const [from, to] = stepRange(step);
+  const startTick = barTick(st.sections[from].start), endTick = barEndTick(secEnd(to) - 1);
+  // Volta nova (ou acabada): do início do trecho. Pausada a meio: continua de onde estava.
+  const pos = api().tickPosition;
+  if (pos <= startTick || pos >= endTick - 1) api().tickPosition = startTick;
+  const src = gridSource();
+  const { bpm, numerator, denominator } = src ? stateAt(src.events, startTick) : { bpm: score().tempo || 120, numerator: 4, denominator: 4 };
+  const beats = Math.max(1, Math.min(12, numerator));
+  const beatSec = (60 / Math.max(20, bpm)) * (4 / denominator) / (api().playbackSpeed || 1);
+  const sound: MetroSound = metro.sound === 'click' ? 'wood' : metro.sound;
+  clicker.ensure();
+  const lead = 0.12, t0 = clicker.now() + lead;
+  const goal = runsGoal(steps, learn.step), run = learn.runs + 1;
+  $('loCountLab').textContent = goal === 1 ? 'Get ready' : run <= goal ? 'Run ' + run + ' of ' + goal : 'Run ' + run;
+  $('loNum').textContent = '';
+  $('learnOverlay').hidden = false; $('loCount').hidden = false;
+  const timers: number[] = [];
+  for (let b = 0; b < beats; b++) {
+    clicker.tick(sound, b, t0 + b * beatSec, beatSec);
+    timers.push(window.setTimeout(() => {
+      const n = $('loNum'); n.textContent = String(b + 1);
+      n.classList.remove('pop'); void n.offsetWidth; n.classList.add('pop');
+    }, (lead + b * beatSec) * 1000));
+  }
+  timers.push(window.setTimeout(() => {
+    learn.counting = null; $('loCount').hidden = true; $('learnOverlay').hidden = true;
+    practice.lastTick = -1;
+    api().play();
+  }, (lead + beats * beatSec) * 1000));
+  learn.counting = timers;
+  syncLearnPlay();
+}
+function cancelLearnCount() {
+  if (!learn.counting) return;
+  learn.counting.forEach(t => clearTimeout(t)); learn.counting = null;
+  $('loCount').hidden = true; if ($('loDone').hidden) $('learnOverlay').hidden = true;
+  syncLearnPlay();
+}
+
+/** Acabou uma volta: conta-a; se ainda faltam voltas vem a contagem, senão pára e pergunta: repetir ou avançar. */
+function learnRunEnded() {
+  if (!st.isSample) onLoopDone();
+  const msg = learnLoopDone();
+  if (learn.runs >= learn.target) showLearnDone(msg);
+  else learnCountIn();
+}
+function showLearnDone(msg: string) {
+  const steps = learnSteps(), i = learn.step, final = isFinal(steps, i), goal = runsGoal(steps, i);
+  $('loTitle').textContent = msg || (final ? 'The whole song, no tab. Amazing!' : 'Done! ' + learn.runs + ' runs.');
+  $('loText').textContent = final ? 'You played the whole song with no tab.' : 'Up next: ' + stepLabel(steps, i + 1) + '.';
+  $('loRepeat').textContent = goal === 1 ? 'Play it again' : 'Repeat ' + goal + ' more times';
+  $('loNextLabel').textContent = final ? 'Finish Tile by Tile' : 'Next step';
+  $('learnOverlay').hidden = false; $('loDone').hidden = false; $('loCount').hidden = true;
+  $('loNext').focus();
+}
+function hideLearnDone() {
+  $('loDone').hidden = true; if (!learn.counting) $('learnOverlay').hidden = true;
+}
+$('loRepeat').addEventListener('click', () => {
+  learn.target = learn.runs + runsGoal(learnSteps(), learn.step);
+  hideLearnDone(); learnCountIn();
+});
+$('loNext').addEventListener('click', () => { hideLearnDone(); $('learnNext').click(); });
 
 /** Espreitar a tab (enquanto se carrega no botão) nos passos sem a tab. */
 function setPeek(on: boolean) {
@@ -1828,7 +1914,8 @@ function showLearnStep() {
   const i = (learn.step = Math.max(0, Math.min(learn.step, steps.length - 1)));
   const step = steps[i], final = isFinal(steps, i), goal = runsGoal(steps, i);
   storage.set(learnKey(), { v: 2, step: i } satisfies SavedLearn);
-  learn.runs = 0; learn.peeked = false; setPeek(false);
+  learn.runs = 0; learn.target = goal; learn.peeked = false; setPeek(false);
+  cancelLearnCount(); hideLearnDone();
   const b = document.body, noTab = step.kind !== 'learn';
   b.classList.add('learning');
   b.classList.toggle('learn-tab', !noTab);
@@ -1846,10 +1933,10 @@ function showLearnStep() {
     $('learnText').textContent = 'One clean run without peeking and the song is yours.';
   } else if (step.kind === 'learn') {
     $('learnTitle').textContent = name + ': play it ' + times + ' with the tab.';
-    $('learnText').textContent = 'Follow the tab while it plays on loop. Slow it down with the speed if you need to. Each loop counts on its own.';
+    $('learnText').textContent = 'Follow the tab and play along. Each run starts with a count-in and stops at the end. Slow it down with the speed if you need to.';
   } else if (step.kind === 'recall') {
     $('learnTitle').textContent = name + ': play it ' + times + ' without looking at the tab.';
-    $('learnText').innerHTML = 'The tab is hidden: play from the chord tiles. Stuck? Hold <strong>Peek</strong> to see the tab, but that loop won’t count. Double-tap a tile to write a reminder (“slide”, “x2”).';
+    $('learnText').innerHTML = 'The tab is hidden: play from the chord tiles. Stuck? Hold <strong>Peek</strong> to see the tab, but that run won’t count. Double-tap a tile to write a reminder (“slide”, “x2”).';
   } else {
     $('learnTitle').textContent = name + ': play ' + (to - from === 1 ? 'both' : 'them') + ' ' + times + ' in a row, no tab.';
     $('learnText').textContent = 'Don’t stop between sections: the changes are where it usually breaks.';
@@ -1866,8 +1953,9 @@ function syncLearnPlay() {
   if (!learn.on) return;
   const playing = !!st.api && st.ready && api().playerState === PLAYING;
   const final = isFinal(learnSteps(), learn.step);
-  $('learnPlay').querySelector('span')!.textContent = playing ? 'Pause' : final ? 'Play the whole song' : 'Play on loop';
-  $('learnPlay').querySelector('svg')!.innerHTML = playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
+  const busy = playing || !!learn.counting;
+  $('learnPlay').querySelector('span')!.textContent = learn.counting ? 'Cancel' : playing ? 'Pause' : final ? 'Play the whole song' : 'Play';
+  $('learnPlay').querySelector('svg')!.innerHTML = busy ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
 }
 // Os botões do leitor no painel são atalhos para os da barra de baixo (que fica escondida enquanto se aprende)
 document.querySelectorAll<HTMLButtonElement>('.learn-tools [data-for]').forEach(b => {
@@ -1966,10 +2054,11 @@ $('learnNext').addEventListener('click', () => {
 });
 $('learnPlay').addEventListener('click', () => {
   if (!st.ready) { toast('The sounds are still loading.'); return; }
+  if (learn.counting) { cancelLearnCount(); return; }
   if (api().playerState === PLAYING) { api().pause(); return; }
-  const step = learnSteps()[learn.step];
-  if (step && !st.api?.isLooping) { const [from, to] = stepRange(step); setLearnLoop(from, to); }
-  api().play();
+  // Depois de acabar o passo, tocar outra vez é repetir as voltas
+  if (learn.runs >= learn.target) learn.target = learn.runs + runsGoal(learnSteps(), learn.step);
+  learnCountIn();
 });
 // Peek: carregar e manter (rato ou dedo) mostra a tab; ao largar esconde-se. Com o teclado, alterna.
 {

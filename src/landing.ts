@@ -1,8 +1,6 @@
 // Página inicial (estática): apresenta o problema, o método Tile by Tile e o leitor. Não guarda nada no browser:
 // "Pick a song to learn" leva ao leitor, onde a música é carregada e guardada na conta (sem conta, pede primeiro para criar uma grátis).
 import './fonts';
-import '@fontsource/montserrat/latin-700.css';
-import '@fontsource/montserrat/latin-800.css';
 import './landing.css';
 import { accountsEnabled, storedAccount } from './app/session-hint';
 

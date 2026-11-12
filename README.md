@@ -84,6 +84,7 @@ scripts/
   copy-alphatab.mjs        Copia o alphaTab, a fonte e os sons para public/vendor
   pdf-fonts.mjs            Converte a Roboto (WOFF) em TTF para o PDF, em public/vendor/fonts
   make-fixture.py          Gera o .gp5 de teste (precisa de `pip install pyguitarpro`)
+video/                     Vídeo de apresentação (Remotion), gravado do site real: ver video/README.md
 ```
 
 ### Como funciona a deteção

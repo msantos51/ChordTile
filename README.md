@@ -47,6 +47,7 @@ account.html               Conta: entrar, perfil, plano, segurança e apagar a c
 licenses.html              Termos, privacidade e licenças
 help.html                  Página "How it works" (guia e perguntas frequentes)
 open-guitar-pro-files.html Página de SEO: abrir ficheiros Guitar Pro online (para quem já tem um ficheiro)
+how-to-memorise-guitar-songs.html  Página de SEO: como decorar músicas (o método por secções, que leva ao Tile by Tile)
 public/leitor.html, ajuda.html, licencas.html   Redirecionam os endereços antigos para os novos
 src/
   main.ts                  Interface: esquema, tablatura sincronizada, leitor, ajustes

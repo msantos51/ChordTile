@@ -1066,6 +1066,47 @@ body.learning .learn-cta { display: none; }
   .learn-cta.folded { flex-wrap: nowrap; min-height: 0; padding: 0 4px; }
 }
 
+/* ---------- Ao abrir uma música: aprender com o Tile by Tile ou só abrir a tab ---------- */
+.mode-pick { position: fixed; z-index: 31; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(760px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg, 16px); box-shadow: var(--shadow); padding: 28px 24px 24px; display: grid; gap: 14px; }
+.mode-pick[hidden] { display: none; }
+.mode-pick:not([hidden]) { animation: ct-pop .5s var(--ease); }
+#modeScrim { z-index: 30; }
+.mode-pick h2 { margin: 0; font-size: 24px; line-height: 1.2; padding-right: 36px; text-wrap: balance; }
+.mode-pick .pw-kicker { margin: 0; padding-right: 36px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-options { display: grid; grid-template-columns: 1.45fr 1fr; gap: 12px; margin-top: 4px; }
+.mp-opt { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 18px; text-align: left; font: inherit; color: var(--ink); cursor: pointer;
+  background: var(--bg); border: 1px solid var(--line-2); border-radius: var(--r-item, 12px); transition: border-color .15s, transform .15s; }
+.mp-opt:hover { border-color: var(--hover-line, var(--accent)); }
+.mp-opt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mp-opt:active { transform: scale(.99); }
+.mp-learn { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; background: color-mix(in srgb, var(--accent) 9%, var(--bg)); }
+.mp-learn:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--bg)); }
+.mp-head { display: flex; align-items: center; gap: 12px; }
+.mp-opt .lc-icon { width: 38px; height: 38px; flex: none; border-radius: 10px; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); }
+.mp-opt .lc-icon .i { width: 20px; height: 20px; }
+.mp-tab .lc-icon { background: var(--panel-2); color: var(--ink); }
+.mp-name { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.mp-name strong { font-size: 18px; line-height: 1.2; }
+.mp-name em { font: 600 10.5px var(--f-mono); font-style: normal; letter-spacing: .06em; text-transform: uppercase; padding: 3px 7px; border-radius: var(--r-pill);
+  color: var(--accent-text); border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line-2)); }
+.mp-desc { font-size: 14px; line-height: 1.45; color: var(--ink-soft); }
+.mp-opt .lc-track { flex: none; order: 0; }
+.mp-meta { font: 500 12.5px var(--f-mono); color: var(--ink-soft); }
+.mp-meta strong { font-weight: 600; color: var(--accent-text); }
+.mp-go { margin-top: auto; align-self: stretch; justify-content: center; min-height: var(--h-ctl-lg); pointer-events: none; }
+.mp-go span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-go .i { width: 16px; height: 16px; flex: none; }
+@media (max-width: 680px) {
+  .mode-pick { padding: 24px 16px 16px; }
+  .mode-pick h2 { font-size: 21px; }
+  .mp-options { grid-template-columns: 1fr; }
+  .mp-opt { padding: 14px; gap: 10px; }
+  .mp-tab .mp-desc { display: none; }
+  .mode-pick .btn.mp-go span { display: inline; }
+}
+@media (prefers-reduced-motion: reduce) { .mode-pick { animation: none !important; } .mp-opt { transition: none; } }
+
 /* ---------- Compasso expandido: técnicas e dinâmicas ---------- */
 /* Etiqueta da técnica colada à nota (H, P, ↑ full, /, PM…) */
 .bm-staff .nt .tq { position: absolute; left: 50%; bottom: calc(100% - 4px); transform: translateX(-50%); white-space: nowrap;

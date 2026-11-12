@@ -407,6 +407,33 @@
     </div>
   </section>
 </div>
+<!-- Ao abrir uma música: escolher entre aprender com o Tile by Tile ou só abrir a tab -->
+<div class="scrim" id="modeScrim" hidden></div>
+<section class="mode-pick" id="modePick" role="dialog" aria-modal="true" aria-labelledby="mpTitle" hidden>
+  <button class="ibtn pw-close" id="mpClose" type="button" aria-label="Close and open the tab">✕</button>
+  <p class="pw-kicker" id="mpSong"></p>
+  <h2 id="mpTitle">How do you want to play this song?</h2>
+  <div class="mp-options">
+    <button class="mp-opt mp-learn" id="mpLearn" type="button">
+      <span class="mp-head">
+        <span class="lc-icon" aria-hidden="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M14 17.5l2.2 2.2L21 15"/></svg></span>
+        <span class="mp-name"><strong>Learn it with Tile by Tile</strong><em id="mpBadge" hidden></em></span>
+      </span>
+      <span class="mp-desc">One section at a time: with the tab, then without it, then joined to the ones before, until you play the whole song from memory.</span>
+      <span class="lc-track" id="mpTrack" aria-hidden="true"></span>
+      <span class="mp-meta" id="mpMeta"></span>
+      <span class="btn primary mp-go"><span id="mpGo">Start</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </button>
+    <button class="mp-opt mp-tab" id="mpTab" type="button">
+      <span class="mp-head">
+        <span class="lc-icon" aria-hidden="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></span>
+        <span class="mp-name"><strong>Just open the tab</strong></span>
+      </span>
+      <span class="mp-desc">Read the tab and the chart and play along freely. Tile by Tile stays one click away, at the top of the page.</span>
+      <span class="btn mp-go"><span>Open the tab</span></span>
+    </button>
+  </div>
+</section>
 <div class="scrim" id="learnIntroScrim" hidden></div>
 <section class="learn-intro" id="learnIntro" role="dialog" aria-modal="true" aria-labelledby="liTitle" hidden>
   <button class="ibtn pw-close" id="learnIntroClose" type="button" aria-label="Close">✕</button>

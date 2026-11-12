@@ -131,6 +131,7 @@ const posts = srv => srv.log.filter(l => l.startsWith('POST /rest/v1/user_data')
     const { b, p, srv, ready } = await world({ plan: 'trial', limit: true });
     await p.goto(BASE + 'player'); await p.waitForFunction(() => document.getElementById('songTitle').textContent === 'Exemplo', null, { timeout: 20000 }); await ready();
     await p.setInputFiles('#fileInput', FIX + 'exemplo.gp5'); await p.waitForTimeout(2000);
+    if (await p.locator('#modePick').isVisible()) await p.keyboard.press('Escape');
     const st = srv.log.filter(l => /storage\/v1\/object\/songs\//.test(l) && !l.startsWith('GET'));
     ok(st.length === 1 && st[0].startsWith('PUT'), 'storage calls: ' + st.join(' | '));
     ok(await p.locator('#paywall:not([hidden])').count() === 0, 'paywall shown for a song already saved');

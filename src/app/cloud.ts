@@ -225,7 +225,7 @@ export async function deleteAccountSong(id: string): Promise<void> {
   fileCache.delete(id);
 }
 /** Chaves de `user_data` que pertencem a uma música. */
-export const songDataKeys = (id: string) => ['mapa:' + id, 'mapa:progress:' + id, 'mapa:learn:' + id];
+export const songDataKeys = (id: string) => ['mapa:' + id, 'mapa:progress:' + id, 'mapa:learn:' + id, 'mapa:asked:' + id];
 
 // ---------- Dados da pessoa (tabela user_data) ----------
 

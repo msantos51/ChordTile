@@ -150,6 +150,7 @@ function loadBytes(bytes: Uint8Array, name: string, isSample: boolean): boolean 
   // Ainda com a música anterior: sai do Tile by Tile, fecha o compasso expandido e guarda o progresso dela.
   // (Feito depois de trocar, o esquema da música antiga era desenhado com os compassos da nova.)
   if (learn.on) exitLearn(false);
+  closeModePick(false);
   closeBarModal(); flushProgress(); practice.dirty = false;
   st.score = s; st.isSample = isSample;
   st.fileKey = (s.title || name) + '|' + (s.artist || '') + '|' + s.masterBars.length;
@@ -1210,6 +1211,7 @@ addEventListener('keydown', e => {
     return;
   }
   if (e.key === 'Escape' && !$('paywall').hidden) { closePaywall(); return; }
+  if (e.key === 'Escape' && !$('modePick').hidden) { e.preventDefault(); closeModePick(); return; }
   if (e.key === 'Escape' && !$('helpMenu').hidden) { openHelp(false); return; }
   if (e.key === 'Escape' && !$('settings').hidden) { openSettings(false); return; }
   if (e.key === 'Escape' && !$('library').hidden) { openLibrary(false); $('libraryBtn').focus(); return; }
@@ -1301,6 +1303,7 @@ function openImported(bytes: Uint8Array, name: string): Promise<boolean> {
     if (!loadBytes(bytes, name, false)) return false;
     saveImported(bytes, name);
     openLibrary(false);
+    offerLearn();
     return true;
   });
 }
@@ -1361,7 +1364,7 @@ async function renderLibrary() {
     if (cur) { const now = document.createElement('span'); now.className = 'lib-now'; now.textContent = 'Open'; m.prepend(now); }
     txt.append(t, m); open.append(ic, txt);
     if (cur) open.setAttribute('aria-current', 'true');
-    open.addEventListener('click', () => openSaved(song.id));
+    open.addEventListener('click', () => openSaved(song.id, false, true));
     const del = document.createElement('button'); del.type = 'button'; del.className = 'lib-del'; del.innerHTML = ICON_TRASH;
     del.setAttribute('aria-label', 'Delete ' + song.title);
     del.addEventListener('click', () => {
@@ -1391,15 +1394,18 @@ async function renderLibrary() {
     li.append(open, del); list.append(li);
   }
 }
-/** Abre uma música da conta. `keepLibrary`: não fecha "My songs" (ao abrir a seguinte depois de apagar uma). */
-async function openSaved(id: string, keepLibrary = false) {
+/**
+ * Abre uma música da conta. `keepLibrary`: não fecha "My songs" (ao abrir a seguinte depois de apagar uma).
+ * `ask`: foi a pessoa que a escolheu, por isso pergunta-se como a quer tocar (Tile by Tile ou só a tab).
+ */
+async function openSaved(id: string, keepLibrary = false, ask = false) {
   const turn = ++openTurn;
   let song: Awaited<ReturnType<typeof lib.get>> = null;
   try { song = await lib.get(id); } catch { toast('Couldn’t open the song. Check your connection and try again.'); return; }
   if (turn !== openTurn) return; // entretanto pediu-se outra música: essa é que fica
   if (!song) { toast('That song isn’t in your account any more.'); renderLibrary(); return; }
   st.api?.stop(); clearLoop();
-  if (loadBytes(song.bytes, song.fileName, false)) { lib.touch(id).catch(() => {}); if (!keepLibrary) openLibrary(false); }
+  if (loadBytes(song.bytes, song.fileName, false)) { lib.touch(id).catch(() => {}); if (!keepLibrary) openLibrary(false); if (ask) offerLearn(); }
 }
 /** Conta os pedidos de abrir uma música: se chegarem fora de ordem (rede), só o último pedido conta. */
 let openTurn = 0;
@@ -2181,29 +2187,67 @@ $('learnCtaFold').addEventListener('click', () => {
  */
 function updateLearnCta() {
   if (!st.score) return;
+  const { saved, step, bars, known, next, pct, nextName } = learnProgress();
+  const track = $('learnCtaTrack');
+  track.replaceChildren(...learnSegs(known, next, bars));
+  const count = known.filter(Boolean).length;
+  track.setAttribute('aria-label', count + ' of ' + st.sections.length + ' sections with no tab');
+  $('learnCtaPct').querySelector('strong')!.textContent = pct + '%';
+  $('learnCtaBtnText').textContent = saved?.done ? 'Practise again' : step > 0 ? 'Continue' + (nextName ? ' · ' + nextName : '') : 'Start' + (nextName ? ' · ' + nextName : '');
+  $('learnCtaTitle').textContent = saved?.done ? 'You can play it with no tab' : 'Tile by Tile';
+}
+/** Onde se vai no Tile by Tile desta música: o passo guardado, o que já se sabe de cor e a secção que vem a seguir. */
+function learnProgress() {
   const steps = learnSteps(), saved = storage.get<SavedLearn>(learnKey());
   const step = restoreStep(saved, steps, st.sections.length);
   const bars = secBars();
   const known = saved?.done ? bars.map(() => true) : knownSections(steps, step);
   // A próxima secção a aprender: a primeira que ainda não se sabe de cor
   const next = saved?.done ? -1 : known.indexOf(false);
-  const pct = byHeartPct(known, bars);
-  const track = $('learnCtaTrack');
-  track.replaceChildren(...st.sections.map((sec, k) => {
+  return { saved, step, bars, known, next, pct: byHeartPct(known, bars), nextName: next >= 0 ? st.sections[next]?.name ?? '' : '' };
+}
+/** Um segmento por secção (largura = compassos): cheio as que já se sabem de cor, com contorno a próxima. */
+function learnSegs(known: boolean[], next: number, bars: number[]) {
+  return st.sections.map((sec, k) => {
     const seg = document.createElement('span');
     seg.className = 'lc-seg' + (known[k] ? ' known' : k === next ? ' next' : '');
     seg.style.flex = String(Math.max(1, bars[k]));
     seg.title = sec.name + ' · ' + bars[k] + ' bar' + (bars[k] === 1 ? '' : 's') + (known[k] ? ' · no tab' : k === next ? ' · next' : '');
     const name = document.createElement('span'); name.textContent = sec.name; seg.append(name);
     return seg;
-  }));
-  const count = known.filter(Boolean).length;
-  track.setAttribute('aria-label', count + ' of ' + st.sections.length + ' sections with no tab');
-  $('learnCtaPct').querySelector('strong')!.textContent = pct + '%';
-  const nextName = next >= 0 ? st.sections[next]?.name : '';
-  $('learnCtaBtnText').textContent = saved?.done ? 'Practise again' : step > 0 ? 'Continue' + (nextName ? ' · ' + nextName : '') : 'Start' + (nextName ? ' · ' + nextName : '');
-  $('learnCtaTitle').textContent = saved?.done ? 'You can play it with no tab' : 'Tile by Tile';
+  });
 }
+
+// Ao abrir uma música (escolhida pela pessoa): aprender com o Tile by Tile ou só abrir a tab. Pergunta-se na primeira
+// vez de cada música; depois, só enquanto houver um percurso a meio (para o retomar). Fechar = só abrir a tab.
+const askedKey = () => 'mapa:asked:' + st.fileKey;
+function offerLearn() {
+  if (!st.score || learn.on || tour.open || !st.sections.length) return;
+  const { saved, step, bars, known, next, pct, nextName } = learnProgress();
+  const midway = !saved?.done && step > 0;
+  if (storage.get<boolean>(askedKey()) && !midway) return;
+  $('mpSong').textContent = [$('songTitle').textContent, score().artist].filter(Boolean).join(' · ');
+  $('mpTitle').textContent = midway ? 'Pick up where you left off?' : 'How do you want to play this song?';
+  $('mpTrack').replaceChildren(...learnSegs(known, next, bars));
+  const n = st.sections.length;
+  const meta = $('mpMeta'); meta.textContent = n + ' section' + (n === 1 ? '' : 's') + ' · ';
+  const strong = document.createElement('strong'); strong.textContent = pct + '%';
+  meta.append(strong, ' no tab yet');
+  $('mpGo').textContent = saved?.done ? 'Practise again' : (midway ? 'Continue' : 'Start') + (nextName ? ' · ' + nextName : '');
+  // Sem acesso: diz logo o que é preciso (o botão leva à criação de conta ou ao Premium)
+  const a = access(plan, 'learn'), badge = $('mpBadge');
+  badge.hidden = a === 'ok'; badge.textContent = a === 'account' ? 'Free account' : 'Premium';
+  $('modePick').hidden = false; $('modeScrim').hidden = false;
+  $('mpLearn').focus();
+}
+/** `seen` false: fechou-se porque se abriu outra música (não conta como resposta). */
+function closeModePick(seen = true) {
+  if ($('modePick').hidden) return;
+  $('modePick').hidden = true; $('modeScrim').hidden = true;
+  if (seen) storage.set(askedKey(), true);
+}
+['mpTab', 'mpClose', 'modeScrim'].forEach(id => $(id).addEventListener('click', () => closeModePick()));
+$('mpLearn').addEventListener('click', () => { closeModePick(); enterLearn(); });
 $('learnExit').addEventListener('click', () => exitLearn());
 
 // "How it works": o método explicado numa janela (abre sozinha na primeira vez; depois, no botão "?")

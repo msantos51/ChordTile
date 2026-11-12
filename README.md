@@ -46,6 +46,7 @@ player.html                O leitor: esquema, tablatura e leitor (estrutura e í
 account.html               Conta: entrar, perfil, plano, segurança e apagar a conta
 licenses.html              Termos, privacidade e licenças
 help.html                  Página "How it works" (guia e perguntas frequentes)
+open-guitar-pro-files.html Página de SEO: abrir ficheiros Guitar Pro online (para quem já tem um ficheiro)
 public/leitor.html, ajuda.html, licencas.html   Redirecionam os endereços antigos para os novos
 src/
   main.ts                  Interface: esquema, tablatura sincronizada, leitor, ajustes

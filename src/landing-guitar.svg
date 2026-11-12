@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700">
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a2a2d"/><stop offset=".45" stop-color="#0d0d0f"/><stop offset="1" stop-color="#050506"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff3b3b" stop-opacity="0"/><stop offset=".55" stop-color="#ff3b3b" stop-opacity=".15"/><stop offset="1" stop-color="#ff2a2a" stop-opacity=".95"/>
+    </linearGradient>
+    <linearGradient id="neck" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a1d18"/><stop offset=".5" stop-color="#1c0f0e"/><stop offset="1" stop-color="#0c0707"/>
+    </linearGradient>
+    <linearGradient id="fret" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4f4f4"/><stop offset="1" stop-color="#8c8c8c"/>
+    </linearGradient>
+    <linearGradient id="str" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity=".25"/><stop offset=".6" stop-color="#ffd9d9" stop-opacity=".8"/><stop offset="1" stop-color="#fff" stop-opacity=".95"/>
+    </linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="1.1"/></filter>
+    <filter id="glow"><feGaussianBlur stdDeviation="7"/></filter>
+  </defs>
+  <!-- Tudo rodado: o corpo em baixo à esquerda, o braço a subir para a direita -->
+  <g transform="rotate(-57 330 470)" filter="url(#soft)">
+    <!-- Corpo -->
+    <path id="b" d="M40 330C20 400 60 520 150 580C250 645 400 640 480 590C530 558 540 520 500 498C470 482 468 458 500 440C545 415 540 372 480 345C400 308 250 290 150 300C95 305 55 310 40 330Z" fill="url(#body)"/>
+    <path d="M40 330C20 400 60 520 150 580C250 645 400 640 480 590C530 558 540 520 500 498C470 482 468 458 500 440C545 415 540 372 480 345C400 308 250 290 150 300C95 305 55 310 40 330Z" fill="none" stroke="url(#rim)" stroke-width="5"/>
+    <path d="M150 580C250 645 400 640 480 590C530 558 540 520 500 498" fill="none" stroke="#ff2a2a" stroke-width="10" opacity=".55" filter="url(#glow)"/>
+    <!-- Captadores e ponte -->
+    <rect x="300" y="428" width="26" height="86" rx="6" fill="#050505" stroke="#3b3b3e" stroke-width="2"/>
+    <rect x="385" y="428" width="26" height="86" rx="6" fill="#050505" stroke="#3b3b3e" stroke-width="2"/>
+    <rect x="205" y="434" width="20" height="74" rx="4" fill="#2c2c30"/>
+    <!-- Braço -->
+    <rect x="455" y="434" width="720" height="74" fill="url(#neck)"/>
+    <g fill="url(#fret)">
+      <rect x="497" y="434" width="3.5" height="74"/><rect x="541" y="434" width="3.5" height="74"/><rect x="588" y="434" width="3.5" height="74"/>
+      <rect x="638" y="434" width="3.5" height="74"/><rect x="691" y="434" width="3.5" height="74"/><rect x="747" y="434" width="3.5" height="74"/>
+      <rect x="806" y="434" width="3.5" height="74"/><rect x="869" y="434" width="3.5" height="74"/><rect x="936" y="434" width="3.5" height="74"/>
+      <rect x="1007" y="434" width="3.5" height="74"/><rect x="1082" y="434" width="3.5" height="74"/>
+    </g>
+    <g fill="#d9d9d9" opacity=".8">
+      <circle cx="565" cy="471" r="5"/><circle cx="665" cy="471" r="5"/><circle cx="777" cy="471" r="5"/><circle cx="903" cy="471" r="5"/><circle cx="1045" cy="455" r="5"/><circle cx="1045" cy="487" r="5"/>
+    </g>
+    <!-- Cordas -->
+    <g stroke="url(#str)" fill="none">
+      <path d="M215 441H1180" stroke-width="2.6"/><path d="M215 453H1180" stroke-width="2.2"/><path d="M215 465H1180" stroke-width="1.8"/>
+      <path d="M215 477H1180" stroke-width="1.4"/><path d="M215 489H1180" stroke-width="1.1"/><path d="M215 501H1180" stroke-width=".9"/>
+    </g>
+  </g>
+</svg>

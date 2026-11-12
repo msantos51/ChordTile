@@ -1,0 +1,22 @@
+{
+  "name": "chordtile-video",
+  "private": true,
+  "description": "Vídeo de apresentação do ChordTile (Remotion). Ver video/README.md.",
+  "scripts": {
+    "record": "node scripts/record.cjs",
+    "studio": "remotion studio",
+    "render": "remotion render Short out/chordtile-short.mp4 && bash scripts/finish.sh"
+  },
+  "dependencies": {
+    "@fontsource/roboto": "5.3.0",
+    "@fontsource/roboto-mono": "5.3.0",
+    "@remotion/cli": "4.0.538",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "remotion": "4.0.538"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.12",
+    "typescript": "5.9.2"
+  }
+}

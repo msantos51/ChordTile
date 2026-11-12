@@ -30,7 +30,8 @@ const CAPTURE = () => {
   const bars = () => p.locator('#chart .bar').count();
   const waitReady = async () => { await p.waitForFunction(() => document.querySelectorAll('#chart .bar').length > 0, null, { timeout: 20000 }); await p.waitForTimeout(800); };
   /** Sem conta, carregar um ficheiro pede para criar conta: fecha o pedido e diz se apareceu. */
-  const closeSignup = async () => { await p.waitForTimeout(600); if (!(await p.locator('dialog.auth-dialog[open]').count())) return false; await p.keyboard.press('Escape'); await p.waitForTimeout(300); return true; };
+  // (Com conta, a música abre e pergunta-se como a tocar: "Tile by Tile" ou só a tab. Aqui fica-se pela tab.)
+  const closeSignup = async () => { await p.waitForTimeout(600); if (!(await p.locator('dialog.auth-dialog[open]').count())) { if (await p.locator('#modePick').isVisible()) await p.keyboard.press('Escape'); return false; } await p.keyboard.press('Escape'); await p.waitForTimeout(300); return true; };
   const waitSynth = () => p.waitForFunction(() => { const a = window.__apis.at(-1); return a && a.isReadyForPlayback; }, null, { timeout: 30000 });
 
   await test('Landing loads with heading and CTA', async () => {

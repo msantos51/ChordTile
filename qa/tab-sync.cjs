@@ -47,6 +47,8 @@ const BAR = 3840;
     fs.writeFileSync(TMP + '/repeats.gp', Buffer.from(bytes));
     await p.setInputFiles('#fileInput', TMP + '/repeats.gp');
     await p.waitForFunction(() => document.getElementById('songTitle').textContent === 'Repeats', null, { timeout: 10000 }); await ready();
+    // Ao abrir um ficheiro pergunta-se como o tocar (Tile by Tile ou só a tab): aqui, só a tab
+    if (await p.locator('#modePick').isVisible()) await p.keyboard.press('Escape');
   };
 
   await p.goto(BASE + 'player?sample'); await ready();

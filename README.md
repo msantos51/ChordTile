@@ -96,7 +96,9 @@ Se o ficheiro tiver acordes escritos nesse instrumento, usa esses.
 
 ### Tile by Tile (aprender de cor)
 
-Método guiado no leitor (`player.html?learn`, atalho `learn.html`). O percurso (`src/app/learn-path.ts`, testado) é,
+Método guiado no leitor (`player.html?learn`, atalho `learn.html`). Ao abrir uma música (ficheiro carregado ou escolhida
+em "My songs"), uma janela pergunta como a tocar: **Tile by Tile** ou só a tab. Aparece na primeira vez de cada música
+(`mapa:asked:<música>`) e, depois, só enquanto houver um percurso a meio; a música que abre sozinha ao entrar não pergunta. O percurso (`src/app/learn-path.ts`, testado) é,
 para cada secção: **Learn** (só a tab dessa secção em loop, `display.startBar`/`barCount` do alphaTab) →
 **Remember** (a tab esconde-se, ficam só os quadrados dessa secção) → **Connect** (a partir da 2.ª secção, toca-se
 da 1.ª até essa, seguido e sem a tab). A última ligação é a música toda.

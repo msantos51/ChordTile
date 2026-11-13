@@ -7,7 +7,7 @@ import { parseScore } from './analysis/parse';
 import { pitchClassesOf } from './app/notes';
 import { exportPdf } from './app/pdf';
 import { DYNAMIC_NAMES, TECH_NAMES, barView, techLegend, type BarView } from './analysis/bar';
-import { Clicker, METRO_SOUNDS, isMetroSound, nextTickTime, type MetroSound } from './app/metronome';
+import { Clicker, DEFAULT_METRO_SOUND, METRO_SOUNDS, isMetroSound, nextTickTime, type MetroSound } from './app/metronome';
 import { MetroInjector, type GridSource } from './app/metro-inject';
 import { stateAt, type GridEvent } from './app/metro-grid';
 import { autoSub, beatInfo, countLabels, slotOf, type Sub } from './app/count';
@@ -770,7 +770,7 @@ for (const ev of ['pointerdown', 'keydown'] as const) {
     const t = e.target as HTMLElement | null;
     const startsAudio = ev === 'keydown' ? (e as KeyboardEvent).key === ' '
       : !!t?.closest('#playBtn, #bmPlay, #tsLoop, #bbPlay, .sbtn, #nextBtn, #prevBtn, #progress');
-    if (startsAudio) { unlockAudio(); if (metro.sound !== 'click') clicker.ensure(); }
+    if (startsAudio) { unlockAudio(); clicker.ensure(); }
   }, { capture: true });
 }
 
@@ -819,7 +819,7 @@ function initApi() {
     a.playbackSpeed = +select('speed').value / 100;
     setupInjector(a);
     if (learn.on) showLearnStep();
-    applyMetronome(); if (metro.sound !== 'click') void clicker.load(metro.sound);
+    applyMetronome(); void clicker.load(metro.sound);
     applyMute();
   });
   a.renderStarted.on(() => ($('tabLoading').hidden = false));
@@ -962,7 +962,7 @@ function applyMute() {
 
 // ---------- Sons do metrónomo ----------
 const clicker = new Clicker(base);
-const metro = { sound: 'click' as MetroSound, last: null as number | null, countInLeft: 0 };
+const metro = { sound: DEFAULT_METRO_SOUND as MetroSound, last: null as number | null, countInLeft: 0 };
 for (const id of ['metroSound', 'bmSound']) {
   for (const o of METRO_SOUNDS) { const el = document.createElement('option'); el.value = o.id; el.textContent = o.label; select(id).append(el); }
   select(id).addEventListener('change', () => { clicker.ensure(); setMetroSound(select(id).value as MetroSound); });
@@ -970,21 +970,20 @@ for (const id of ['metroSound', 'bmSound']) {
 function setMetroSound(v: MetroSound) {
   metro.sound = v; select('metroSound').value = v; select('bmSound').value = v;
   storage.set('mapa:metroSound', v);
-  if (v !== 'click') void clicker.load(v);
+  void clicker.load(v);
   void injector?.prepare();
   applyMetronome();
 }
-{ const saved = storage.get<string>('mapa:metroSound'); metro.sound = isMetroSound(saved) ? saved : 'click'; select('metroSound').value = metro.sound; select('bmSound').value = metro.sound; }
-/** O clique próprio do alphaTab só se ouve com o som "Click"; os outros sons tocamos nós. */
+{ const saved = storage.get<string>('mapa:metroSound'); metro.sound = isMetroSound(saved) ? saved : DEFAULT_METRO_SOUND; select('metroSound').value = metro.sound; select('bmSound').value = metro.sound; }
+/** O clique próprio do alphaTab fica sempre mudo: os sons do metrónomo e da contagem tocamos nós. */
 function applyMetronome() {
   syncModalToggles();
   if (!st.api) return;
-  const metroOn = $('metroBtn').getAttribute('aria-pressed') === 'true';
   const countOn = $('countBtn').getAttribute('aria-pressed') === 'true';
-  st.api.metronomeVolume = metroOn && metro.sound === 'click' ? 1 : 0;
-  // A contagem inicial só acontece com volume > 0: com outro som fica quase muda e tocamos nós.
+  st.api.metronomeVolume = 0;
+  // A contagem inicial só acontece com volume > 0: fica quase muda e tocamos nós.
   // No Tile by Tile a contagem é a do próprio passo (no meio do ecrã, antes de cada volta), por isso desliga-se aqui.
-  st.api.countInVolume = countOn && !learn.on ? (metro.sound === 'click' ? 1 : 0.0001) : 0;
+  st.api.countInVolume = countOn && !learn.on ? 0.0001 : 0;
 }
 const curNumerator = () => {
   const i = Math.max(0, st.playingBar);
@@ -992,7 +991,7 @@ const curNumerator = () => {
 };
 /**
  * Metrónomo e contagem exatos: o som é misturado no próprio fluxo de áudio da música, na amostra certa
- * (ver app/metro-inject.ts). O som "Click" é o do próprio alphaTab, que já vem dentro do sintetizador.
+ * (ver app/metro-inject.ts).
  * Se isto não puder ser instalado, usa-se o método antigo (onMetronome), que agenda os sons pelos avisos.
  */
 let injector: MetroInjector | null = null;
@@ -1041,14 +1040,14 @@ function onMetronome(m: AlphaTab.midi.AlphaTabMetronomeEvent) {
   const inCountIn = metro.countInLeft > 0;
   if (inCountIn) metro.countInLeft--;
   const on = $(inCountIn ? 'countBtn' : 'metroBtn').getAttribute('aria-pressed') === 'true';
-  if (on && metro.sound !== 'click') clicker.tick(metro.sound, m.metronomeNumerator, metro.last, sec);
+  if (on) clicker.tick(metro.sound, m.metronomeNumerator, metro.last, sec);
 }
 $('metroTest').addEventListener('click', () => {
   clicker.ensure();
   void clicker.load(metro.sound).then(() => {
     const t0 = clicker.now() + 0.1;
     for (let b = 0; b < 4; b++) {
-      if (metro.sound === 'click') clicker.tick('wood', b, t0 + b * 0.6, 0.6); else clicker.tick(metro.sound, b, t0 + b * 0.6, 0.6);
+      clicker.tick(metro.sound, b, t0 + b * 0.6, 0.6);
     }
   });
 });
@@ -2059,7 +2058,7 @@ function learnCountIn() {
   const { bpm, numerator, denominator } = src ? stateAt(src.events, startTick) : { bpm: score().tempo || 120, numerator: 4, denominator: 4 };
   const beats = Math.max(1, Math.min(12, numerator));
   const beatSec = (60 / Math.max(20, bpm)) * (4 / denominator) / (api().playbackSpeed || 1);
-  const sound: MetroSound = metro.sound === 'click' ? 'wood' : metro.sound;
+  const sound: MetroSound = metro.sound;
   clicker.ensure();
   const lead = 0.12, t0 = clicker.now() + lead;
   const goal = runsGoal(steps, learn.step), run = learn.runs + 1;

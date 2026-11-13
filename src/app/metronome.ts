@@ -3,17 +3,17 @@
 // em blocos, com alguns ms de irregularidade. Por isso cada som é agendado no relógio de áudio
 // a intervalos certos, corrigindo devagar o desvio (nextTickTime), em vez de tocar à chegada.
 
-export type MetroSound = 'click' | 'wood' | 'beep' | 'cowbell' | 'hihat' | 'voice-f' | 'voice-m';
+// Três sons, todos gravados em ficheiro (public/sounds; gerados por scripts/metro-sounds.py): o woodblock,
+// o hi-hat e a voz que conta. Cada um tem o tempo forte (o 1) diferente dos outros.
+export type MetroSound = 'wood' | 'hihat' | 'voice-f' | 'voice-m';
 
 export const METRO_SOUNDS: { id: MetroSound; label: string }[] = [
-  { id: 'click', label: 'Click (classic)' },
+  { id: 'wood', label: 'Woodblock' },
+  { id: 'hihat', label: 'Hi-hat' },
   { id: 'voice-f', label: 'Voice “one, two…” · female' },
   { id: 'voice-m', label: 'Voice “one, two…” · male' },
-  { id: 'wood', label: 'Woodblock' },
-  { id: 'beep', label: 'Beep' },
-  { id: 'cowbell', label: 'Cowbell' },
-  { id: 'hihat', label: 'Hi-hat' },
 ];
+export const DEFAULT_METRO_SOUND: MetroSound = 'wood';
 
 export const isMetroSound = (v: unknown): v is MetroSound => METRO_SOUNDS.some(s => s.id === v);
 
@@ -62,6 +62,8 @@ export function fitWord(word: Float32Array, beatSec: number, sampleRate: number)
 export class Clicker {
   private ctx: AudioContext | null = null;
   private voices = new Map<string, AudioBuffer[]>();
+  /** Woodblock e hi-hat: [tempo forte, outros tempos]. */
+  private hits = new Map<string, [AudioBuffer, AudioBuffer]>();
   private loading = new Map<string, Promise<void>>();
   private lastVoice: AudioBufferSourceNode | null = null;
   constructor(private base: string) {}
@@ -75,14 +77,21 @@ export class Clicker {
   }
   now(): number { return this.ensure().currentTime; }
 
-  /** Descarrega as gravações da voz (uma vez). */
+  /** Descarrega as gravações do som (uma vez). */
   load(sound: MetroSound): Promise<void> {
-    if (!sound.startsWith('voice')) return Promise.resolve();
+    const ctx = this.ensure();
+    const get = (path: string) => fetch(this.base + path).then(r => r.arrayBuffer()).then(b => ctx.decodeAudioData(b));
+    if (sound === 'wood' || sound === 'hihat') {
+      if (!this.loading.has(sound)) {
+        this.loading.set(sound, Promise.all([get('sounds/metro/' + sound + '-accent.wav'), get('sounds/metro/' + sound + '-normal.wav')])
+          .then(([a, n]) => { this.hits.set(sound, [a, n]); })
+          .catch(() => { this.loading.delete(sound); }));
+      }
+      return this.loading.get(sound)!;
+    }
     const tag = sound === 'voice-f' ? 'f' : 'm';
     if (!this.loading.has(tag)) {
-      const ctx = this.ensure();
-      this.loading.set(tag, Promise.all(Array.from({ length: 12 }, (_, i) =>
-        fetch(this.base + 'sounds/count/' + tag + (i + 1) + '.wav').then(r => r.arrayBuffer()).then(b => ctx.decodeAudioData(b))))
+      this.loading.set(tag, Promise.all(Array.from({ length: 12 }, (_, i) => get('sounds/count/' + tag + (i + 1) + '.wav')))
         .then(bufs => { this.voices.set(tag, bufs); })
         .catch(() => { this.loading.delete(tag); }));
     }
@@ -91,7 +100,7 @@ export class Clicker {
 
   /**
    * Amostras (mono) de um som do metrónomo, para misturar no fluxo de áudio da música (ver metro-inject.ts).
-   * Gera-se uma vez por som, com a mesma síntese do `tick`; a voz usa as gravações, uma palavra por tempo.
+   * Vêm das gravações (convertidas para a taxa de amostragem do leitor), uma vez por som; a voz tem uma palavra por tempo.
    */
   async samples(sound: MetroSound, sampleRate: number): Promise<MetroSamples> {
     const key = sound + '@' + sampleRate;
@@ -101,13 +110,12 @@ export class Clicker {
       await this.load(sound);
       const bufs = this.voices.get(sound === 'voice-f' ? 'f' : 'm') ?? [];
       out.words = bufs.map(b => resample(b.getChannelData(0), b.sampleRate, sampleRate));
-    } else if (sound !== 'click') {
-      for (const accent of [true, false]) {
-        const ctx = new OfflineAudioContext(1, Math.ceil(sampleRate * 0.4), sampleRate);
-        const g = ctx.createGain(); g.connect(ctx.destination);
-        this.synth(ctx, g, sound, accent, 0);
-        const buf = await ctx.startRendering();
-        out[accent ? 'accent' : 'normal'] = Float32Array.from(buf.getChannelData(0));
+    } else {
+      await this.load(sound);
+      const pair = this.hits.get(sound);
+      if (pair) {
+        out.accent = resample(pair[0].getChannelData(0), pair[0].sampleRate, sampleRate);
+        out.normal = resample(pair[1].getChannelData(0), pair[1].sampleRate, sampleRate);
       }
     }
     this.bank.set(key, out);
@@ -132,24 +140,11 @@ export class Clicker {
       src.start(t);
       return;
     }
-    this.synth(ctx, out, sound, accent, t);
-  }
-
-  /** Sons sintetizados (tudo menos a voz), num contexto qualquer: o de tempo real ou o offline que gera as amostras. */
-  private synth(ctx: BaseAudioContext, out: AudioNode, sound: MetroSound, accent: boolean, t: number): void {
-    if (sound === 'wood') {
-      this.tone(ctx, out, t, accent ? 1250 : 900, 0.07, 'sine', 0.9);
-      this.noise(ctx, out, t, 0.012, 'bandpass', accent ? 2600 : 2000, 0.35);
-    } else if (sound === 'beep') {
-      this.tone(ctx, out, t, accent ? 1320 : 880, 0.06, 'sine', 0.7, 0.003);
-    } else if (sound === 'cowbell') {
-      const f = accent ? 1 : 0.94;
-      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2640 * f; bp.Q.value = 1.2; bp.connect(out);
-      this.tone(ctx, bp, t, 587 * f, 0.22, 'square', accent ? 0.5 : 0.38);
-      this.tone(ctx, bp, t, 845 * f, 0.22, 'square', accent ? 0.5 : 0.38);
-    } else if (sound === 'hihat') {
-      this.noise(ctx, out, t, accent ? 0.09 : 0.05, 'highpass', 7000, accent ? 0.7 : 0.45);
-    }
+    const pair = this.hits.get(sound);
+    // Ainda a descarregar (só no primeiro tempo, se tanto): um toque curto no lugar do som
+    if (!pair) { void this.load(sound); this.tone(ctx, out, t, accent ? 1600 : 1200, 0.04, 'sine', 0.5); return; }
+    const src = ctx.createBufferSource(); src.buffer = pair[accent ? 0 : 1];
+    src.connect(out); src.start(t);
   }
 
   private tone(ctx: BaseAudioContext, dest: AudioNode, t: number, freq: number, dur: number, type: OscillatorType, peak: number, attack = 0.001) {
@@ -157,16 +152,5 @@ export class Clicker {
     o.type = type; o.frequency.setValueAtTime(freq, t);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g).connect(dest); o.start(t); o.stop(t + dur + 0.02);
-  }
-  private noiseBuf: AudioBuffer | null = null;
-  private noise(ctx: BaseAudioContext, dest: AudioNode, t: number, dur: number, type: BiquadFilterType, freq: number, peak: number) {
-    if (!this.noiseBuf) {
-      this.noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate);
-      const d = this.noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    }
-    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-    s.buffer = this.noiseBuf; f.type = type; f.frequency.value = freq;
-    g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    s.connect(f).connect(g).connect(dest); s.start(t); s.stop(t + dur + 0.02);
   }
 }

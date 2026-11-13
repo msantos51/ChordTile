@@ -20,5 +20,7 @@ describe('metrónomo', () => {
   it('só aceita sons conhecidos', () => {
     expect(isMetroSound('voice-f')).toBe(true);
     expect(isMetroSound('tambourine')).toBe(false);
+    // Sons que deixaram de existir: quem os tinha escolhido passa ao som por defeito
+    for (const old of ['click', 'beep', 'cowbell']) expect(isMetroSound(old)).toBe(false);
   });
 });

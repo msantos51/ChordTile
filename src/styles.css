@@ -38,9 +38,10 @@
   --err-bg: #3a1418; --err-ink: #ffc2c9;
   --shadow: 0 20px 56px rgba(0, 0, 0, .45);
   /* Cores das notas (convenção Boomwhackers): Dó vermelho → Si rosa */
-  /* Tons suaves, todos com a mesma luminosidade (OKLCH L .80 C .12): nenhuma nota grita mais do que as outras */
-  --n0: #ff9e9b; --n1: #fea47c; --n2: #f3ad66; --n3: #e1b75c; --n4: #cdc15f; --n5: #a4cd79;
-  --n6: #7ad59c; --n7: #4cd7c8; --n8: #67caff; --n9: #afb5ff; --n10: #d5a8f8; --n11: #f89dc9;
+  /* Tons pastel, todos com a mesma luminosidade (OKLCH): nenhuma nota grita mais do que as outras.
+     --n = o quadrado; --np = o mesmo tom mais vivo, para o compasso a tocar */
+  --n0: #fda19e; --n1: #f9a782; --n2: #efaf6f; --n3: #deb866; --n4: #ccc069; --n5: #a6cc80; --n6: #81d39f; --n7: #5cd5c7; --n8: #71c9fa; --n9: #b0b6ff; --n10: #d3aaf3; --n11: #f4a0c8;
+  --np0: #fb817f; --np1: #f78955; --np2: #ea942f; --np3: #d6a20a; --np4: #bead18; --np5: #8bbd50; --np6: #4bc680; --np7: #00c8b7; --np8: #22b8fb; --np9: #999eff; --np10: #c88ef1; --np11: #f080b8;
   --f-body: "Roboto", "Roboto Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-head: "Roboto", "Roboto Fallback", system-ui, sans-serif;
   --f-display: "Roboto", "Roboto Fallback", system-ui, sans-serif;
@@ -1335,36 +1336,22 @@ body.learning .learn-go { display: none; }
   .top-actions { width: auto; justify-content: flex-end; }
 }
 
-/* ---------- Quadrados suaves ----------
-   Cada compasso é um quadrado translúcido: fundo tingido com a cor da nota, contorno fino e a letra do acorde
-   na própria cor. Só o compasso a tocar fica com a cor cheia, por isso salta à vista sem o resto gritar. */
-:root { --tile-mix: 22%; --tile-line: 48%; --tile-base: var(--panel); }
-:root[data-theme="light"] { --tile-mix: 26%; --tile-line: 55%; --tile-base: #ffffff; }
-/* A cor da letra depende da nota de cada quadrado, por isso é calculada no próprio quadrado (não no :root) */
-.chart.colored .bar[data-pc], .notekey span, .note-legend span, .bm-chord[style*="--nc"] { --tile-ink: var(--nc); }
-:root[data-theme="light"] :is(.chart.colored .bar[data-pc], .notekey span, .note-legend span, .bm-chord[style*="--nc"]) { --tile-ink: color-mix(in oklab, var(--nc) 45%, #000); }
-.chart.colored .bar[data-pc] {
-  background: color-mix(in oklab, var(--nc) var(--tile-mix), var(--tile-base));
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nc) var(--tile-line), transparent);
-}
-.chart.colored .bar[data-pc] .ch { color: var(--tile-ink); font-weight: 600; letter-spacing: -.01em; }
-.chart.colored .bar[data-pc] .num { color: color-mix(in oklab, var(--tile-ink) 60%, transparent); }
-.chart.colored .bar[data-pc] .txt { color: color-mix(in oklab, var(--tile-ink) 80%, var(--ink)); }
-.chart.colored .bar[data-pc].two {
-  background: linear-gradient(90deg, color-mix(in oklab, var(--nc) var(--tile-mix), var(--tile-base)) 50%, color-mix(in oklab, var(--nc2) var(--tile-mix), var(--tile-base)) 50%);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nc) var(--tile-line), transparent);
-}
-.chart.colored .bar[data-pc].playing { background: var(--nc); box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px color-mix(in oklab, var(--nc) 70%, transparent), 0 8px 24px -6px color-mix(in oklab, var(--nc) 55%, transparent); }
-.chart.colored .bar[data-pc].two.playing { background: linear-gradient(90deg, var(--nc) 50%, var(--nc2) 50%); }
+/* ---------- Quadrados em pastel sólido ----------
+   Cada compasso é um quadrado cheio num tom pastel, com a letra escura. O compasso a tocar fica num tom
+   mais vivo da mesma cor, com um anel à volta. No tema claro os tons são mais claros ainda. */
+:root[data-theme="light"] { --n0: #ffc6c3; --n1: #ffcab2; --n2: #f8cfa7; --n3: #edd5a3; --n4: #e0daa4; --n5: #c8e1b1; --n6: #b3e6c4; --n7: #a3e7dd; --n8: #abe0ff; --n9: #ced3ff; --n10: #e6cbfb; --n11: #fcc5de; --np0: #fda19e; --np1: #f9a782; --np2: #efaf6f; --np3: #deb866; --np4: #ccc069; --np5: #a6cc80; --np6: #81d39f; --np7: #5cd5c7; --np8: #71c9fa; --np9: #b0b6ff; --np10: #d3aaf3; --np11: #f4a0c8; }
+.chart.colored .bar[data-pc] { background: var(--nc); box-shadow: none; }
+.chart.colored .bar[data-pc].two { background: linear-gradient(90deg, var(--nc) 50%, var(--nc2) 50%); }
+.chart.colored .bar[data-pc] .ch { color: #1b1b1f; font-weight: 700; }
+.chart.colored .bar[data-pc] .num { color: rgba(27, 27, 31, .5); }
+.chart.colored .bar[data-pc] .txt { color: rgba(27, 27, 31, .78); }
+.chart.colored .bar[data-pc].playing { background: var(--ncp, var(--nc)); box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--ink-strong); }
+.chart.colored .bar[data-pc].two.playing { background: linear-gradient(90deg, var(--ncp, var(--nc)) 50%, var(--nc2p, var(--nc2)) 50%); }
 .chart.colored .bar[data-pc].playing .ch { color: #141417; }
-.chart.colored .bar[data-pc].playing .num, .chart.colored .bar[data-pc].playing .txt { color: rgba(20, 20, 23, .62); }
+.chart.colored .bar[data-pc].playing .num, .chart.colored .bar[data-pc].playing .txt { color: rgba(20, 20, 23, .6); }
 @media (hover: hover) and (pointer: fine) {
-  .chart.colored .bar[data-pc]:hover:not(.playing) { background: color-mix(in oklab, var(--nc) calc(var(--tile-mix) + 8%), var(--tile-base));
-    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nc) 60%, transparent), 0 10px 20px -12px color-mix(in oklab, var(--nc) 60%, #000); }
+  .chart.colored .bar[data-pc]:hover:not(.playing) { box-shadow: 0 10px 20px -12px rgba(0, 0, 0, .55); filter: saturate(1.15); }
 }
 /* A legenda das notas, o acorde da janela do compasso e a legenda da ajuda seguem o mesmo estilo */
-.notekey span, .note-legend span, .bm-chord[style*="--nc"] {
-  background: color-mix(in oklab, var(--nc) var(--tile-mix), var(--tile-base)); color: var(--tile-ink);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nc) var(--tile-line), transparent);
-}
+.notekey span, .note-legend span, .bm-chord[style*="--nc"] { background: var(--nc); color: #1b1b1f; box-shadow: none; }
 .notekey span { border-radius: 6px; }

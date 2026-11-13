@@ -1,7 +1,7 @@
 import type { jsPDF as JsPDF } from 'jspdf';
 
 /** Cores das notas (iguais às do site), por classe de nota: 0 = Dó … 11 = Si. */
-export const NOTE_HEX = ['#ff9e9b', '#fea47c', '#f3ad66', '#e1b75c', '#cdc15f', '#a4cd79', '#7ad59c', '#4cd7c8', '#67caff', '#afb5ff', '#d5a8f8', '#f89dc9'];
+export const NOTE_HEX = ['#fda19e', '#f9a782', '#efaf6f', '#deb866', '#ccc069', '#a6cc80', '#81d39f', '#5cd5c7', '#71c9fa', '#b0b6ff', '#d3aaf3', '#f4a0c8'];
 
 /**
  * `note`: texto pessoal do compasso, escrito em pequeno por baixo do acorde.

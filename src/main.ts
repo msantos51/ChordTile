@@ -183,11 +183,28 @@ function restoreSong(saved: SavedSong | null, keepTrack = false) {
 function renderInfo(name: string) {
   const s = score();
   $('songTitle').textContent = s.title || name.replace(/\.[^.]+$/, '');
-  document.title = $('songTitle').textContent + ' · ChordTile';
+  // A música de exemplo é o que se vê ao abrir o site: o separador fica com o título da página inicial.
+  document.title = st.isSample ? HOME_TITLE : $('songTitle').textContent + ' · ChordTile';
+  renderTrackInfo();
+}
+const HOME_TITLE = document.title;
+const NOTE_LETTERS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+/** Que tab é (baixo, guitarra…) e a afinação: dependem do instrumento escolhido. */
+function tabKindOf(t: Track) {
+  const tab = t.staves.some(x => x.showTablature !== false && x.tuning && x.tuning.length);
+  if (!tab) return 'Score';
+  if (isBassTrack(t)) return 'Bass tab';
+  return (t.staves[0]?.tuning.length ?? 0) >= 6 ? 'Guitar tab' : 'Tab';
+}
+/** Linha por baixo do título: artista, compassos, andamento, compasso e afinação (da corda mais grave para a mais aguda). */
+function renderTrackInfo() {
+  const s = score(), t = s.tracks[st.viewTrack];
+  $('tabKind').textContent = t ? tabKindOf(t) : 'Tab';
   const mb = s.masterBars[0];
-  const parts = [s.artist, s.masterBars.length + ' bars', Math.round(s.tempo) + ' bpm', mb ? mb.timeSignatureNumerator + '/' + mb.timeSignatureDenominator : ''];
+  const tuning = (t?.staves[0]?.tuning ?? []).slice().reverse().map(n => NOTE_LETTERS[((n % 12) + 12) % 12]).join(' ');
+  const parts = [s.artist, s.masterBars.length + ' bars', Math.round(s.tempo) + ' bpm', mb ? mb.timeSignatureNumerator + '/' + mb.timeSignatureDenominator : '', tuning ? 'Tuning ' + tuning : ''];
   const m = $('songMeta'); m.textContent = parts.filter(Boolean).join(' · ');
-  if (st.isSample) { const b = document.createElement('span'); b.className = 'sample'; b.textContent = 'Sample'; m.append(b); }
+  if (st.isSample) { const b = document.createElement('span'); b.className = 'sample'; b.textContent = 'Sample'; m.prepend(b); }
 }
 
 const isPercussion = (t: Track) => t.staves.every(x => x.isPercussion);
@@ -197,23 +214,28 @@ function trackLabel(t: Track, i: number) {
   return isBassTrack(t) && !/bass|baixo|bajo/i.test(name) ? name + ' · bass' : name;
 }
 
-/** Preenche o seletor de instrumento da barra de topo. A bateria fica de fora: não tem tom. */
+/** Separadores de instrumento, por cima da tab (como nos sites de tabs). A bateria fica de fora: não tem tom. */
 function renderTrackControls() {
   const s = score();
-  const sel = select('trackQuick');
-  sel.innerHTML = '';
+  const box = $('trackTabs');
+  box.replaceChildren();
   s.tracks.forEach((t, i) => {
     if (isPercussion(t)) return;
-    const o = document.createElement('option'); o.value = String(i); o.textContent = trackLabel(t, i);
-    o.selected = i === st.viewTrack; sel.append(o);
+    const b = document.createElement('button');
+    b.type = 'button'; b.dataset.track = String(i); b.textContent = trackLabel(t, i);
+    b.setAttribute('aria-pressed', String(i === st.viewTrack));
+    b.addEventListener('click', () => setTrack(i));
+    box.append(b);
   });
+  box.hidden = box.childElementCount < 2;
 }
 
 /** Muda o instrumento: volta a detetar o tom só com ele, e atualiza a tablatura. */
 function setTrack(i: number) {
   if (i === st.viewTrack) return;
   st.viewTrack = i;
-  select('trackQuick').value = String(i);
+  $('trackTabs').querySelectorAll<HTMLElement>('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.track === String(i))));
+  renderTrackInfo();
   save(); detect(); renderChart(); renderTab();
   toast('Key detected from: ' + trackLabel(score().tracks[i], i));
 }
@@ -505,7 +527,6 @@ select('tabPerRow').addEventListener('change', () => {
 $('resetBtn').addEventListener('click', () => {
   st.overridesByTrack[st.viewTrack] = {}; st.sections = sectionsFromScore(score()); clearLoop(); save(); renderChart(); toast('Chart reset from the file.');
 });
-select('trackQuick').addEventListener('change', () => setTrack(+select('trackQuick').value));
 
 // ---------- Compasso escolhido na tablatura ----------
 /** Mostra o contorno e a barra (Expandir / Loop) por cima do compasso i na tablatura. */
@@ -1535,7 +1556,7 @@ function applyRemote(changed: string[], first: boolean) {
     const before = JSON.stringify(st.sections.map(x => x.start));
     restoreSong(storage.get<SavedSong>('mapa:' + st.fileKey), playing); // a tocar, o instrumento não muda
     if (JSON.stringify(st.sections.map(x => x.start)) !== before && (st.loopSection >= 0 || st.loopBar >= 0)) clearLoop();
-    renderTrackControls(); detect(); renderChart();
+    renderTrackControls(); renderTrackInfo(); detect(); renderChart();
     if (st.viewTrack !== track) renderTab();
     if (st.selBar >= 0) selectBar(st.selBar);
   }
@@ -2168,6 +2189,7 @@ select('learnSpeed').addEventListener('change', () => {
 new MutationObserver(() => { $('learnStatus').textContent = $('status').textContent; }).observe($('status'), { childList: true, subtree: true, characterData: true });
 $('learnBtn').addEventListener('click', enterLearn);
 $('learnCtaBtn').addEventListener('click', enterLearn);
+$('learnGo').addEventListener('click', enterLearn);
 // A faixa pode ficar recolhida (num chip pequeno) para quem só quer ler a tab; a escolha fica guardada.
 const setCtaFolded = (folded: boolean) => {
   $('learnCta').classList.toggle('folded', folded);
@@ -2195,6 +2217,7 @@ function updateLearnCta() {
   $('learnCtaPct').querySelector('strong')!.textContent = pct + '%';
   $('learnCtaBtnText').textContent = saved?.done ? 'Practise again' : step > 0 ? 'Continue' + (nextName ? ' · ' + nextName : '') : 'Start' + (nextName ? ' · ' + nextName : '');
   $('learnCtaTitle').textContent = saved?.done ? 'You can play it with no tab' : 'Tile by Tile';
+  $('learnGoText').textContent = saved?.done ? 'Practise it again without the tab' : step > 0 ? 'Continue learning · ' + pct + '% no tab' : 'Learn it without the tab';
 }
 /** Onde se vai no Tile by Tile desta música: o passo guardado, o que já se sabe de cor e a secção que vem a seguir. */
 function learnProgress() {
@@ -2319,7 +2342,7 @@ async function boot(): Promise<unknown> {
 }
 boot()
   .catch(() => openSample())
-  // Ligações diretas: /player?premium abre os planos; ?signup a criação de conta
+  // Ligações diretas: /?premium abre os planos; ?signup a criação de conta
   .then(() => {
     const q = new URLSearchParams(location.search);
     if (q.has('premium')) openPaywall('upgrade');

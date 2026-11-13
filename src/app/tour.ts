@@ -28,7 +28,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     title: 'Pick your instrument',
     text: 'The chord of each bar is detected from the instrument you pick. If the song has a bass, it starts with that.',
-    targets: ['.top-actions .track-pick'],
+    targets: ['#trackTabs:not([hidden])', '#tabKind'],
   },
   {
     title: 'The song chart',

@@ -113,7 +113,6 @@ export class MetroInjector {
   /** Prepara o som escolhido (gera as amostras); chamar ao mudar de som e antes de tocar. */
   async prepare(): Promise<void> {
     const sound = this.deps.sound();
-    if (sound === 'click') return;
     const rate = this.out?.sampleRate ?? this.out?.context?.sampleRate ?? this.rate;
     this.rate = rate;
     const data = await this.deps.samples(sound, rate);

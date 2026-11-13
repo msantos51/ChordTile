@@ -38,8 +38,9 @@
   --err-bg: #3a1418; --err-ink: #ffc2c9;
   --shadow: 0 20px 56px rgba(0, 0, 0, .45);
   /* Cores das notas (convenção Boomwhackers): Dó vermelho → Si rosa */
-  --n0: #ff4d4d; --n1: #ff6d3a; --n2: #ff9a2e; --n3: #ffbe1f; --n4: #f2d40a; --n5: #9bd13b;
-  --n6: #3ccf6e; --n7: #1cc2b0; --n8: #3b9cff; --n9: #7c5cff; --n10: #c056f0; --n11: #ff5fa8;
+  /* Tons suaves, todos com a mesma luminosidade (OKLCH L .80 C .12): nenhuma nota grita mais do que as outras */
+  --n0: #ff9e9b; --n1: #fea47c; --n2: #f3ad66; --n3: #e1b75c; --n4: #cdc15f; --n5: #a4cd79;
+  --n6: #7ad59c; --n7: #4cd7c8; --n8: #67caff; --n9: #afb5ff; --n10: #d5a8f8; --n11: #f89dc9;
   --f-body: "Roboto", "Roboto Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-head: "Roboto", "Roboto Fallback", system-ui, sans-serif;
   --f-display: "Roboto", "Roboto Fallback", system-ui, sans-serif;
@@ -1333,3 +1334,37 @@ body.learning .learn-go { display: none; }
   .brand-name { display: inline; font-size: 17px; }
   .top-actions { width: auto; justify-content: flex-end; }
 }
+
+/* ---------- Quadrados suaves ----------
+   Cada compasso é um quadrado translúcido: fundo tingido com a cor da nota, contorno fino e a letra do acorde
+   na própria cor. Só o compasso a tocar fica com a cor cheia, por isso salta à vista sem o resto gritar. */
+:root { --tile-mix: 22%; --tile-line: 48%; --tile-base: var(--panel); }
+:root[data-theme="light"] { --tile-mix: 26%; --tile-line: 55%; --tile-base: #ffffff; }
+/* A cor da letra depende da nota de cada quadrado, por isso é calculada no próprio quadrado (não no :root) */
+.chart.colored .bar[data-pc], .notekey span, .note-legend span, .bm-chord[style*="--nc"] { --tile-ink: var(--nc); }
+:root[data-theme="light"] :is(.chart.colored .bar[data-pc], .notekey span, .note-legend span, .bm-chord[style*="--nc"]) { --tile-ink: color-mix(in oklab, var(--nc) 45%, #000); }
+.chart.colored .bar[data-pc] {
+  background: color-mix(in oklab, var(--nc) var(--tile-mix), var(--tile-base));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nc) var(--tile-line), transparent);
+}
+.chart.colored .bar[data-pc] .ch { color: var(--tile-ink); font-weight: 600; letter-spacing: -.01em; }
+.chart.colored .bar[data-pc] .num { color: color-mix(in oklab, var(--tile-ink) 60%, transparent); }
+.chart.colored .bar[data-pc] .txt { color: color-mix(in oklab, var(--tile-ink) 80%, var(--ink)); }
+.chart.colored .bar[data-pc].two {
+  background: linear-gradient(90deg, color-mix(in oklab, var(--nc) var(--tile-mix), var(--tile-base)) 50%, color-mix(in oklab, var(--nc2) var(--tile-mix), var(--tile-base)) 50%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nc) var(--tile-line), transparent);
+}
+.chart.colored .bar[data-pc].playing { background: var(--nc); box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px color-mix(in oklab, var(--nc) 70%, transparent), 0 8px 24px -6px color-mix(in oklab, var(--nc) 55%, transparent); }
+.chart.colored .bar[data-pc].two.playing { background: linear-gradient(90deg, var(--nc) 50%, var(--nc2) 50%); }
+.chart.colored .bar[data-pc].playing .ch { color: #141417; }
+.chart.colored .bar[data-pc].playing .num, .chart.colored .bar[data-pc].playing .txt { color: rgba(20, 20, 23, .62); }
+@media (hover: hover) and (pointer: fine) {
+  .chart.colored .bar[data-pc]:hover:not(.playing) { background: color-mix(in oklab, var(--nc) calc(var(--tile-mix) + 8%), var(--tile-base));
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nc) 60%, transparent), 0 10px 20px -12px color-mix(in oklab, var(--nc) 60%, #000); }
+}
+/* A legenda das notas, o acorde da janela do compasso e a legenda da ajuda seguem o mesmo estilo */
+.notekey span, .note-legend span, .bm-chord[style*="--nc"] {
+  background: color-mix(in oklab, var(--nc) var(--tile-mix), var(--tile-base)); color: var(--tile-ink);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nc) var(--tile-line), transparent);
+}
+.notekey span { border-radius: 6px; }

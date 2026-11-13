@@ -261,10 +261,11 @@ function secOf(i: number) { let k = 0; st.sections.forEach((s, j) => { if (s.sta
 function colorCell(cell: HTMLElement, text: string) {
   const pcs = pitchClassesOf(text);
   cell.classList.remove('two'); delete cell.dataset.pc;
-  cell.style.removeProperty('--nc'); cell.style.removeProperty('--nc2');
+  for (const k of ['--nc', '--nc2', '--ncp', '--nc2p']) cell.style.removeProperty(k);
   if (!pcs.length) return;
-  cell.dataset.pc = String(pcs[0]); cell.style.setProperty('--nc', 'var(--n' + pcs[0] + ')');
-  if (pcs.length === 2 && pcs[1] !== pcs[0]) { cell.classList.add('two'); cell.style.setProperty('--nc2', 'var(--n' + pcs[1] + ')'); }
+  // --nc: o tom do quadrado; --ncp: o mesmo tom mais vivo, quando o compasso está a tocar
+  cell.dataset.pc = String(pcs[0]); cell.style.setProperty('--nc', 'var(--n' + pcs[0] + ')'); cell.style.setProperty('--ncp', 'var(--np' + pcs[0] + ')');
+  if (pcs.length === 2 && pcs[1] !== pcs[0]) { cell.classList.add('two'); cell.style.setProperty('--nc2', 'var(--n' + pcs[1] + ')'); cell.style.setProperty('--nc2p', 'var(--np' + pcs[1] + ')'); }
 }
 function renderNoteKey() {
   const o = opts(), key = $('noteKey');

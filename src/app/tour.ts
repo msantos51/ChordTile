@@ -18,7 +18,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     title: 'Load your song',
     text: 'Guitar Pro (.gp3, .gp4, .gp5, .gpx, .gp) and MusicXML files work. You can also drag the file onto the page. The file is opened right here in your browser.',
-    targets: ['label.btn.primary[for="fileInput"]'],
+    targets: ['label.load-btn[for="fileInput"]'],
   },
   {
     title: 'Your songs are saved',

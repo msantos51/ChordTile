@@ -2191,6 +2191,11 @@ new MutationObserver(() => { $('learnStatus').textContent = $('status').textCont
 $('learnBtn').addEventListener('click', enterLearn);
 $('learnCtaBtn').addEventListener('click', enterLearn);
 $('learnGo').addEventListener('click', enterLearn);
+// "?" ao lado do botão: os 3 passos do Tile by Tile, num balão (fecha ao clicar fora ou com Esc)
+const setLearnPop = (open: boolean) => { $('learnGoPop').hidden = !open; $('learnGoHelp').setAttribute('aria-expanded', String(open)); };
+$('learnGoHelp').addEventListener('click', () => setLearnPop($('learnGoPop').hidden));
+document.addEventListener('click', e => { if (!(e.target as HTMLElement).closest('.learn-go-wrap')) setLearnPop(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('learnGoPop').hidden) { setLearnPop(false); $('learnGoHelp').focus(); } });
 // A faixa pode ficar recolhida (num chip pequeno) para quem só quer ler a tab; a escolha fica guardada.
 const setCtaFolded = (folded: boolean) => {
   $('learnCta').classList.toggle('folded', folded);
@@ -2218,7 +2223,9 @@ function updateLearnCta() {
   $('learnCtaPct').querySelector('strong')!.textContent = pct + '%';
   $('learnCtaBtnText').textContent = saved?.done ? 'Practise again' : step > 0 ? 'Continue' + (nextName ? ' · ' + nextName : '') : 'Start' + (nextName ? ' · ' + nextName : '');
   $('learnCtaTitle').textContent = saved?.done ? 'You can play it with no tab' : 'Tile by Tile';
-  $('learnGoText').textContent = saved?.done ? 'Practise it again without the tab' : step > 0 ? 'Continue learning · ' + pct + '% no tab' : 'Learn it without the tab';
+  const n = st.sections.length;
+  $('learnGoText').textContent = saved?.done ? 'Practise it again' : step > 0 ? 'Continue Section by Section' : 'Learn Section by Section';
+  $('learnGoSub').textContent = 'Tile by Tile · ' + (step > 0 || saved?.done ? pct + '% with no tab' : n + (n === 1 ? ' section' : ' sections'));
 }
 /** Onde se vai no Tile by Tile desta música: o passo guardado, o que já se sabe de cor e a secção que vem a seguir. */
 function learnProgress() {

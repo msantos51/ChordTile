@@ -117,7 +117,7 @@
     <button class="btn" id="libraryBtn" type="button" aria-expanded="false" aria-controls="library" title="My songs">
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M3 5h3M3 9h3"/></svg><span>Songs</span>
     </button>
-    <label class="btn primary" for="fileInput">
+    <label class="btn load-btn" for="fileInput">
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg><span>Open tab file</span>
       <input type="file" id="fileInput">
     </label>
@@ -164,9 +164,24 @@
         <p id="songMeta"></p>
       </div>
       <div class="track-tabs" id="trackTabs" role="group" aria-label="Instrument" title="My instrument: the chords are detected from it, and it is the one shown in the tab, muted by Play along and heard alone with Solo"></div>
-      <button class="btn learn-go" id="learnGo" data-gate="learn" type="button">
-        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M14 17.5l2.2 2.2L21 15"/></svg><span id="learnGoText">Learn it without the tab</span>
-      </button>
+      <!-- Tile by Tile: o botão principal da página, e um "?" que explica os 3 passos -->
+      <div class="learn-go-wrap">
+        <button class="learn-go" id="learnGo" data-gate="learn" type="button">
+          <span class="lg-icon" aria-hidden="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M14 17.5l2.2 2.2L21 15"/></svg></span>
+          <span class="lg-text"><strong id="learnGoText">Learn Section by Section</strong><small id="learnGoSub">Tile by Tile</small></span>
+        </button>
+        <button class="btn icon lg-help" id="learnGoHelp" type="button" aria-label="How Tile by Tile works" aria-expanded="false" aria-controls="learnGoPop">?</button>
+        <div class="lg-pop" id="learnGoPop" role="dialog" aria-labelledby="lgPopTitle" hidden>
+          <p class="lg-kicker">Tile by Tile</p>
+          <p class="lg-title" id="lgPopTitle">Stop reading, start knowing the song. Each section, three steps:</p>
+          <ol class="lg-steps">
+            <li><b>1</b><span><strong>With the tab</strong> · play along, as slow as you need</span></li>
+            <li><b>2</b><span><strong>Without it</strong> · only the coloured tiles stay</span></li>
+            <li><b>3</b><span><strong>Join it</strong> · play it after the parts you already know</span></li>
+          </ol>
+          <p class="lg-end">At the end you play the whole song once, with no tab.</p>
+        </div>
+      </div>
     </section>
     <section class="learn-panel" id="learnPanel" hidden aria-labelledby="learnTitle">
       <!-- Em cima: as secções da música (✓ já sem tab · ● a de agora), quanto já se toca sem a tab e sair -->

@@ -41,21 +41,18 @@ Testes no browser (Playwright), com o site a correr:
 ## Estrutura
 
 ```
-index.html                 Página inicial (apresentação)
-player.html                O leitor: esquema, tablatura e leitor (estrutura e ícones)
+index.html                 Página inicial = o leitor: tablatura, acordes e leitor (estrutura e ícones)
 account.html               Conta: entrar, perfil, plano, segurança e apagar a conta
 licenses.html              Termos, privacidade e licenças
 help.html                  Página "How it works" (guia e perguntas frequentes)
 open-guitar-pro-files.html Página de SEO: abrir ficheiros Guitar Pro online (para quem já tem um ficheiro)
-public/leitor.html, ajuda.html, licencas.html   Redirecionam os endereços antigos para os novos
+public/player.html, leitor.html, ajuda.html, licencas.html   Redirecionam os endereços antigos para os novos
 src/
   main.ts                  Interface: esquema, tablatura sincronizada, leitor, ajustes
-  landing.ts               Página inicial (animação e importar a partir daí)
   account.ts               Página da conta
   doc.ts                   Páginas de texto (ajuda e termos)
   fonts.ts                 Fontes alojadas no site (Fontsource)
   styles.css               Estilos do leitor e das páginas de texto (design "Vermelho, branco e preto": tema escuro e claro, tokens de cor)
-  landing.css              Estilos da página inicial (mesma paleta)
   analysis/
     analyze.ts             Deteção do tom por compasso e secções (módulo puro, testado)
     parse.ts               Leitura dos ficheiros, com recurso a Windows-1252 nos GP3–GP5
@@ -145,7 +142,7 @@ sons Sonivox (Apache 2.0) vêm no pacote do alphaTab; o script copia também os 
 ### Fontes
 
 Roboto (todo o texto e títulos) e Roboto Mono (números), ambas OFL, vêm do [Fontsource](https://fontsource.org)
-e são servidas pelo próprio site (`src/fonts.ts`, `src/landing.ts`). Para o PDF, `scripts/pdf-fonts.mjs` converte-as em TTF (o jsPDF só aceita TTF). Não há pedidos a servidores de terceiros, o que evita enviar o IP de quem visita à Google.
+e são servidas pelo próprio site (`src/fonts.ts`). Para o PDF, `scripts/pdf-fonts.mjs` converte-as em TTF (o jsPDF só aceita TTF). Não há pedidos a servidores de terceiros, o que evita enviar o IP de quem visita à Google.
 
 ## Músicas guardadas e tutorial
 
@@ -191,7 +188,7 @@ Quem cria conta (email e palavra-passe, com "Forgot your password?" por email) p
 
 1. Cria um projeto em [supabase.com](https://supabase.com) (o plano grátis chega para começar).
 2. No **SQL Editor**, corre por ordem os ficheiros de `supabase/migrations/` (001 a 006: músicas, bucket privado, planos, experiência de 7 dias, limite por conta e `user_data`, contacto, e substituir o ficheiro de uma música já guardada sem contar para o limite).
-3. Em **Authentication → URL Configuration**, põe `https://www.chordtile.com/` em *Site URL* e acrescenta `https://www.chordtile.com/player` e `https://www.chordtile.com/account` e `http://localhost:5173/player.html` em *Redirect URLs*.
+3. Em **Authentication → URL Configuration**, põe `https://www.chordtile.com/` em *Site URL* e acrescenta `https://www.chordtile.com/`, `https://www.chordtile.com/account` e `http://localhost:5173/` em *Redirect URLs*.
 4. Põe a *Project URL* e a chave pública (*publishable* ou *anon*) em `.env.production`. Esse ficheiro já tem o projeto do site e é usado no build (`npm run build` e o deploy). Para testar com outro projeto em `npm run dev`, cria um `.env.local` a partir de `.env.example`.
 
 A chave *anon* é pública por natureza; quem protege os dados são as regras RLS do ficheiro SQL (cada pessoa só lê e escreve as suas músicas).
@@ -218,14 +215,14 @@ As regras de cada plano estão em `src/app/plan.ts` (o limite de músicas també
 
 ### Estado atual (Stripe, conta ChordTile)
 
-Já criado em **modo live** (pagamentos reais): produto *ChordTile Premium* (`prod_VZH1CnBUMOkyDZ`), os 3 preços (`lookup_key`: `premium_monthly` 3,99 €, `premium_yearly` 29 €, `premium_lifetime` 49 €, IVA incluído), os 3 Payment Links (em `.env.production`, com regresso a `https://www.chordtile.com/player?checkout=success`), o portal do cliente e o webhook para a função `stripe-webhook`. Os mesmos objetos existem em **modo de teste** para experimentar. No Supabase (**Edge Functions → Secrets**) os segredos `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` têm de ser os de **live**.
+Já criado em **modo live** (pagamentos reais): produto *ChordTile Premium* (`prod_VZH1CnBUMOkyDZ`), os 3 preços (`lookup_key`: `premium_monthly` 3,99 €, `premium_yearly` 29 €, `premium_lifetime` 49 €, IVA incluído), os 3 Payment Links (em `.env.production`, com regresso a `https://www.chordtile.com/?checkout=success`), o portal do cliente e o webhook para a função `stripe-webhook`. Os mesmos objetos existem em **modo de teste** para experimentar. No Supabase (**Edge Functions → Secrets**) os segredos `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` têm de ser os de **live**.
 
 ### Ativar os pagamentos (Stripe)
 
 A tabela, as regras e a função `stripe-webhook` já estão no projeto Supabase. Falta a parte da Stripe:
 
 1. Na Stripe, cria um produto **Premium** com 3 preços: 3,99 € mensal, 29 € anual (recorrentes) e 49 € único.
-2. Cria um **Payment Link** para cada preço. Em *After payment*, escolhe "Don't show confirmation page" e redireciona para `https://www.chordtile.com/player?checkout=success`. Ativa a recolha de morada/IVA se usares o Stripe Tax.
+2. Cria um **Payment Link** para cada preço. Em *After payment*, escolhe "Don't show confirmation page" e redireciona para `https://www.chordtile.com/?checkout=success`. Ativa a recolha de morada/IVA se usares o Stripe Tax.
 3. Em **Settings → Billing → Customer portal**, ativa o portal e copia o *link de login*.
 4. Põe os 3 links e o do portal em `.env.production` (`VITE_STRIPE_LINK_*` e `VITE_STRIPE_PORTAL_URL`).
 5. Em **Developers → Webhooks**, adiciona o endpoint `https://dgxmxzhkbbosiadexayy.supabase.co/functions/v1/stripe-webhook` com os eventos `checkout.session.completed`, `customer.subscription.updated` e `customer.subscription.deleted` (e `checkout.session.async_payment_succeeded`, se ativares métodos de pagamento que só confirmam mais tarde).

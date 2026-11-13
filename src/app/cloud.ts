@@ -61,7 +61,7 @@ const pageUrl = (page: string) => new URL(page, location.href).href.split('?')[0
 /** Cria a conta. `needsConfirm`: o Supabase pede para confirmar o email antes de entrar. */
 export async function signUp(email: string, password: string, name: string): Promise<{ needsConfirm: boolean }> {
   const c = await sb();
-  const { data, error } = await c.auth.signUp({ email, password, options: { data: { name }, emailRedirectTo: pageUrl('/player') } });
+  const { data, error } = await c.auth.signUp({ email, password, options: { data: { name }, emailRedirectTo: pageUrl('/') } });
   if (error) throw error;
   // Email já registado (o Supabase não o diz, por privacidade): devolve um utilizador sem identidades
   if (data.user && data.user.identities && data.user.identities.length === 0) throw Object.assign(new Error('User already registered'), { code: 'user_already_exists' });

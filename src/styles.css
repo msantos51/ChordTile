@@ -8,28 +8,28 @@
    em baixo o leitor, com uma barra de progresso neutra. */
 :root {
   color-scheme: dark;
-  /* Paleta: grafite #1f2024 · branco · vermelho #c8102e (escuro, mas não preto: mais fácil de ler) */
-  --bg: #1f2024;
+  /* Paleta: quase preto #0b0b0d · branco · vermelho #e5222b (o mesmo da antiga página inicial) */
+  --bg: #0b0b0d;
   --bg-grad: none;
-  --panel: #2a2b31;
-  --panel-2: #35363d;
-  --dock: #2a2b31;
+  --panel: #141417;
+  --panel-2: #1f1f24;
+  --dock: #141417;
   --line: rgba(255, 255, 255, .14);
   --line-2: rgba(255, 255, 255, .24);
   --ink: #f5f5f6;
   --ink-strong: #ffffff;
   --ink-soft: #bfc0c6;
-  --accent: #d0122f;        /* loop, estado ativo (fundos) */
-  --accent-2: #e8213f;      /* variação mais clara do vermelho */
+  --accent: #e5222b;        /* loop, estado ativo (fundos) */
+  --accent-2: #ff3a3a;      /* variação mais clara do vermelho */
   --accent-ink: #ffffff;    /* texto sobre --accent */
-  --accent-text: #ff6b7d;   /* texto e contornos na cor de destaque (legível no escuro) */
+  --accent-text: #ff4d5a;   /* texto e contornos na cor de destaque (legível no escuro) */
   --on-note: #121212;       /* texto sobre um quadrado com a cor cheia da nota */
   --tint: 100%;             /* cor da nota cheia (viva) nos quadrados, na legenda e no compasso aberto */
   /* As cores das notas são iguais nos dois temas */
-  --note-base: #2a2b31;
+  --note-base: #141417;
   --note-ink: #000;
   --rep-bg: rgba(255, 255, 255, .12);
-  --overlay: rgba(31, 32, 36, .85);
+  --overlay: rgba(11, 11, 13, .85);
   --scrim: rgba(0, 0, 0, .6);
   --underline: rgba(242, 242, 242, .35);
   --hover-on-strong: rgba(18, 18, 18, .12);
@@ -1267,4 +1267,69 @@ body.learning .learn-cta { display: none; }
   .viewswitch { margin-bottom: 6px; padding: 2px; }
   .viewswitch button { min-height: 30px; padding-block: 2px; }
   body:not(.learning) .tabpanel { margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); border-radius: 0; border-inline: 0; padding: 2px 0; }
+}
+
+/* ---------- Site de tabs: a página inicial é o player ----------
+   Quem abre o site vê logo uma tab: o título da música com o tipo de tab (BASS TAB…), a afinação,
+   os separadores de instrumento e a tablatura em "papel" claro, larga, com os acordes numa coluna ao lado. */
+.logo { fill: var(--accent); }
+.brand-name { font-weight: 700; }
+.tagline { font-size: 13px; color: var(--ink-soft); padding-left: 14px; border-left: 1px solid var(--line-2); white-space: nowrap; }
+
+.song-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 20px; margin-bottom: 18px; }
+.song-head .song { flex: 1 1 340px; min-width: 0; }
+.song-title { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+#songTitle { font-size: clamp(24px, 2.6vw, 34px); font-weight: 900; letter-spacing: -.02em; line-height: 1.12; }
+.tab-kind { flex: none; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent-text); font: 700 12px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+#songMeta { margin-top: 8px; font: 500 13px var(--f-mono); }
+#songMeta .sample { margin: 0 10px 0 0; font-family: var(--f-body); }
+.track-tabs { display: flex; gap: 4px; padding: 4px; max-width: 100%; overflow-x: auto; scrollbar-width: none; border-radius: var(--r-md); background: var(--panel); border: 1px solid var(--line); }
+.track-tabs::-webkit-scrollbar { display: none; }
+.track-tabs[hidden] { display: none; }
+.track-tabs button { flex: none; height: 36px; max-width: 220px; padding: 0 16px; border: 0; border-radius: 9px; background: transparent; color: var(--ink-soft);
+  font: 500 14px var(--f-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track-tabs button:hover { color: var(--ink); }
+.track-tabs button[aria-pressed="true"] { background: var(--ink-strong); color: var(--bg); font-weight: 700; }
+.learn-go { height: var(--h-ctl-lg); padding: 0 18px; border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--panel)); font-size: 14px; font-weight: 700; }
+.learn-go svg.i { width: 18px; height: 18px; color: var(--accent-text); }
+.learn-go:hover:not(:disabled) { border-color: var(--accent-text); background: color-mix(in srgb, var(--accent) 22%, var(--panel)); }
+body.learning .learn-go { display: none; }
+/* A faixa do Tile by Tile deu lugar ao botão "Learn it without the tab", junto ao título */
+.learn-cta { display: none !important; }
+
+/* Tab primeiro (à esquerda, larga); os acordes numa coluna estreita à direita */
+@media (min-width: 1101px) {
+  .cols { grid-template-columns: minmax(0, 1fr) minmax(300px, 360px); }
+  #vChart, #vTab { order: 0; }
+  .viewswitch { margin-inline: 0 auto; }
+}
+
+/* A tablatura em "papel": escura sobre clara nos dois temas, como numa partitura */
+.tabpanel { background: #f5f3ef; border-color: transparent; color: #17171a; }
+:root[data-theme="light"] .tabpanel { background: #ffffff; border-color: var(--line-2); }
+.tabpanel .panel-head h2 { color: #17171a; }
+.tabpanel .now-chip { color: #b3141c; }
+.tabpanel .tab-loading { color: #5b5850; }
+.at-cursor-bar { background: rgba(229, 34, 43, .14); }
+.at-cursor-beat { background: var(--accent); }
+.at-highlight * { fill: #c8102e; stroke: #c8102e; }
+.tabpanel .tab-sel-bar { background: #17171a; color: #ffffff; }
+.tabpanel .tab-sel-bar button { background: #2a2a30; color: #ffffff; }
+.tabpanel .tab-sel-bar button.accent { background: var(--accent); }
+
+@media (max-width: 860px) { .tagline { display: none; } }
+@media (max-width: 600px) {
+  .song-head { gap: 10px; margin-bottom: 12px; }
+  .song-head .song { flex-basis: 100%; }
+  #songTitle { font-size: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
+  .song-title { flex-wrap: nowrap; gap: 10px; }
+  .tab-kind { font-size: 11px; padding: 3px 8px; }
+  #songMeta { margin-top: 4px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-tabs { flex: 1 1 100%; min-width: 0; }
+  .track-tabs button { flex: 1 0 auto; }
+  .learn-go { flex: 1 1 100%; justify-content: center; height: 44px; }
+  .top { flex-wrap: nowrap; }
+  .brand-name { display: inline; font-size: 17px; }
+  .top-actions { width: auto; justify-content: flex-end; }
 }

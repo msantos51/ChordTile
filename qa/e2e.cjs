@@ -34,18 +34,13 @@ const CAPTURE = () => {
   const closeSignup = async () => { await p.waitForTimeout(600); if (!(await p.locator('dialog.auth-dialog[open]').count())) { if (await p.locator('#modePick').isVisible()) await p.keyboard.press('Escape'); return false; } await p.keyboard.press('Escape'); await p.waitForTimeout(300); return true; };
   const waitSynth = () => p.waitForFunction(() => { const a = window.__apis.at(-1); return a && a.isReadyForPlayback; }, null, { timeout: 30000 });
 
-  await test('Landing loads with heading and CTA', async () => {
-    await p.goto(BASE + 'index.html'); ok(await p.locator('h1').count() === 1, 'no h1');
-    ok(await p.locator('[data-pick]').first().isVisible(), 'no load button');
+  await test('Home page is the player: the sample tab opens straight away', async () => {
+    await p.goto(BASE); await waitReady(); ok(await p.locator('h1#songTitle').count() === 1, 'no song title');
+    ok(/tab/i.test(await p.locator('#tabKind').textContent()), 'no tab kind badge');
+    return `${await bars()} bars · ` + await p.locator('#tabKind').textContent();
   });
-  await test('Landing "Load a Guitar Pro file" goes to the player (guest: create an account first)', async () => {
-    await p.goto(BASE + 'index.html');
-    await p.click('[data-pick]');
-    await p.waitForURL(/player(\.html)?\?(signup|load)/, { timeout: 10000 }); await waitReady();
-    if (await closeSignup()) return 'guest: sign-up prompt shown (own songs need an account, as designed)';
-    ok(await p.locator('#library:not([hidden])').count() === 1, 'My songs not opened');
-    await p.keyboard.press('Escape');
-    return 'signed in / no accounts: My songs opened to load the file';
+  await test('Old /player address goes to the home page and keeps the query', async () => {
+    await p.goto(BASE + 'player.html?sample'); await p.waitForTimeout(700); ok(!/player/.test(new URL(p.url()).pathname), 'still on ' + p.url()); await waitReady();
   });
   await test('Nothing about the songs is stored in the browser', async () => {
     const st = await p.evaluate(async () => ({ ls: Object.keys(localStorage).filter(k => !k.startsWith('sb-')), idb: (await indexedDB.databases()).map(d => d.name) }));
@@ -53,7 +48,7 @@ const CAPTURE = () => {
     return 'localStorage and IndexedDB empty';
   });
   await test('Try the sample opens the demo song', async () => {
-    await p.goto(BASE + 'index.html'); await p.click('a.link[href*="sample"]'); await waitReady(); return `${await bars()} bars`;
+    await p.goto(BASE + '?sample'); await waitReady(); return `${await bars()} bars`;
   });
   await test('Player: import GP3 and GP4 files', async () => {
     for (const f of ['exemplo.gp3', 'exemplo.gp4']) { await p.setInputFiles('#fileInput', FIX + f); await p.waitForTimeout(1500); if (await closeSignup()) return 'guest: sign-up prompt (as designed)'; ok(await bars() > 0, f + ' no bars'); ok(await p.locator('#err').isHidden(), f + ' error shown'); }
@@ -190,7 +185,7 @@ const CAPTURE = () => {
     return (await p.textContent('#cStatus')).trim();
   });
   await test('Legacy URLs redirect (ajuda, leitor, licencas, learn)', async () => {
-    for (const [a, to] of [['ajuda.html', /help/], ['leitor.html', /player/], ['licencas.html', /licenses/], ['learn.html', /player(\.html)?\?learn/]]) { await p.goto(BASE + a); await p.waitForTimeout(700); ok(to.test(p.url()), a + ' → ' + p.url()); }
+    for (const [a, to] of [['ajuda.html', /help/], ['leitor.html', /\/(\?|#|$)/], ['licencas.html', /licenses/], ['learn.html', /\/\?learn/]]) { await p.goto(BASE + a); await p.waitForTimeout(700); ok(to.test(p.url()), a + ' → ' + p.url()); }
   });
   await test('404 page exists in build', async () => { const r = await p.goto(BASE + '404.html'); ok(r.status() === 200 && (await p.textContent('h1')).includes('not found'), 'missing'); });
   results.push([errors.length ? 'FAIL' : 'PASS', 'No uncaught JS errors during journeys', errors.slice(0, 5).join(' | ')]);

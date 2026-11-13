@@ -214,27 +214,24 @@ function trackLabel(t: Track, i: number) {
   return isBassTrack(t) && !/bass|baixo|bajo/i.test(name) ? name + ' · bass' : name;
 }
 
-/** Separadores de instrumento, por cima da tab (como nos sites de tabs). A bateria fica de fora: não tem tom. */
+/** Menu pendente do instrumento, junto ao título. A bateria fica de fora: não tem tom. */
 function renderTrackControls() {
   const s = score();
-  const box = $('trackTabs');
-  box.replaceChildren();
+  const sel = select('trackQuick');
+  sel.innerHTML = '';
   s.tracks.forEach((t, i) => {
     if (isPercussion(t)) return;
-    const b = document.createElement('button');
-    b.type = 'button'; b.dataset.track = String(i); b.textContent = trackLabel(t, i);
-    b.setAttribute('aria-pressed', String(i === st.viewTrack));
-    b.addEventListener('click', () => setTrack(i));
-    box.append(b);
+    const o = document.createElement('option'); o.value = String(i); o.textContent = trackLabel(t, i);
+    o.selected = i === st.viewTrack; sel.append(o);
   });
-  box.hidden = box.childElementCount < 2;
+  $('trackPick').hidden = sel.options.length < 2;
 }
 
 /** Muda o instrumento: volta a detetar o tom só com ele, e atualiza a tablatura. */
 function setTrack(i: number) {
   if (i === st.viewTrack) return;
   st.viewTrack = i;
-  $('trackTabs').querySelectorAll<HTMLElement>('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.track === String(i))));
+  select('trackQuick').value = String(i);
   renderTrackInfo();
   save(); detect(); renderChart(); renderTab();
   toast('Key detected from: ' + trackLabel(score().tracks[i], i));
@@ -2191,6 +2188,7 @@ new MutationObserver(() => { $('learnStatus').textContent = $('status').textCont
 $('learnBtn').addEventListener('click', enterLearn);
 $('learnCtaBtn').addEventListener('click', enterLearn);
 $('learnGo').addEventListener('click', enterLearn);
+select('trackQuick').addEventListener('change', () => setTrack(+select('trackQuick').value));
 // "?" ao lado do botão: os 3 passos do Tile by Tile, num balão (fecha ao clicar fora ou com Esc)
 const setLearnPop = (open: boolean) => { $('learnGoPop').hidden = !open; $('learnGoHelp').setAttribute('aria-expanded', String(open)); };
 $('learnGoHelp').addEventListener('click', () => setLearnPop($('learnGoPop').hidden));

@@ -1286,13 +1286,10 @@ body.learning .learn-cta { display: none; }
   color: var(--accent-text); font: 700 12px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
 #songMeta { margin-top: 8px; font: 500 13px var(--f-mono); }
 #songMeta .sample { margin: 0 10px 0 0; font-family: var(--f-body); }
-.track-tabs { display: flex; gap: 4px; padding: 4px; max-width: 100%; overflow-x: auto; scrollbar-width: none; border-radius: var(--r-md); background: var(--panel); border: 1px solid var(--line); }
-.track-tabs::-webkit-scrollbar { display: none; }
-.track-tabs[hidden] { display: none; }
-.track-tabs button { flex: none; height: 36px; max-width: 220px; padding: 0 16px; border: 0; border-radius: 9px; background: transparent; color: var(--ink-soft);
-  font: 500 14px var(--f-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.track-tabs button:hover { color: var(--ink); }
-.track-tabs button[aria-pressed="true"] { background: var(--ink-strong); color: var(--bg); font-weight: 700; }
+/* Instrumento: menu pendente junto ao título (escondido quando a música só tem um) */
+.song-head .track-pick { height: var(--h-ctl-lg); padding-left: 14px; font-size: 14px; }
+.song-head .track-pick select { font-size: 14px; font-weight: 600; max-width: 240px; }
+.track-pick[hidden] { display: none; }
 /* Tile by Tile: o botão principal da página (vermelho, grande, com o que é por baixo) e um "?" com os 3 passos */
 .learn-go-wrap { position: relative; display: flex; align-items: center; gap: 10px; }
 .learn-go { display: flex; align-items: center; gap: 14px; min-height: 60px; padding: 10px 24px 10px 14px; border: 0; border-radius: 16px; text-align: left;
@@ -1350,8 +1347,10 @@ body.learning .learn-go-wrap { display: none; }
   .song-title { flex-wrap: nowrap; gap: 10px; }
   .tab-kind { font-size: 11px; padding: 3px 8px; }
   #songMeta { margin-top: 4px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .track-tabs { flex: 1 1 100%; min-width: 0; }
-  .track-tabs button { flex: 1 0 auto; }
+  /* (no topo antigo o seletor era só um ícone, com o menu invisível por cima: aqui mostra-se o nome) */
+  .song-head .track-pick { flex: 1 1 100%; min-width: 0; padding: 0 30px 0 14px; }
+  .song-head .track-pick::after { display: block; }
+  .song-head .track-pick select { position: static; opacity: 1; width: 100%; height: auto; max-width: none; font-size: 16px; text-overflow: ellipsis; }
   .learn-go-wrap { flex: 1 1 100%; }
   .learn-go { flex: 1; min-height: 56px; }
   .load-btn span { display: none; }

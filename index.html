@@ -163,7 +163,11 @@
         </div>
         <p id="songMeta"></p>
       </div>
-      <div class="track-tabs" id="trackTabs" role="group" aria-label="Instrument" title="My instrument: the chords are detected from it, and it is the one shown in the tab, muted by Play along and heard alone with Solo"></div>
+      <label class="btn track-pick" id="trackPick" for="trackQuick" title="My instrument: the chords are detected from it, and it is the one shown in the tab, muted by Play along and heard alone with Solo">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15V9a8 8 0 0 1 16 0v6"/><path d="M4 15h3v5H4zM17 15h3v5h-3z"/></svg>
+        <span class="sr">Instrument</span>
+        <select id="trackQuick"></select>
+      </label>
       <!-- Tile by Tile: o botão principal da página, e um "?" que explica os 3 passos -->
       <div class="learn-go-wrap">
         <button class="learn-go" id="learnGo" data-gate="learn" type="button">

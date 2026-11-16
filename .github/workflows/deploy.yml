@@ -1,8 +1,8 @@
 name: Publicar no GitHub Pages
 
+# Só manual: Actions → "Publicar no GitHub Pages" → Run workflow (ou `npm run deploy`).
+# Não corre sozinho a cada push, para não gastar minutos do GitHub Actions.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:

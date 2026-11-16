@@ -177,10 +177,17 @@ Pode ser adicionado ao ecrã principal (`manifest.webmanifest` e ícones em `pub
 
 ## Publicação
 
-Cada push para a `main` publica o site no GitHub Pages (`.github/workflows/deploy.yml`), no domínio **https://www.chordtile.com** (DNS na OVH; domínio definido em *Settings → Pages → Custom domain*, com HTTPS obrigatório).
+O site é publicado no GitHub Pages (`.github/workflows/deploy.yml`), no domínio **https://www.chordtile.com** (DNS na OVH; domínio definido em *Settings → Pages → Custom domain*, com HTTPS obrigatório).
 Na primeira vez, ativa em **Settings → Pages → Source: GitHub Actions**.
 
-Cada PR corre os testes, a verificação de tipos e o build (`.github/workflows/ci.yml`).
+A publicação **só acontece quando é pedida**: um push ou um merge para a `main` não publica nada nem gasta minutos do GitHub Actions. O percurso é:
+
+1. Juntar as alterações na `main` (um ou vários PRs).
+2. Testar no browser: `npm run dev` (http://localhost:5173) ou, para ver o site tal como vai ficar, `npm run build && npm run preview` (http://localhost:4173).
+3. Verificar tudo de uma vez: `npm run check` (tipos, testes e build).
+4. Publicar: no GitHub, **Actions → Publicar no GitHub Pages → Run workflow** (branch `main`), ou `npm run deploy` (precisa do [GitHub CLI](https://cli.github.com) com sessão iniciada). Antes de publicar, o workflow volta a correr os testes e o build.
+
+O CI (`.github/workflows/ci.yml`: tipos, testes e build) também já não corre em cada PR. Corre-se à mão no mesmo menu **Actions → CI → Run workflow**, se for preciso.
 
 ## Contas e sincronização (Supabase)
 

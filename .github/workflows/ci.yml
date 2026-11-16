@@ -1,9 +1,9 @@
 name: CI
 
+# Só manual, para não gastar minutos do GitHub Actions: os testes correm no computador
+# (`npm run check`) e o "Publicar no GitHub Pages" volta a corrê-los antes de publicar.
 on:
-  pull_request:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   verificar:

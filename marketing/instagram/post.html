@@ -27,6 +27,7 @@ h1 em{font-style:normal;color:#e5222b}
 .tab{margin-top:24px;height:100px;position:relative}
 .tab i{position:absolute;left:0;right:0;height:2px;background:rgba(255,255,255,.22)}
 .tab b{position:absolute;font-family:M;font-size:20px;color:#f5f5f6;background:#141417;padding:0 5px;transform:translate(-50%,-50%)}
+.tab u{position:absolute;top:0;width:2px;height:100px;background:rgba(255,255,255,.4)}
 .tab .head{position:absolute;top:-8px;bottom:-8px;width:4px;background:#ff3a3a;border-radius:2px;box-shadow:0 0 18px #ff3a3a}
 .speeds{display:flex;gap:12px;margin-top:22px}
 .sp{flex:1;text-align:center;padding:12px 0;border-radius:999px;border:2px solid rgba(255,255,255,.24);font-weight:700;font-size:25px;color:#bfc0c6}
@@ -53,10 +54,10 @@ h1 em{font-style:normal;color:#e5222b}
   <div class="row"><div class="sec" data-k="sec"></div>
     <div class="loopbadge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg><span data-k="loop"></span></div></div>
   <div class="tiles">
-    <div class="t" style="background:#ff4d4d">C</div>
-    <div class="t on" style="background:#8a6bff">Am</div>
-    <div class="t" style="background:#9bd33a">F</div>
-    <div class="t" style="background:#3ccf6c">G</div>
+    <div class="t" style="background:#fda19e">C</div>
+    <div class="t on" style="background:#999eff">Am</div>
+    <div class="t" style="background:#a6cc80">F</div>
+    <div class="t" style="background:#5cd5c7">G</div>
   </div>
   <div class="tab" id="tab"></div>
   <div class="speeds">
@@ -86,8 +87,13 @@ document.querySelectorAll('[data-k]').forEach(e=>e.innerHTML=L[e.dataset.k]);
 // mini tab: 6 strings with a few fret numbers and a playhead
 const tab=document.getElementById('tab');
 for(let s=0;s<6;s++){const i=document.createElement('i');i.style.top=(s*20)+'px';tab.appendChild(i);}
-const notes=[[3,1,'2'],[7,2,'2'],[11,3,'0'],[16,0,'0'],[20,1,'1'],[24,2,'2'],[30,1,'1'],[34,3,'2'],[38,4,'0'],[44,1,'1'],[48,2,'2'],[54,3,'3'],[58,4,'3'],[64,2,'0'],[68,1,'0'],[72,0,'3'],[78,4,'2'],[82,5,'3'],[88,3,'0'],[92,2,'0'],[96,1,'3']];
+// string 0 = high e ... 5 = low E. Open shapes picked as arpeggios, one bar under each tile.
+// C x32010 | Am x02210 | F xx3211 | G 320003
+const bars=[[[4,3],[3,2],[2,0],[1,1],[0,0]],[[4,0],[3,2],[2,2],[1,1],[0,0]],[[3,3],[2,2],[1,1],[0,1]],[[5,3],[4,2],[3,0],[2,0],[1,0],[0,3]]];
+const notes=[];
+bars.forEach((bar,k)=>{const step=21/bar.length;bar.forEach(([st,fr],j)=>notes.push([k*25+3+step*(j+.5),st,String(fr)]));});
+[25,50,75].forEach(x=>{const u=document.createElement('u');u.style.left=x+'%';tab.appendChild(u);});
 notes.forEach(([x,s,f])=>{const b=document.createElement('b');b.textContent=f;b.style.left=x+'%';b.style.top=(s*20)+'px';tab.appendChild(b);});
-const h=document.createElement('div');h.className='head';h.style.left='41%';tab.appendChild(h);
+const h=document.createElement('div');h.className='head';h.style.left='39.5%';tab.appendChild(h);
 </script>
 </body></html>

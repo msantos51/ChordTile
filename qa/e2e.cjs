@@ -25,7 +25,9 @@ const CAPTURE = () => {
   await ctx.addInitScript(CAPTURE);
   const p = await ctx.newPage();
   const errors = []; p.on('pageerror', e => errors.push(e.message));
-  p.on('console', m => { if (m.type() === 'error' && !/supabase|Failed to load resource|ERR_|fetch|No compatible importer/i.test(m.text())) errors.push('console: ' + m.text().slice(0, 150)); });
+  // Qualquer bloqueio da política de segurança (CSP) conta como erro, mesmo que a mensagem fale do Supabase
+  p.on('console', m => { if (/Content Security Policy/i.test(m.text())) errors.push('CSP: ' + m.text().slice(0, 200)); });
+  p.on('console', m => { if (m.type() === 'error' && !/Content Security Policy/i.test(m.text()) && !/supabase|Failed to load resource|ERR_|fetch|No compatible importer/i.test(m.text())) errors.push('console: ' + m.text().slice(0, 150)); });
   const api = fn => p.evaluate(fn);
   const bars = () => p.locator('#chart .bar').count();
   const waitReady = async () => { await p.waitForFunction(() => document.querySelectorAll('#chart .bar').length > 0, null, { timeout: 20000 }); await p.waitForTimeout(800); };

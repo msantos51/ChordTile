@@ -233,6 +233,6 @@ A tabela, as regras e a função `stripe-webhook` já estão no projeto Supabase
 3. Em **Settings → Billing → Customer portal**, ativa o portal e copia o *link de login*.
 4. Põe os 3 links e o do portal em `.env.production` (`VITE_STRIPE_LINK_*` e `VITE_STRIPE_PORTAL_URL`).
 5. Em **Developers → Webhooks**, adiciona o endpoint `https://dgxmxzhkbbosiadexayy.supabase.co/functions/v1/stripe-webhook` com os eventos `checkout.session.completed`, `customer.subscription.updated` e `customer.subscription.deleted` (e `checkout.session.async_payment_succeeded`, se ativares métodos de pagamento que só confirmam mais tarde).
-6. No Supabase, em **Edge Functions → Secrets**, cria `STRIPE_SECRET_KEY` (chave secreta da Stripe, `sk_...` ou uma *restricted key* com leitura **e escrita** de subscrições: a função cancela a subscrição de quem compra a vitalícia ou apaga a conta) e `STRIPE_WEBHOOK_SECRET` (o `whsec_...` do passo 5).
+6. No Supabase, em **Edge Functions → Secrets**, cria `STRIPE_SECRET_KEY` (chave secreta da Stripe, `sk_...` ou uma *restricted key* com leitura **e escrita** de subscrições e leitura de **Checkout Sessions** (para confirmar que um pagamento único é mesmo o preço `premium_lifetime`): a função cancela a subscrição de quem compra a vitalícia ou apaga a conta) e `STRIPE_WEBHOOK_SECRET` (o `whsec_...` do passo 5).
 
 O site junta o id da conta a cada link (`client_reference_id`); a função recebe o pagamento e ativa o Premium dessa conta. Ao voltar do pagamento (`?checkout=success`), o site espera uns segundos até o Premium aparecer.

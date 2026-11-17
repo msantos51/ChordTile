@@ -32,6 +32,15 @@ async function stripe(path: string, method = 'GET'): Promise<Record<string, unkn
   if (!r.ok) throw new Error('Stripe ' + r.status + ': ' + await r.text());
   return r.json();
 }
+/**
+ * Só o preço da vitalícia dá a vitalícia (lookup_key do preço na Stripe; o mesmo em modo live e de teste).
+ * Sem esta verificação, qualquer pagamento único futuro (um cartão-oferta, por exemplo) dava Premium para sempre.
+ */
+const LIFETIME_LOOKUP_KEY = Deno.env.get('STRIPE_LIFETIME_LOOKUP_KEY') || 'premium_lifetime';
+async function boughtLifetime(sessionId: string): Promise<boolean> {
+  const items = await stripe('checkout/sessions/' + encodeURIComponent(sessionId) + '/line_items?limit=100') as { data?: { price?: { lookup_key?: string | null } | null }[] };
+  return (items.data ?? []).some(i => i.price?.lookup_key === LIFETIME_LOOKUP_KEY);
+}
 /** O id da conta vem no link de pagamento (client_reference_id): só se aceita um UUID. */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** A conta já não existe (apagada entre o pagamento e o aviso): repetir o aviso não resolve nada. */
@@ -68,6 +77,11 @@ Deno.serve(async req => {
       const userId = obj.client_reference_id as string | null;
       if (!userId || !UUID_RE.test(userId)) return new Response('No client_reference_id', { status: 200 });
       if (obj.mode === 'payment' && obj.payment_status === 'paid') {
+        // (Se a Stripe falhar a responder, o erro dá 500 e a Stripe volta a enviar o aviso mais tarde.)
+        if (!(await boughtLifetime(obj.id as string))) {
+          console.warn('one-off payment that is not the lifetime price: ignored', obj.id);
+          return new Response('Not the lifetime price', { status: 200 });
+        }
         // Quem tinha uma subscrição e compra a vitalícia deixa de a pagar: cancela-se já, senão continuava a ser cobrada.
         const { data: before } = await db.from('entitlements').select('stripe_subscription_id').eq('user_id', userId).maybeSingle();
         const { error } = await db.from('entitlements').upsert({

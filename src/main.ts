@@ -1229,6 +1229,8 @@ addEventListener('keydown', e => {
     return;
   }
   if (e.key === 'Escape' && !$('paywall').hidden) { closePaywall(); return; }
+  // Durante a animação das secções, uma tecla salta para a pergunta (Esc continua a fechar = abrir a tab)
+  if (!$('modePick').hidden && building() && e.key !== 'Escape') { if (e.key !== 'Tab') { e.preventDefault(); endBuild(); } return; }
   if (e.key === 'Escape' && !$('modePick').hidden) { e.preventDefault(); closeModePick(); return; }
   if (e.key === 'Escape' && !$('helpMenu').hidden) { openHelp(false); return; }
   if (e.key === 'Escape' && !$('settings').hidden) { openSettings(false); return; }
@@ -2266,11 +2268,62 @@ function offerLearn() {
   const a = access(plan, 'learn'), badge = $('mpBadge');
   badge.hidden = a === 'ok'; badge.textContent = a === 'account' ? 'Free account' : 'Premium';
   $('modePick').hidden = false; $('modeScrim').hidden = false;
+  // Música nova: primeiro mostra-se a música a ser dividida em secções; só depois vem a pergunta
+  if (!midway && !saved?.done && !matchMedia('(prefers-reduced-motion: reduce)').matches) buildSections();
+  else $('mpLearn').focus();
+}
+
+// ---------- Animação "a dividir em secções" (antes da pergunta, ao abrir uma música nova) ----------
+let buildTimers: ReturnType<typeof setTimeout>[] = [];
+const building = () => $('modePick').classList.contains('building');
+/**
+ * Os compassos entram um a um (na cor do acorde), todos colados; depois afastam-se em secções e aparece o nome
+ * de cada uma; por fim "N sections ready" e a pergunta. Clicar ou carregar numa tecla salta para a pergunta.
+ */
+function buildSections() {
+  const box = $('mpBuild'), nBars = score().masterBars.length, n = st.sections.length;
+  // Muitos compassos: quadrados mais pequenos, para caberem sem se ter de descer na janela
+  box.style.setProperty('--tile', (nBars <= 64 ? 16 : nBars <= 160 ? 11 : 7) + 'px');
+  const per = Math.min(28, 1100 / nBars), stagger = Math.min(140, 900 / n);
+  box.replaceChildren(...st.sections.map((sec, k) => {
+    const g = document.createElement('span'); g.className = 'mb-sec'; g.style.setProperty('--d', k * stagger + 'ms');
+    const name = document.createElement('span'); name.className = 'mb-name'; name.textContent = sec.name;
+    const bars = document.createElement('span'); bars.className = 'mb-bars';
+    for (let i = sec.start; i < secEnd(k); i++) {
+      const t = document.createElement('i'); t.style.animationDelay = Math.round(i * per) + 'ms';
+      const pc = pitchClassesOf(barText(i))[0];
+      if (pc != null) t.style.setProperty('--nc', 'var(--n' + pc + ')');
+      bars.append(t);
+    }
+    g.append(name, bars); return g;
+  }));
+  $('modePick').classList.add('building'); box.classList.remove('split');
+  box.hidden = false; $('mpSkip').hidden = false;
+  $('mpTitle').textContent = 'Splitting the song into sections…';
+  $('mpSkip').focus();
+  const t1 = nBars * per + 350, t2 = t1 + 500 + n * stagger;
+  buildTimers = [
+    setTimeout(() => box.classList.add('split'), t1),
+    setTimeout(() => { $('mpTitle').textContent = n + (n === 1 ? ' section' : ' sections') + ' ready'; }, t2),
+    setTimeout(endBuild, t2 + 900),
+  ];
+}
+/** Acaba a animação (ou salta-a) e mostra a pergunta. */
+function endBuild() {
+  buildTimers.forEach(clearTimeout); buildTimers = [];
+  if (!building()) return;
+  $('modePick').classList.remove('building');
+  $('mpBuild').hidden = true; $('mpSkip').hidden = true;
+  $('mpTitle').textContent = 'How do you want to play this song?';
+  $('mpOptions').classList.add('reveal');
   $('mpLearn').focus();
 }
+['mpSkip', 'mpBuild'].forEach(id => $(id).addEventListener('click', endBuild));
 /** `seen` false: fechou-se porque se abriu outra música (não conta como resposta). */
 function closeModePick(seen = true) {
   if ($('modePick').hidden) return;
+  buildTimers.forEach(clearTimeout); buildTimers = [];
+  $('modePick').classList.remove('building'); $('mpBuild').hidden = true; $('mpSkip').hidden = true; $('mpOptions').classList.remove('reveal');
   $('modePick').hidden = true; $('modeScrim').hidden = true;
   if (seen) storage.set(askedKey(), true);
 }

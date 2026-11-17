@@ -1108,7 +1108,25 @@ body.learning .learn-cta { display: none; }
   .mp-tab .mp-desc { display: none; }
   .mode-pick .btn.mp-go span { display: inline; }
 }
-@media (prefers-reduced-motion: reduce) { .mode-pick { animation: none !important; } .mp-opt { transition: none; } }
+/* Antes da pergunta: a música a ser dividida em secções (compassos colados → secções com nome) */
+.mode-pick.building .mp-options { display: none; }
+.mp-options.reveal { animation: ct-pop .45s var(--ease); }
+.mp-build { --tile: 16px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 3px; padding: 6px 0 4px; cursor: pointer; transition: gap .45s var(--ease); }
+.mp-build[hidden] { display: none; }
+.mp-build.split { gap: 14px 12px; }
+.mb-sec { display: flex; flex-direction: column; gap: 0; min-width: 0; border-radius: 8px; transition: gap .45s var(--ease), padding .45s var(--ease), background-color .45s; transition-delay: var(--d); }
+.mb-name { max-height: 0; opacity: 0; translate: 0 4px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  font: 600 11.5px/1.3 var(--f-mono); color: var(--accent-text); transition: max-height .4s var(--ease), opacity .4s, translate .4s var(--ease); transition-delay: var(--d); }
+.mb-bars { display: flex; flex-wrap: wrap; gap: 3px; }
+.mb-bars i { width: var(--tile); height: var(--tile); border-radius: 3px; background: var(--nc, var(--panel-2)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 10%, transparent);
+  animation: mb-tile .3s var(--ease) both; }
+.mp-build.split .mb-sec { gap: 5px; padding: 6px; background: color-mix(in srgb, var(--accent) 8%, var(--bg)); box-shadow: inset 0 0 0 1px var(--line-2); }
+.mp-build.split .mb-name { max-height: 16px; opacity: 1; translate: 0 0; }
+@keyframes mb-tile { from { opacity: 0; scale: .3; } }
+.mp-skip { justify-self: end; margin-top: -6px; padding: 4px 8px; font: 500 12px var(--f-sans, inherit); color: var(--ink-soft); background: none; border: 0; border-radius: 6px; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.mp-skip[hidden] { display: none; }
+.mp-skip:hover { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .mode-pick, .mp-options.reveal, .mb-bars i { animation: none !important; } .mp-opt, .mp-build, .mb-sec, .mb-name { transition: none; } }
 
 /* ---------- Compasso expandido: técnicas e dinâmicas ---------- */
 /* Etiqueta da técnica colada à nota (H, P, ↑ full, /, PM…) */

@@ -517,10 +517,18 @@
     <button class="mp-opt mp-learn" id="mpLearn" type="button">
       <span class="mp-head">
         <span class="lc-icon" aria-hidden="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M14 17.5l2.2 2.2L21 15"/></svg></span>
-        <span class="mp-name"><strong>Learn it with Tile by Tile</strong><em id="mpBadge" hidden></em></span>
+        <span class="mp-name"><small>Tile by Tile</small><strong>Learn it by heart</strong></span>
+        <em class="mp-badge" id="mpBadge" hidden></em>
       </span>
-      <span class="mp-desc">One section at a time: with the tab, then without it, then joined to the ones before, until you play the whole song from memory.</span>
-      <span class="lc-track" id="mpTrack" aria-hidden="true"></span>
+      <span class="mp-desc">We split the song into sections and take you through them one by one, until you play it all <b>without the tab</b>.</span>
+      <span class="mp-steps" aria-hidden="true">
+        <span><i>1</i>With the tab</span>
+        <svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <span><i>2</i>Without it</span>
+        <svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <span><i>3</i>Join it up</span>
+      </span>
+      <span class="mp-song" id="mpTrack" role="img"></span>
       <span class="mp-meta" id="mpMeta"></span>
       <span class="btn primary mp-go"><span id="mpGo">Start</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
     </button>

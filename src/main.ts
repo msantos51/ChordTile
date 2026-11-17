@@ -2248,6 +2248,25 @@ function learnSegs(known: boolean[], next: number, bars: number[]) {
   });
 }
 
+/**
+ * A música numa faixa colorida: um bloco por secção (largura = compassos) feito de uma fatia por compasso, na cor
+ * do acorde. As que já se sabem de cor levam um visto; a próxima, um contorno. O nome fica no título (rato).
+ */
+function songStrip(known: boolean[], next: number, bars: number[]) {
+  return st.sections.map((sec, k) => {
+    const seg = document.createElement('span');
+    seg.className = 'ms-sec' + (known[k] ? ' known' : k === next ? ' next' : '');
+    seg.style.flex = String(Math.max(1, bars[k]));
+    seg.title = sec.name + ' · ' + bars[k] + ' bar' + (bars[k] === 1 ? '' : 's') + (known[k] ? ' · by heart' : k === next ? ' · next' : '');
+    for (let i = sec.start; i < secEnd(k); i++) {
+      const b = document.createElement('i'); const pc = pitchClassesOf(barText(i))[0];
+      if (pc != null) b.style.setProperty('--nc', 'var(--np' + pc + ')');
+      seg.append(b);
+    }
+    return seg;
+  });
+}
+
 // Ao abrir uma música (escolhida pela pessoa): aprender com o Tile by Tile ou só abrir a tab. Pergunta-se na primeira
 // vez de cada música; depois, só enquanto houver um percurso a meio (para o retomar). Fechar = só abrir a tab.
 const askedKey = () => 'mapa:asked:' + st.fileKey;
@@ -2258,11 +2277,13 @@ function offerLearn() {
   if (storage.get<boolean>(askedKey()) && !midway) return;
   $('mpSong').textContent = [$('songTitle').textContent, score().artist].filter(Boolean).join(' · ');
   $('mpTitle').textContent = midway ? 'Pick up where you left off?' : 'How do you want to play this song?';
-  $('mpTrack').replaceChildren(...learnSegs(known, next, bars));
+  const track = $('mpTrack');
+  track.replaceChildren(...songStrip(known, next, bars));
+  track.setAttribute('aria-label', 'The song in ' + st.sections.length + ' sections: ' + st.sections.map(s => s.name).join(', '));
   const n = st.sections.length;
-  const meta = $('mpMeta'); meta.textContent = n + ' section' + (n === 1 ? '' : 's') + ' · ';
-  const strong = document.createElement('strong'); strong.textContent = pct + '%';
-  meta.append(strong, ' no tab yet');
+  const meta = $('mpMeta'), nb = bars.reduce((a, b) => a + b, 0);
+  meta.textContent = n + ' section' + (n === 1 ? '' : 's') + ' · ' + nb + ' bars';
+  if (step > 0 || saved?.done) { const strong = document.createElement('strong'); strong.textContent = pct + '%'; meta.append(' · ', strong, ' by heart'); }
   $('mpGo').textContent = saved?.done ? 'Practise again' : (midway ? 'Continue' : 'Start') + (nextName ? ' · ' + nextName : '');
   // Sem acesso: diz logo o que é preciso (o botão leva à criação de conta ou ao Premium)
   const a = access(plan, 'learn'), badge = $('mpBadge');

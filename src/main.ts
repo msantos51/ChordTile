@@ -2296,19 +2296,37 @@ function offerLearn() {
 
 // ---------- Animação "a dividir em secções" (antes da pergunta, ao abrir uma música nova) ----------
 let buildTimers: ReturnType<typeof setTimeout>[] = [];
+let buildRaf = 0;
 const building = () => $('modePick').classList.contains('building');
+const BUILD_STEPS = ['Reading the bars', 'Finding where each section starts', 'Grouping the bars into sections'];
 /**
- * Os compassos entram um a um (na cor do acorde), todos colados; depois afastam-se em secções e aparece o nome
- * de cada uma; por fim "N sections ready" e a pergunta. Clicar ou carregar numa tecla salta para a pergunta.
+ * Mostra o processo em três fases, com tempo para se perceber o que acontece:
+ * 1) os compassos entram um a um (na cor do acorde), colados, com um contador; 2) marca-se o início de cada secção;
+ * 3) as secções afastam-se e ganham nome e número de compassos. No fim, "N sections ready" fica visível um pouco
+ * e passa-se à pergunta. Clicar, "Continue"/"Skip" ou uma tecla salta para a pergunta.
  */
 function buildSections() {
   const box = $('mpBuild'), nBars = score().masterBars.length, n = st.sections.length;
   // Muitos compassos: quadrados mais pequenos, para caberem sem se ter de descer na janela
   box.style.setProperty('--tile', (nBars <= 64 ? 16 : nBars <= 160 ? 11 : 7) + 'px');
-  const per = Math.min(28, 1100 / nBars), stagger = Math.min(140, 900 / n);
-  box.replaceChildren(...st.sections.map((sec, k) => {
-    const g = document.createElement('span'); g.className = 'mb-sec'; g.style.setProperty('--d', k * stagger + 'ms');
-    const name = document.createElement('span'); name.className = 'mb-name'; name.textContent = sec.name;
+  const tRead = Math.min(2600, Math.max(1600, nBars * 40)), per = tRead / nBars;
+  const tMark = Math.min(1500, Math.max(700, n * 220)), markStep = tMark / n;
+  const tGroup = 600 + Math.min(900, n * 120), groupStep = Math.min(120, 900 / n);
+  const tHold = 2400;
+
+  const steps = document.createElement('ol'); steps.className = 'mb-steps';
+  steps.append(...BUILD_STEPS.map(label => {
+    const li = document.createElement('li'); const dot = document.createElement('b'); const txt = document.createElement('span');
+    txt.textContent = label; li.append(dot, txt); return li;
+  }));
+  const stage = document.createElement('div'); stage.className = 'mb-stage';
+  stage.append(...st.sections.map((sec, k) => {
+    const g = document.createElement('span'); g.className = 'mb-sec'; g.style.setProperty('--d', k * groupStep + 'ms');
+    const name = document.createElement('span'); name.className = 'mb-name';
+    const len = secEnd(k) - sec.start;
+    const nm = document.createElement('strong'); nm.textContent = sec.name;
+    const ct = document.createElement('small'); ct.textContent = len + (len === 1 ? ' bar' : ' bars');
+    name.append(nm, ct);
     const bars = document.createElement('span'); bars.className = 'mb-bars';
     for (let i = sec.start; i < secEnd(k); i++) {
       const t = document.createElement('i'); t.style.animationDelay = Math.round(i * per) + 'ms';
@@ -2318,20 +2336,55 @@ function buildSections() {
     }
     g.append(name, bars); return g;
   }));
-  $('modePick').classList.add('building'); box.classList.remove('split');
-  box.hidden = false; $('mpSkip').hidden = false;
-  $('mpTitle').textContent = 'Splitting the song into sections…';
+  const foot = document.createElement('div'); foot.className = 'mb-foot';
+  const count = document.createElement('span'); count.className = 'mb-count';
+  const prog = document.createElement('span'); prog.className = 'mb-prog'; prog.append(document.createElement('i'));
+  foot.append(count, prog);
+  box.replaceChildren(steps, stage, foot);
+
+  const lis = [...steps.children] as HTMLElement[], secs = [...stage.children] as HTMLElement[];
+  const total = tRead + tMark + tGroup;
+  const phase = (p: number, title: string) => {
+    lis.forEach((li, i) => { li.classList.toggle('done', i < p); li.classList.toggle('active', i === p); });
+    $('mpTitle').textContent = title;
+  };
+  const setProg = (ms: number) => box.style.setProperty('--p', String(Math.min(1, ms / total)));
+
+  $('modePick').classList.add('building'); box.className = 'mp-build';
+  box.hidden = false; $('mpSkip').hidden = false; $('mpSkip').textContent = 'Skip'; $('mpSkip').classList.remove('go');
+  phase(0, 'Reading the song…');
   $('mpSkip').focus();
-  const t1 = nBars * per + 350, t2 = t1 + 500 + n * stagger;
+  // Fase 1: contador de compassos e barra de progresso a acompanhar os quadrados
+  const t0 = performance.now();
+  const tick = () => {
+    const el = performance.now() - t0;
+    if (el < tRead) count.textContent = Math.min(nBars, Math.floor(el / per) + 1) + ' / ' + nBars + ' bars';
+    setProg(el);
+    if (el < total) buildRaf = requestAnimationFrame(tick);
+  };
+  buildRaf = requestAnimationFrame(tick);
   buildTimers = [
-    setTimeout(() => box.classList.add('split'), t1),
-    setTimeout(() => { $('mpTitle').textContent = n + (n === 1 ? ' section' : ' sections') + ' ready'; }, t2),
-    setTimeout(endBuild, t2 + 900),
+    setTimeout(() => {
+      count.textContent = nBars + ' bars';
+      phase(1, 'Finding the sections…'); box.classList.add('marking');
+      secs.forEach((g, k) => buildTimers.push(setTimeout(() => {
+        g.classList.add('cut'); count.textContent = (k + 1) + (k ? ' sections found' : ' section found');
+      }, k * markStep)));
+    }, tRead),
+    setTimeout(() => { phase(2, 'Grouping into sections…'); box.classList.add('split'); }, tRead + tMark),
+    setTimeout(() => {
+      phase(3, n + (n === 1 ? ' section' : ' sections') + ' ready');
+      box.classList.add('ready'); setProg(total);
+      count.textContent = nBars + ' bars → ' + n + (n === 1 ? ' section' : ' sections') + ' to learn one at a time';
+      $('mpSkip').textContent = 'Continue'; $('mpSkip').classList.add('go');
+    }, total),
+    setTimeout(endBuild, total + tHold),
   ];
 }
 /** Acaba a animação (ou salta-a) e mostra a pergunta. */
+function stopBuild() { buildTimers.forEach(clearTimeout); buildTimers = []; cancelAnimationFrame(buildRaf); }
 function endBuild() {
-  buildTimers.forEach(clearTimeout); buildTimers = [];
+  stopBuild();
   if (!building()) return;
   $('modePick').classList.remove('building');
   $('mpBuild').hidden = true; $('mpSkip').hidden = true;
@@ -2343,7 +2396,7 @@ function endBuild() {
 /** `seen` false: fechou-se porque se abriu outra música (não conta como resposta). */
 function closeModePick(seen = true) {
   if ($('modePick').hidden) return;
-  buildTimers.forEach(clearTimeout); buildTimers = [];
+  stopBuild();
   $('modePick').classList.remove('building'); $('mpBuild').hidden = true; $('mpSkip').hidden = true; $('mpOptions').classList.remove('reveal');
   $('modePick').hidden = true; $('modeScrim').hidden = true;
   if (seen) storage.set(askedKey(), true);

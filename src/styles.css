@@ -1133,22 +1133,56 @@ body.learning .learn-cta { display: none; }
 /* Antes da pergunta: a música a ser dividida em secções (compassos colados → secções com nome) */
 .mode-pick.building .mp-options { display: none; }
 .mp-options.reveal { animation: ct-pop .45s var(--ease); }
-.mp-build { --tile: 16px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 3px; padding: 6px 0 4px; cursor: pointer; transition: gap .45s var(--ease); }
+.mp-build { --tile: 16px; --p: 0; display: grid; gap: 14px; padding: 4px 0 2px; cursor: pointer; }
 .mp-build[hidden] { display: none; }
-.mp-build.split { gap: 14px 12px; }
-.mb-sec { display: flex; flex-direction: column; gap: 0; min-width: 0; border-radius: 8px; transition: gap .45s var(--ease), padding .45s var(--ease), background-color .45s; transition-delay: var(--d); }
-.mb-name { max-height: 0; opacity: 0; translate: 0 4px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-  font: 600 11.5px/1.3 var(--f-mono); color: var(--accent-text); transition: max-height .4s var(--ease), opacity .4s, translate .4s var(--ease); transition-delay: var(--d); }
+/* Passos do processo: o atual pulsa, os feitos levam um visto */
+.mb-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-soft); }
+.mb-steps li { display: inline-flex; align-items: center; gap: 8px; opacity: .45; transition: opacity .3s, color .3s; }
+.mb-steps li.active, .mb-steps li.done { opacity: 1; }
+.mb-steps li.active { color: var(--ink); font-weight: 600; }
+.mb-steps b { position: relative; width: 16px; height: 16px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--line-2); transition: background-color .3s, box-shadow .3s; }
+.mb-steps li.active b { box-shadow: inset 0 0 0 1.5px var(--accent); animation: mb-pulse 1.2s ease-out infinite; }
+.mb-steps li.active b::after { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--accent); }
+.mb-steps li.done b { background: var(--accent); box-shadow: none; }
+.mb-steps li.done b::after { content: ""; position: absolute; left: 5.5px; top: 3px; width: 3.5px; height: 7px; border: solid var(--accent-ink); border-width: 0 2px 2px 0; rotate: 45deg; animation: ct-fade .25s; }
+@keyframes mb-pulse { 0% { box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); } 100% { box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 0 7px transparent; } }
+/* A música: compassos colados → marcas de início → secções separadas com nome */
+.mb-stage { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 3px; min-height: calc(var(--tile) + 30px); padding: 12px; border-radius: 12px;
+  background: color-mix(in srgb, var(--ink) 4%, var(--bg)); box-shadow: inset 0 0 0 1px var(--line); transition: gap .5s var(--ease); }
+.mp-build.split .mb-stage { gap: 12px 10px; }
+.mb-sec { position: relative; display: flex; flex-direction: column; gap: 0; min-width: 0; border-radius: 8px;
+  transition: gap .5s var(--ease), padding .5s var(--ease), background-color .5s, box-shadow .5s; transition-delay: var(--d); }
+.mb-sec::before { content: ""; position: absolute; left: -2.5px; bottom: 0; width: 2px; height: calc(var(--tile) + 8px); border-radius: 2px; background: var(--accent);
+  box-shadow: 0 0 8px var(--accent); scale: 1 0; transform-origin: bottom; opacity: 0; transition: scale .35s var(--ease), opacity .35s; }
+.mb-sec.cut::before { scale: 1 1; opacity: 1; }
+.mb-sec.cut .mb-bars i:first-child { outline: 2px solid var(--accent); outline-offset: 1px; }
+.mp-build.split .mb-sec::before { opacity: 0; }
+.mp-build.split .mb-sec .mb-bars i:first-child { outline-color: transparent; transition: outline-color .4s; }
+.mb-name { display: flex; align-items: baseline; gap: 6px; width: 0; min-width: 100%; max-height: 0; opacity: 0; translate: 0 4px; overflow: hidden; white-space: nowrap;
+  transition: max-height .45s var(--ease), opacity .45s, translate .45s var(--ease); transition-delay: var(--d); }
+.mb-name strong { font: 600 12px/1.3 var(--f-sans, inherit); color: var(--ink); overflow: hidden; text-overflow: ellipsis; }
+.mb-name small { font: 500 10.5px/1.3 var(--f-mono); color: var(--ink-soft); }
 .mb-bars { display: flex; flex-wrap: wrap; gap: 3px; }
 .mb-bars i { width: var(--tile); height: var(--tile); border-radius: 3px; background: var(--nc, var(--panel-2)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 10%, transparent);
-  animation: mb-tile .3s var(--ease) both; }
-.mp-build.split .mb-sec { gap: 5px; padding: 6px; background: color-mix(in srgb, var(--accent) 8%, var(--bg)); box-shadow: inset 0 0 0 1px var(--line-2); }
-.mp-build.split .mb-name { max-height: 16px; opacity: 1; translate: 0 0; }
-@keyframes mb-tile { from { opacity: 0; scale: .3; } }
+  animation: mb-tile .45s var(--ease) both; }
+.mp-build.split .mb-sec { gap: 6px; padding: 8px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line-2), 0 6px 18px -12px rgb(0 0 0 / .5); }
+.mp-build.split .mb-name { width: auto; max-height: 18px; opacity: 1; translate: 0 0; }
+.mp-build.ready .mb-sec { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, var(--line-2)), 0 6px 18px -12px rgb(0 0 0 / .5); }
+@keyframes mb-tile { 0% { opacity: 0; scale: .4; } 55% { opacity: 1; scale: 1.12; filter: brightness(1.25); } 100% { scale: 1; } }
+/* Contador e progresso */
+.mb-foot { display: flex; align-items: center; gap: 12px; }
+.mb-count { flex: none; min-width: 0; font: 500 12.5px var(--f-mono); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.mp-build.ready .mb-count { color: var(--accent-text); font-weight: 600; flex: 1 1 auto; }
+.mb-prog { flex: 1 1 auto; height: 4px; border-radius: 4px; overflow: hidden; background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.mp-build.ready .mb-prog { display: none; }
+.mb-prog i { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: left; scale: var(--p) 1; }
+@media (max-width: 600px) { .mb-steps { gap: 6px 12px; font-size: 12px; } .mb-stage { padding: 10px; } }
 .mp-skip { justify-self: end; margin-top: -6px; padding: 4px 8px; font: 500 12px var(--f-sans, inherit); color: var(--ink-soft); background: none; border: 0; border-radius: 6px; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .mp-skip[hidden] { display: none; }
 .mp-skip:hover { color: var(--ink); }
-@media (prefers-reduced-motion: reduce) { .mode-pick, .mp-options.reveal, .mb-bars i { animation: none !important; } .mp-opt, .mp-build, .mb-sec, .mb-name { transition: none; } }
+.mp-skip.go { padding: 7px 14px; font-weight: 600; color: var(--accent-ink); background: var(--accent); text-decoration: none; border-radius: var(--r-pill, 999px); animation: ct-pop .35s var(--ease); }
+.mp-skip.go:hover { color: var(--accent-ink); filter: brightness(1.08); }
+@media (prefers-reduced-motion: reduce) { .mode-pick, .mp-options.reveal, .mb-bars i, .mb-steps b { animation: none !important; } .mp-opt, .mb-stage, .mb-sec, .mb-sec::before, .mb-name { transition: none; } }
 
 /* ---------- Compasso expandido: técnicas e dinâmicas ---------- */
 /* Etiqueta da técnica colada à nota (H, P, ↑ full, /, PM…) */

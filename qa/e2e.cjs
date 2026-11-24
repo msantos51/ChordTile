@@ -87,6 +87,12 @@ const CAPTURE = () => {
     await p.keyboard.press('Space'); await p.waitForTimeout(400); const s2 = await api(() => window.__apis.at(-1).playerState);
     ok(s1 === 1 && s2 === 0, `states ${s1},${s2}`);
   });
+  await test('Welcome strip for guests: opens the file picker and closes', async () => {
+    if (await p.locator('#welcome').isHidden()) return 'SKIP: no accounts in this build (no welcome strip)';
+    const [chooser] = await Promise.all([p.waitForEvent('filechooser', { timeout: 3000 }), p.click('.wl-open')]);
+    ok(!!chooser, 'no file chooser');
+    await p.click('#welcomeClose'); ok(await p.locator('#welcome').isHidden(), 'still visible');
+  });
   let gated = false;
   await test('Guest gating: a locked tool opens the sign-up prompt, Esc closes it', async () => {
     await p.click('#loopBtn'); await p.waitForTimeout(500);

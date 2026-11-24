@@ -797,6 +797,25 @@ function endTabPress(e?: Event) {
   surface.dispatchEvent(new MouseEvent('mouseup', { button: 0, clientX: m?.clientX ?? -1, clientY: m?.clientY ?? -1 }));
 }
 for (const ev of ['mouseup', 'pointercancel', 'blur'] as const) addEventListener(ev, endTabPress, { capture: true });
+// Banco de sons: fora do caminho crítico do arranque (era ~1 MB a competir com a tab e a fonte de música).
+// Carrega-se ao primeiro toque, tecla ou clique em qualquer sítio, ou quando o browser fica sem nada
+// para fazer depois de a página carregar (no máximo ~2,5 s depois), o que vier primeiro.
+let soundsRequested = false;
+function loadSounds() {
+  if (soundsRequested || !st.api) return;
+  soundsRequested = true;
+  $('status').textContent = 'Loading sounds…';
+  st.api.loadSoundFont(vendor + 'soundfont/sonivox.sf3', false);
+}
+function scheduleSounds() {
+  const opts = { capture: true, once: true, passive: true } as const;
+  for (const ev of ['pointerdown', 'keydown', 'touchstart'] as const) addEventListener(ev, loadSounds, opts);
+  const idle = () => {
+    const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void }).requestIdleCallback;
+    if (ric) ric(loadSounds, { timeout: 2500 }); else setTimeout(loadSounds, 1500);
+  };
+  if (document.readyState === 'complete') idle(); else addEventListener('load', idle, { once: true });
+}
 function initApi() {
   const a = new at.AlphaTabApi($('tab'), {
     core: { fontDirectory: vendor + 'font/', scriptFile: vendor + 'alphaTab.min.js', engine: 'svg' },
@@ -806,7 +825,8 @@ function initApi() {
       resources: TAB_COLORS[currentTheme()],
     },
     player: {
-      playerMode: 'EnabledSynthesizer', outputMode: 'WebAudioScriptProcessor', soundFont: vendor + 'soundfont/sonivox.sf3',
+      // O banco de sons (~1 MB) não vai aqui: carrega-se à parte (loadSounds), depois de a página aparecer
+      playerMode: 'EnabledSynthesizer', outputMode: 'WebAudioScriptProcessor',
       scrollElement: $('tabScroll'), enableCursor: true, enableAnimatedBeatCursor: true, enableUserInteraction: true,
       // O scroll automático é feito por nós (followTab), a partir da posição real da música:
       // o do alphaTab dependia do cursor e deixava a tablatura parada no início enquanto a música avançava.
@@ -819,6 +839,7 @@ function initApi() {
   for (const [el, f] of fonts) fonts.set(el, new at.model.Font('Roboto', f.size, f.style, f.weight));
   a.updateSettings();
   a.customCursorHandler = delay.cursorHandler(at.midi.MidiTickLookupFindBeatResultCursorMode.ToNextBext);
+  scheduleSounds();
   a.soundFontLoad.on(e => { if (e.total) $('status').textContent = 'Loading sounds… ' + Math.round((e.loaded / e.total) * 100) + '%'; });
   a.playerReady.on(() => {
     st.ready = true;
@@ -931,6 +952,8 @@ function ensurePlayingMark(i: number) {
   const el = document.querySelector('.bar[data-bar="' + i + '"]');
   if (el && !el.classList.contains('playing')) markPlaying(i, false);
 }
+/** Muda o texto só se for diferente (não cria uma pintura nova sem necessidade). */
+function setText(el: HTMLElement, txt: string) { if (el.textContent !== txt) el.textContent = txt; }
 function setStatus(txt: string) {
   const s = $('status'); s.textContent = txt;
   const what = st.loopSection >= 0 ? st.sections[st.loopSection].name : st.loopBar >= 0 ? 'bar ' + (st.loopBar + 1) : '';
@@ -2231,8 +2254,10 @@ function updateLearnCta() {
   $('learnCtaBtnText').textContent = saved?.done ? 'Practise again' : step > 0 ? 'Continue' + (nextName ? ' · ' + nextName : '') : 'Start' + (nextName ? ' · ' + nextName : '');
   $('learnCtaTitle').textContent = saved?.done ? 'You can play it with no tab' : 'Tile by Tile';
   const n = st.sections.length;
-  $('learnGoText').textContent = saved?.done ? 'Practise it again' : step > 0 ? 'Continue Section by Section' : 'Learn Section by Section';
-  $('learnGoSub').textContent = 'Tile by Tile · ' + (step > 0 || saved?.done ? pct + '% with no tab' : n + (n === 1 ? ' section' : ' sections'));
+  // Só se escreve o texto quando muda: trocar o nó de texto (mesmo pelo mesmo texto) conta como uma pintura
+  // nova, e este é o maior texto do ecrã ao abrir (atrasava o LCP até a música estar pronta).
+  setText($('learnGoText'), saved?.done ? 'Practise it again' : step > 0 ? 'Continue Section by Section' : 'Learn Section by Section');
+  setText($('learnGoSub'), 'Tile by Tile · ' + (step > 0 || saved?.done ? pct + '% with no tab' : n + (n === 1 ? ' section' : ' sections')));
 }
 /** Onde se vai no Tile by Tile desta música: o passo guardado, o que já se sabe de cor e a secção que vem a seguir. */
 function learnProgress() {

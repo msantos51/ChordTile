@@ -102,6 +102,9 @@
  ]
 }
 </script>
+<!-- alphaTab: defer, para não atrasar a primeira pintura. Fica no <head>, antes do main.ts (que o Vite também
+     põe no <head>): os scripts adiados correm pela ordem em que aparecem, e o main.ts precisa do alphaTab. -->
+<script defer src="./vendor/alphatab/alphaTab.min.js"></script>
 </head>
 <body>
 <header class="top">
@@ -323,7 +326,7 @@
     </div>
     <div class="now">
       <span class="now-title" id="nowTitle">Start</span>
-      <span id="status">Loading sounds…</span>
+      <span id="status">Loading…</span>
     </div>
     <button class="ibtn more" id="moreBtn" type="button" aria-expanded="false" aria-controls="dockTools" aria-label="More player options">
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
@@ -612,7 +615,6 @@
 <div class="drop" id="drop" hidden><div>Drop the file here</div></div>
 <div class="toast" id="toast" role="status" hidden></div>
 
-<script src="./vendor/alphatab/alphaTab.min.js"></script>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

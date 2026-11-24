@@ -1492,3 +1492,26 @@ body.learning .learn-go-wrap { display: none; }
 /* A legenda das notas, o acorde da janela do compasso e a legenda da ajuda seguem o mesmo estilo */
 .notekey span, .note-legend span, .bm-chord[style*="--nc"] { background: var(--nc); color: #1b1b1f; box-shadow: none; }
 .notekey span { border-radius: 6px; }
+
+/* ---------- Acabamentos ---------- */
+/* O cursor da tab "multiplica" com o papel: o texto por baixo (INTRO, Moderate, f) continua legível */
+.tabpanel .at-cursors { mix-blend-mode: multiply; }
+/* O botão "Tile by Tile" no cabeçalho dos acordes repetia o botão grande junto ao título */
+.chartcol .learn-btn { display: none; }
+@media (max-width: 600px) {
+  /* A linha da música (compassos, bpm, afinação) passa à linha seguinte em vez de ficar cortada */
+  #songMeta { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.5; }
+  /* Tile by Tile mais compacto, para a tab aparecer mais cedo no ecrã */
+  .learn-go { min-height: 48px; padding: 6px 16px 6px 8px; gap: 10px; border-radius: 14px; }
+  .lg-icon { width: 30px; height: 30px; border-radius: 8px; }
+  .lg-icon svg.i { width: 17px; height: 17px; }
+  .lg-text strong { font-size: 15px; }
+  .lg-text small { font-size: 11.5px; }
+  .lg-help { width: 48px; height: 48px; flex: none; }
+  /* Premium também no topo do telemóvel (só o ícone, e só para quem ainda não o tem) */
+  .top-actions { gap: 6px; }
+  .top-actions > .btn { width: 40px; height: 40px; padding: 0; justify-content: center; flex: none; }
+  .top-actions > .premium-btn:not(.on) { display: inline-flex; }
+  .top-actions > .premium-btn span { display: none; }
+}
+@media (max-width: 389px) { .brand-name { display: none !important; } }

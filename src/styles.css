@@ -648,6 +648,17 @@ body.doc .top { position: sticky; top: 0; z-index: 5; border-bottom: 1px solid v
 .speed.locked select { pointer-events: none; }
 .sbtn.locked::after { top: -4px; right: -4px; width: 15px; height: 15px; background-size: 8px 8px; }
 .barbar [data-gate].locked::after, .tab-sel-bar [data-gate].locked::after { top: -5px; right: -3px; }
+/* Menos ruído: com rato o cadeado só aparece ao passar por cima (ou com o foco do teclado); num ecrã
+   tátil fica pequeno e esbatido. Carregar num botão bloqueado continua a explicar o que falta. */
+[data-gate].locked::after { transition: opacity .15s ease, transform .15s ease; }
+@media (hover: hover) and (pointer: fine) {
+  [data-gate].locked::after { opacity: 0; transform: scale(.6); }
+  [data-gate].locked:hover::after, [data-gate].locked:focus-visible::after, [data-gate].locked:focus-within::after { opacity: 1; transform: none; }
+}
+@media (hover: none), (pointer: coarse) {
+  [data-gate].locked::after { opacity: .7; transform: scale(.8); }
+}
+@media (prefers-reduced-motion: reduce) { [data-gate].locked::after { transition: none; } }
 
 /* ---------- Botão de conta ---------- */
 .account-btn.signed { border-color: color-mix(in srgb, var(--accent) 45%, var(--line-2)); padding-left: 6px; }

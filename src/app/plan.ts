@@ -41,17 +41,20 @@ export function canSaveSong(plan: PlanState, savedIds: string[], id: string): bo
 
 /**
  * Funções com cadeado:
- * - tools: velocidade, metrónomo e contagem (conta grátis)
- * - notes: escrever notas nos quadrados (conta grátis)
+ * - tools: velocidade, metrónomo e contagem (livres para todos, também sem conta, para se poder
+ *   experimentar a música de exemplo a sério)
+ * - notes: escrever notas nos quadrados (conta grátis: as notas ficam guardadas na conta)
  * - loop (loop geral, praticar uma secção ou um compasso), playalong, solo, learn (Tile by Tile),
  *   expand, pdf, progress, sync: Premium
  * Sem conta só se toca a música de exemplo: tudo o resto pede uma conta.
  */
 export type Feature = 'tools' | 'notes' | 'loop' | 'playalong' | 'solo' | 'learn' | 'expand' | 'pdf' | 'progress' | 'sync';
 export const PREMIUM_ONLY: Feature[] = ['loop', 'playalong', 'solo', 'learn', 'expand', 'pdf', 'progress', 'sync'];
+/** Livres mesmo sem conta. */
+export const ALWAYS_FREE: Feature[] = ['tools'];
 /** 'ok' = pode usar; 'account' = precisa de criar conta; 'premium' = precisa do Premium. */
 export function access(plan: PlanState, f: Feature): 'ok' | 'account' | 'premium' {
-  if (plan.premium) return 'ok';
+  if (plan.premium || ALWAYS_FREE.includes(f)) return 'ok';
   if (plan.kind === 'guest') return 'account';
   return PREMIUM_ONLY.includes(f) ? 'premium' : 'ok';
 }

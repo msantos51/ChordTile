@@ -101,6 +101,14 @@ const CAPTURE = () => {
     await p.selectOption('#speed', '50'); ok(await api(() => window.__apis.at(-1).playbackSpeed) === 0.5, 'speed not applied');
     await p.selectOption('#speed', '100');
   });
+  await test('Guest can use speed, metronome and count-in (no lock)', async () => {
+    ok(!(await p.locator('#speed').isDisabled()), 'speed disabled');
+    for (const id of ['#metroBtn', '#countBtn']) {
+      ok(!(await p.locator(id).evaluate(e => e.classList.contains('locked'))), id + ' locked');
+      await p.click(id); ok(await p.getAttribute(id, 'aria-pressed') === 'true', id + ' not pressed'); await p.click(id);
+    }
+    ok(!(await p.locator('dialog[open]').count()), 'a sign-up prompt opened');
+  });
   await test('Loop, metronome, count-in toggles', async () => {
     if (gated) return 'SKIP: tools are gated for guests in this build (shows sign-up prompt)';
     for (const id of ['#loopBtn', '#metroBtn', '#countBtn']) { await p.click(id); ok(await p.getAttribute(id, 'aria-pressed') === 'true', id + ' not pressed'); await p.click(id); }

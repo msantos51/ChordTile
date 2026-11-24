@@ -35,7 +35,8 @@ describe('planos', () => {
 describe('cadeados', () => {
   it('sem conta: tudo pede conta; conta grátis: velocidade, metrónomo e notas; o resto é Premium', () => {
     const FREE = { kind: 'free' as const, premium: false, until: null }, PRO = { kind: 'yearly' as const, premium: true, until: 1 };
-    expect(access(GUEST, 'tools')).toBe('account');
+    expect(access(GUEST, 'tools')).toBe('ok');
+    expect(access(GUEST, 'notes')).toBe('account');
     expect(access(GUEST, 'expand')).toBe('account');
     expect(access(FREE, 'tools')).toBe('ok');
     expect(access(FREE, 'notes')).toBe('ok');

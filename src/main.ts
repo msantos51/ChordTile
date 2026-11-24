@@ -186,7 +186,15 @@ function renderInfo(name: string) {
   // A música de exemplo é o que se vê ao abrir o site: o separador fica com o título da página inicial.
   document.title = st.isSample ? HOME_TITLE : $('songTitle').textContent + ' · ChordTile';
   renderTrackInfo();
+  updateWelcome();
 }
+// Boas-vindas: só sem conta, com a música de exemplo aberta. Fechar vale para esta visita
+// (sem conta não se guarda nada no browser).
+let welcomeClosed = false;
+function updateWelcome() {
+  $('welcome').hidden = welcomeClosed || !cloudEnabled || plan.kind !== 'guest' || !st.isSample;
+}
+$('welcomeClose').addEventListener('click', () => { welcomeClosed = true; updateWelcome(); });
 const HOME_TITLE = document.title;
 const NOTE_LETTERS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 /** Que tab é (baixo, guitarra…) e a afinação: dependem do instrumento escolhido. */
@@ -1664,7 +1672,7 @@ function setPlan(p: PlanState) {
   $('setPremiumSub').textContent = p.premium ? 'All features unlocked. Thank you!' : 'Try 7 days free: loop, Tile by Tile, every bar up close and more';
   $('premiumBtnText').textContent = p.kind === 'trial' ? planLabel(p).replace('Premium trial · ', 'Trial · ') : p.premium ? 'Premium' : 'Go Premium';
   if (was !== p.premium) { renderProgress(); renderLibrary(); }
-  updateSyncRow(); applyLocks();
+  updateSyncRow(); applyLocks(); updateWelcome();
 }
 async function refreshPlan() {
   if (!account) { setPlan(GUEST); return; }

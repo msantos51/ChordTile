@@ -154,6 +154,19 @@
   <main class="content">
     <div class="content-main">
     <div id="err" hidden class="error"></div>
+    <!-- Boas-vindas para quem chega sem conta: o que é isto e o que fazer (fecha-se; nada fica guardado) -->
+    <aside class="welcome" id="welcome" aria-labelledby="welcomeTitle" hidden>
+      <div class="wl-text">
+        <p class="wl-title" id="welcomeTitle">Your Guitar Pro tabs, ready to practise</p>
+        <p class="wl-long">This is a sample song. Open your own <b>.gp, .gp5, .gpx</b> or <b>MusicXML</b> file to see it like this: synced tab, chords coloured by note, adjustable speed and loops.</p>
+        <p class="wl-short">This is a sample. Open your own Guitar Pro or MusicXML file to see it like this.</p>
+      </div>
+      <div class="wl-actions">
+        <label class="btn primary wl-open" for="fileInput"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg><span>Open your tab file</span></label>
+        <span class="wl-or">or drag it here · <a href="/help#get-files">No file? Where to find one</a></span>
+      </div>
+      <button class="ibtn wl-close" id="welcomeClose" type="button" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </aside>
     <!-- A música aberta: título, tipo de tab (baixo, guitarra…), dados e o instrumento a ver -->
     <section class="song-head" aria-labelledby="songTitle">
       <div class="song">

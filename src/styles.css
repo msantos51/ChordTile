@@ -1360,6 +1360,34 @@ body.learning .learn-cta { display: none; }
   color: var(--accent-text); font: 700 12px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
 #songMeta { margin-top: 8px; font: 500 13px var(--f-mono); }
 #songMeta .sample { margin: 0 10px 0 0; font-family: var(--f-body); }
+/* Boas-vindas (sem conta, música de exemplo) */
+.welcome { position: relative; display: flex; align-items: center; gap: 14px 24px; flex-wrap: wrap; margin-bottom: 18px; padding: 16px 56px 16px 20px;
+  border-radius: var(--r-item); border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  background: linear-gradient(100deg, color-mix(in srgb, var(--accent) 14%, var(--panel)), var(--panel) 70%); }
+.welcome[hidden] { display: none; }
+.welcome .wl-text { flex: 1 1 380px; min-width: 0; }
+.welcome .wl-title { margin: 0 0 4px; font-size: 17px; font-weight: 800; letter-spacing: -.01em; color: var(--ink-strong); }
+.welcome p { margin: 0; font-size: 14px; line-height: 1.45; color: var(--ink-soft); }
+.welcome p b { color: var(--ink); font-weight: 600; }
+.welcome .wl-actions { flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.welcome .wl-open { height: var(--h-ctl-lg); padding-inline: 18px; font-size: 15px; font-weight: 700; cursor: pointer; }
+.welcome .wl-or { font-size: 12px; color: var(--ink-soft); }
+.welcome .wl-or a { color: var(--ink); }
+.welcome .wl-close { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; color: var(--ink-soft); }
+.welcome .wl-close .i { width: 16px; height: 16px; }
+.welcome .wl-short { display: none; }
+.welcome .wl-open span { display: inline; }
+@media (max-width: 600px) {
+  .welcome { padding: 14px 48px 14px 14px; margin-bottom: 12px; gap: 12px; }
+  .welcome .wl-title { font-size: 16px; }
+  .welcome p { font-size: 13px; }
+  .welcome .wl-long { display: none; }
+  .welcome .wl-short { display: block; }
+  .welcome .wl-open { height: var(--h-ctl); font-size: 14px; }
+  .welcome .wl-actions { width: 100%; }
+  .welcome .wl-open { width: 100%; justify-content: center; }
+  .welcome .wl-or { display: none; }
+}
 /* Instrumento: menu pendente junto ao título (escondido quando a música só tem um) */
 .song-head .track-pick { height: var(--h-ctl-lg); padding-left: 14px; font-size: 14px; }
 .song-head .track-pick select { font-size: 14px; font-weight: 600; max-width: 240px; }

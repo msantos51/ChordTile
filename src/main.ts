@@ -6,6 +6,7 @@ import { analyzeBar, isBassTrack, label, sectionsFromScore, type LabelOptions, t
 import { parseScore } from './analysis/parse';
 import { pitchClassesOf } from './app/notes';
 import { exportPdf } from './app/pdf';
+import { fitTabRows } from './app/tab-rows';
 import { DYNAMIC_NAMES, TECH_NAMES, barView, techLegend, type BarView } from './analysis/bar';
 import { Clicker, DEFAULT_METRO_SOUND, METRO_SOUNDS, isMetroSound, nextTickTime, type MetroSound } from './app/metronome';
 import { MetroInjector, type GridSource } from './app/metro-inject';
@@ -45,6 +46,15 @@ const tabLayout = () => {
   const auto = innerWidth < 600 ? { scale: 0.78, barsPerRow: 2 } : { scale: 0.95, barsPerRow: -1 };
   return tabPerRow > 0 ? { ...auto, barsPerRow: tabPerRow } : auto;
 };
+/**
+ * Parte as linhas da tablatura conforme a densidade das notas (compassos cheios de semicolcheias
+ * ficam com mais espaço, em vez de amontoados). Chamar antes de cada desenho; true se mudou algo.
+ */
+function fitRows(): boolean {
+  if (!st.api || !st.score) return false;
+  const t = st.score.tracks[st.viewTrack];
+  return !!t && fitTabRows(t, st.api.settings.display, $('tab').clientWidth);
+}
 
 interface State {
   score: Score | null;
@@ -491,7 +501,7 @@ function setTheme(theme: Theme, keep = true) {
     const res = st.api.settings.display.resources as unknown as Record<string, unknown>;
     for (const [k, v] of Object.entries(TAB_COLORS[theme])) res[k] = at.model.Color.fromJson(v);
     st.api.updateSettings();
-    st.api.render();
+    fitRows(); st.api.render();
   }
 }
 /** Troca de tema com transição: o novo tema abre-se num círculo a partir do botão (onde o browser deixa). */
@@ -528,7 +538,7 @@ input('optColors').addEventListener('change', renderChart);
 select('perRow').addEventListener('change', () => { st.perRow = +select('perRow').value; save(); renderChart(); if (learn.on) renderLearnPath(learnSteps(), learn.step); });
 select('tabPerRow').addEventListener('change', () => {
   tabPerRow = +select('tabPerRow').value; storage.set('mapa:tabPerRow', tabPerRow);
-  if (st.api) { Object.assign(st.api.settings.display, tabLayout()); st.api.updateSettings(); st.api.render(); }
+  if (st.api) { Object.assign(st.api.settings.display, tabLayout()); st.api.updateSettings(); fitRows(); st.api.render(); }
 });
 $('resetBtn').addEventListener('click', () => {
   st.overridesByTrack[st.viewTrack] = {}; st.sections = sectionsFromScore(score()); clearLoop(); save(); renderChart(); toast('Chart reset from the file.');
@@ -921,13 +931,17 @@ function initApi() {
     practice.lastTick = -1;
   });
   // Ao rodar o telemóvel ou mudar o tamanho da janela, ajusta a densidade da tablatura.
-  let lastLayout = JSON.stringify(tabLayout());
+  // A largura também conta para as quebras de linha (fitRows): se mudarem, redesenha.
+  let lastLayout = JSON.stringify(tabLayout()), resizeTimer = 0;
   addEventListener('resize', () => {
-    const now = JSON.stringify(tabLayout());
-    if (now === lastLayout) return;
-    lastLayout = now;
-    Object.assign(a.settings.display, tabLayout());
-    a.updateSettings(); a.render();
+    clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => {
+      const now = JSON.stringify(tabLayout());
+      const layoutChanged = now !== lastLayout;
+      lastLayout = now;
+      if (layoutChanged) { Object.assign(a.settings.display, tabLayout()); a.updateSettings(); }
+      if (fitRows() || layoutChanged) a.render();
+    }, 150);
   });
   a.error.on(e => { $('status').textContent = 'Player error: ' + (e?.message ?? e); });
 }
@@ -968,6 +982,7 @@ function renderTab() {
   const allTab = t.staves.every(s => s.showTablature !== false && s.tuning && s.tuning.length);
   api().settings.display.staveProfile = allTab ? at.StaveProfile.Tab : at.StaveProfile.Default;
   api().updateSettings();
+  fitRows();
   api().renderScore(score(), [st.viewTrack]);
   if (st.ready) applyMute();
 }
@@ -1304,7 +1319,7 @@ function setView(v: View) {
   // As ações do quadrado escolhido (barra de baixo) são do esquema: não ficam a tapar a tablatura.
   if (cur === 'tab') { $('barbar').hidden = true; document.querySelectorAll('.bar.sel').forEach(e => e.classList.remove('sel')); }
   // A tablatura mudou de largura (ou voltou a aparecer): redesenhar e voltar ao compasso atual.
-  if (cur !== 'chart') { st.api?.render(); pendingScroll = true; }
+  if (cur !== 'chart') { fitRows(); st.api?.render(); pendingScroll = true; }
 }
 $('vChart').addEventListener('click', () => setView('chart'));
 $('vTab').addEventListener('click', () => setView('tab'));
@@ -1931,7 +1946,7 @@ function setTabRange(from: number | null, to: number | null = from, draw = true)
   const count = from === null || to === null ? -1 : secEnd(to) - st.sections[from].start;
   if (d.startBar === start && d.barCount === count) return;
   d.startBar = start; d.barCount = count;
-  a.updateSettings(); if (draw) a.render();
+  a.updateSettings(); fitRows(); if (draw) a.render();
 }
 /**
  * O trecho das secções from…to, pronto a tocar (sem começar sozinho). Não fica em loop no leitor: cada volta

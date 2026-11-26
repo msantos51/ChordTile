@@ -194,7 +194,7 @@ O CI (`.github/workflows/ci.yml`: tipos, testes e build) também já não corre 
 Quem cria conta (email e palavra-passe, com "Forgot your password?" por email) pode carregar as suas músicas, que ficam na conta e aparecem em qualquer dispositivo. Sem configuração, o site funciona sem contas (tudo desbloqueado) e a secção de conta não aparece.
 
 1. Cria um projeto em [supabase.com](https://supabase.com) (o plano grátis chega para começar).
-2. No **SQL Editor**, corre por ordem os ficheiros de `supabase/migrations/` (001 a 006: músicas, bucket privado, planos, experiência de 7 dias, limite por conta e `user_data`, contacto, e substituir o ficheiro de uma música já guardada sem contar para o limite).
+2. No **SQL Editor**, corre por ordem os ficheiros de `supabase/migrations/` (001 a 008: músicas, bucket privado, planos, experiência de 7 dias, limite por conta e `user_data`, contacto, e substituir o ficheiro de uma música já guardada sem contar para o limite, limites de `user_data` e experiência de 15 dias).
 3. Em **Authentication → URL Configuration**, põe `https://www.chordtile.com/` em *Site URL* e acrescenta `https://www.chordtile.com/`, `https://www.chordtile.com/account` e `http://localhost:5173/` em *Redirect URLs*.
 4. Põe a *Project URL* e a chave pública (*publishable* ou *anon*) em `.env.production`. Esse ficheiro já tem o projeto do site e é usado no build (`npm run build` e o deploy). Para testar com outro projeto em `npm run dev`, cria um `.env.local` a partir de `.env.example`.
 
@@ -216,7 +216,7 @@ As regras de cada plano estão em `src/app/plan.ts` (o limite de músicas també
 | Tocar, esquema e tablatura | Velocidade, metrónomo, contagem, notas nos compassos | **Tile by Tile**, **loop** (música, secção, compasso), **play along**, **solo** |
 | — | — | **Expandir um compasso**, **PDF do esquema**, **progresso por secção** |
 
-- **Experiência ("reverse trial")**: cada conta nova tem 7 dias de Premium, sem cartão (gatilho em `auth.users`, ver `supabase/migrations/002_entitlements.sql` e `003_trial_7_days.sql`). Depois passa para Free e mantém tudo o que já tinha.
+- **Experiência ("reverse trial")**: cada conta nova tem 15 dias de Premium, sem cartão (gatilho em `auth.users`, ver `supabase/migrations/002_entitlements.sql` e `008_trial_15_days.sql`). Depois passa para Free e mantém tudo o que já tinha.
 - **Preços** (em `src/app/billing.ts`): 3,99 €/mês, 29 €/ano, 49 € vitalício (preço de fundador).
 - **Código**: regras do plano em `src/app/plan.ts`; progresso em `src/app/practice.ts` (testado); pagamentos em `src/app/billing.ts`; função do servidor em `supabase/functions/stripe-webhook`.
 

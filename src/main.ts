@@ -1365,7 +1365,7 @@ let openedAfterSignIn = false;
 function songLimitReached(retry?: () => void) {
   if (plan.kind === 'guest') {
     afterSignIn = retry ?? null;
-    openAuthDialog('signup', 'To load your own songs, create a free account: it keeps up to ' + FREE_SONG_LIMIT + ' songs, and you get 7 days of Premium with everything unlocked.');
+    openAuthDialog('signup', 'To load your own songs, create a free account: it keeps up to ' + FREE_SONG_LIMIT + ' songs, and you get 15 days of Premium with everything unlocked.');
   } else {
     toast('The free plan keeps ' + FREE_SONG_LIMIT + ' songs. Delete one in “My songs” or go Premium for unlimited songs.');
     openPaywall('library');
@@ -1662,7 +1662,7 @@ function gateOk(f: Feature): boolean {
   if (a === 'ok') return true;
   if (a === 'account') {
     const premiumOnly = access({ kind: 'free', premium: false, until: null }, f) === 'premium';
-    openAuthDialog('signup', GATE_NAMES[f] + (premiumOnly ? ' is Premium: create a free account to try it for 7 days.' : ' need a free account.'), welcome);
+    openAuthDialog('signup', GATE_NAMES[f] + (premiumOnly ? ' is Premium: create a free account to try it for 15 days.' : ' need a free account.'), welcome);
   } else openPaywall(f as PaywallReason);
   return false;
 }
@@ -1692,7 +1692,7 @@ function setPlan(p: PlanState) {
   const btn = $('premiumBtn');
   btn.classList.toggle('on', p.premium);
   $('setPremiumText').textContent = p.premium ? planLabel(p) : 'Go Premium';
-  $('setPremiumSub').textContent = p.premium ? 'All features unlocked. Thank you!' : 'Try 7 days free: loop, Tile by Tile, every bar up close and more';
+  $('setPremiumSub').textContent = p.premium ? 'All features unlocked. Thank you!' : 'Try 15 days free: loop, Tile by Tile, every bar up close and more';
   $('premiumBtnText').textContent = p.kind === 'trial' ? planLabel(p).replace('Premium trial · ', 'Trial · ') : p.premium ? 'Premium' : 'Go Premium';
   if (was !== p.premium) { renderProgress(); renderLibrary(); }
   updateSyncRow(); applyLocks(); updateWelcome();

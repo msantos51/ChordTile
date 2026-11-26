@@ -1,11 +1,11 @@
-// Planos: Free (com limites) e Premium (experiência de 7 dias, subscrição ou vitalícia).
+// Planos: Free (com limites) e Premium (experiência de 15 dias, subscrição ou vitalícia).
 // A mesma regra está em supabase/migrations/002_entitlements.sql (private.is_premium), que é
 // quem manda de facto na sincronização; aqui decide só o que o site mostra.
 
 /** Músicas em "My songs": sem conta nenhuma (só se experimenta a música de exemplo), conta grátis 3, Premium sem limite. */
 export const GUEST_SONG_LIMIT = 0;
 export const FREE_SONG_LIMIT = 3;
-export const TRIAL_DAYS = 7;
+export const TRIAL_DAYS = 15;
 
 /** Linha da tabela `entitlements` (datas em milissegundos). */
 export interface Entitlement {

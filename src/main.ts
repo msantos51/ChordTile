@@ -2146,7 +2146,7 @@ $('loRepeat').addEventListener('click', () => {
 });
 $('loNext').addEventListener('click', () => { hideLearnDone(); $('learnNext').click(); });
 
-/** Espreitar a tab (enquanto se carrega no botão) nos passos sem a tab. */
+/** Espreitar a tab nos passos sem a tab (fica aberta até se tocar outra vez em Peek, ou enquanto se carrega). */
 function setPeek(on: boolean) {
   if (learn.peeking === on) return;
   learn.peeking = on;
@@ -2183,7 +2183,7 @@ function showLearnStep() {
     $('learnText').textContent = 'Follow the tab and play along. Each run starts with a count-in and stops at the end. Slow it down with the speed if you need to.';
   } else if (step.kind === 'recall') {
     $('learnTitle').textContent = name + ': play it ' + times + ' without looking at the tab.';
-    $('learnText').innerHTML = 'The tab is hidden: play from the chord tiles. Stuck? Hold <strong>Peek</strong> to see the tab, but that run won’t count. Double-tap a tile to write a reminder (“slide”, “x2”).';
+    $('learnText').innerHTML = 'The tab is hidden: play from the chord tiles. Stuck? Tap <strong>Peek</strong> to see the tab (tap again to hide it), but that run won’t count. Double-tap a tile to write a reminder (“slide”, “x2”).';
   } else {
     $('learnTitle').textContent = name + ': play ' + (to - from === 1 ? 'both' : 'them') + ' ' + times + ' in a row, no tab.';
     $('learnText').textContent = 'Don’t stop between sections: the changes are where it usually breaks.';
@@ -2482,14 +2482,21 @@ $('learnPlay').addEventListener('click', () => {
   if (learn.runs >= learn.target) learn.target = learn.runs + runsGoal(learnSteps(), learn.step);
   learnCountIn();
 });
-// Peek: carregar e manter (rato ou dedo) mostra a tab; ao largar esconde-se. Com o teclado, alterna.
+// Peek: um toque abre a tab e ela fica aberta (dá para a percorrer, mesmo se for grande); outro toque, ou Esc, fecha.
+// Carregar e manter também funciona: mostra enquanto se carrega e esconde ao largar. Com o teclado, alterna.
 {
   const peek = $<HTMLButtonElement>('learnPeek');
-  peek.addEventListener('pointerdown', e => { e.preventDefault(); peek.setPointerCapture(e.pointerId); setPeek(true); });
-  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture'] as const) peek.addEventListener(ev, () => setPeek(false));
+  const HOLD_MS = 350;
+  let downAt = 0, wasOpen = false;
+  peek.addEventListener('pointerdown', e => {
+    e.preventDefault(); peek.setPointerCapture(e.pointerId);
+    downAt = performance.now(); wasOpen = learn.peeking; setPeek(true);
+  });
+  peek.addEventListener('pointerup', () => { if (wasOpen || performance.now() - downAt >= HOLD_MS) setPeek(false); });
+  peek.addEventListener('pointercancel', () => setPeek(false));
   peek.addEventListener('click', e => { if (e.detail === 0) setPeek(!learn.peeking); });
   peek.addEventListener('contextmenu', e => e.preventDefault());
-  peek.addEventListener('blur', () => setPeek(false));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && learn.peeking) { e.preventDefault(); setPeek(false); } });
 }
 
 // Ao abrir: a música de exemplo (?sample); ou a última aberta na conta (em qualquer dispositivo);

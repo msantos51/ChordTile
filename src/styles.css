@@ -959,7 +959,7 @@ body.learning .viewswitch { display: none !important; }
 body.learn-tab .chartcol { display: none !important; }
 body.learn-tab .tabcol { display: block !important; }
 body.learn-tab .cols, body.learn-tiles .cols { grid-template-columns: minmax(0, 1fr); }
-/* Etapas sem a tab: só o esquema. A tab fica desenhada por cima, escondida, e aparece enquanto se carrega em "Peek". */
+/* Etapas sem a tab: só o esquema. A tab fica desenhada por cima, escondida, e aparece ao tocar em "Peek" (dá para a percorrer). */
 body.learn-tiles .chartcol { display: block !important; max-width: 900px; width: 100%; margin: 0 auto; }
 body.learning.learn-tiles .tabcol { display: block !important; position: fixed; z-index: 20; top: auto; left: 50%; width: min(1100px, calc(100vw - 32px));
   bottom: calc(var(--dock-h, 0px) + 16px); transform: translate(-50%, 16px); visibility: hidden; opacity: 0; pointer-events: none;
@@ -967,7 +967,7 @@ body.learning.learn-tiles .tabcol { display: block !important; position: fixed; 
 body.learning.learn-tiles .tabcol .tabpanel { box-shadow: var(--shadow); border: 1px solid var(--accent); }
 body.learning.learn-tiles #tabScroll { max-height: min(55vh, 460px); }
 body.learning.learn-tiles #tab { min-height: 0; }
-body.learning.learn-tiles.peeking .tabcol { visibility: visible; opacity: 1; transform: translate(-50%, 0); transition: opacity .15s, transform .15s; }
+body.learning.learn-tiles.peeking .tabcol { visibility: visible; opacity: 1; pointer-events: auto; transform: translate(-50%, 0); transition: opacity .15s, transform .15s; }
 body.learning .sbtn[aria-label^="Practise"], body.learning .learn-btn { display: none; }
 @media (max-width: 600px) {
   /* Painel compacto: o que se está a aprender (tab ou quadrados) tem de caber no ecrã */

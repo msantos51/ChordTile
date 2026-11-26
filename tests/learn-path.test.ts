@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildSteps, byHeartPct, connectedTo, firstStepOf, isFinal, knownSections, restoreStep, runsGoal, stepRange,
+  buildSteps, byHeartPct, connectedTo, firstStepOf, isFinal, knownSections, restoreStep, runsGoal, savedLearnPct, stepRange,
 } from '../src/app/learn-path';
 
 describe('Tile by Tile: percurso', () => {
@@ -48,5 +48,14 @@ describe('Tile by Tile: percurso', () => {
     expect(restoreStep({ v: 2, step: 99 }, s, 3)).toBe(7);
     expect(restoreStep({ step: 3 }, s, 3)).toBe(firstStepOf(s, 1));
     expect(restoreStep({ step: 6 }, s, 3)).toBe(7);
+  });
+});
+
+describe('% na lista "My songs"', () => {
+  it('nunca aberta: nada; aberta: a % guardada; no fim: 100', () => {
+    expect(savedLearnPct(null)).toBeNull();
+    expect(savedLearnPct({ v: 2, step: 0 })).toBe(0); // guardada antes de haver %
+    expect(savedLearnPct({ v: 2, step: 4, pct: 37.4 })).toBe(37);
+    expect(savedLearnPct({ v: 2, step: 0, done: true })).toBe(100);
   });
 });

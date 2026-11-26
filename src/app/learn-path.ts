@@ -75,7 +75,18 @@ export function byHeartPct(known: boolean[], barsPerSection: number[]): number {
 }
 
 /** O passo guardado na conta. Versão 2 = este percurso; sem versão = o antigo (com a tab · quadrados por secção, e a música no fim). */
-export interface SavedLearn { v?: number; step: number; /** Já se chegou ao fim (a música toda de cor). */ done?: boolean }
+export interface SavedLearn {
+  v?: number; step: number;
+  /** Já se chegou ao fim (a música toda de cor). */ done?: boolean;
+  /** % da música já sabida de cor (para a lista "My songs", sem ter de abrir a música). */ pct?: number;
+}
+/** % a mostrar na lista "My songs": null se a música nunca foi aberta no Tile by Tile. */
+export function savedLearnPct(saved: SavedLearn | null | undefined): number | null {
+  if (!saved || typeof saved !== 'object') return null;
+  if (saved.done) return 100;
+  if (typeof saved.pct === 'number') return Math.max(0, Math.min(100, Math.round(saved.pct)));
+  return typeof saved.step === 'number' ? 0 : null;
+}
 export function restoreStep(saved: SavedLearn | null | undefined, steps: LearnStep[], sections: number): number {
   if (!saved || typeof saved.step !== 'number' || !steps.length) return 0;
   if (saved.v === 2) return Math.max(0, Math.min(Math.round(saved.step), steps.length - 1));

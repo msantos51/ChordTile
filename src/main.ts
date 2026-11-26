@@ -19,7 +19,7 @@ import { openAuthDialog } from './app/auth-ui';
 import { FREE_SONG_LIMIT, GUEST, access, canSaveSong, planLabel, planState, songLimit, type Feature, type PlanState } from './app/plan';
 import { OFFERS, checkoutUrl, paymentsEnabled } from './app/billing';
 import { addLoop, addTime, isMastered, progressText, type SongProgress } from './app/practice';
-import { buildSteps, byHeartPct, firstStepOf, isFinal, knownSections, restoreStep, runsGoal, stepRange, stepSection, type LearnStep, type SavedLearn } from './app/learn-path';
+import { buildSteps, byHeartPct, firstStepOf, isFinal, knownSections, restoreStep, runsGoal, savedLearnPct, stepRange, stepSection, type LearnStep, type SavedLearn } from './app/learn-path';
 import { readLegacyData, readLegacySongs, relativeDay, wipeLegacy, type SongMeta } from './app/library';
 import { TAB_COLORS, applyTheme, currentTheme, savedTheme, type Theme } from './app/theme';
 import { attachAccount, detachAccount, flush, flushOnExit, isHydrated, mergeRemote, store } from './app/user-store';
@@ -1412,6 +1412,13 @@ async function renderLibrary() {
     const t = document.createElement('span'); t.className = 'lib-title'; t.textContent = song.title;
     const m = document.createElement('span'); m.className = 'lib-meta';
     m.textContent = [song.artist, song.bars + ' bars', 'opened ' + relativeDay(song.openedAt)].filter(Boolean).join(' · ');
+    // Aberta no Tile by Tile: quanto da música já se sabe de cor
+    const pct = savedLearnPct(storage.get<SavedLearn>('mapa:learn:' + song.id));
+    if (pct !== null) {
+      const lp = document.createElement('span'); lp.className = 'lib-learn' + (pct === 100 ? ' done' : '');
+      lp.textContent = pct + '% learned'; lp.title = 'Tile by Tile: ' + pct + '% of the song with no tab';
+      m.prepend(lp);
+    }
     if (cur) { const now = document.createElement('span'); now.className = 'lib-now'; now.textContent = 'Open'; m.prepend(now); }
     txt.append(t, m); open.append(ic, txt);
     if (cur) open.setAttribute('aria-current', 'true');
@@ -2160,7 +2167,7 @@ function showLearnStep() {
   const steps = learnSteps();
   const i = (learn.step = Math.max(0, Math.min(learn.step, steps.length - 1)));
   const step = steps[i], final = isFinal(steps, i), goal = runsGoal(steps, i);
-  storage.set(learnKey(), { v: 2, step: i } satisfies SavedLearn);
+  storage.set(learnKey(), { v: 2, step: i, pct: byHeartPct(knownSections(steps, i), secBars()) } satisfies SavedLearn);
   learn.runs = 0; learn.target = goal; learn.peeked = false; setPeek(false);
   cancelLearnCount(); hideLearnDone();
   const b = document.body, noTab = step.kind !== 'learn';
@@ -2246,6 +2253,8 @@ $('learnCtaFold').addEventListener('click', () => {
 function updateLearnCta() {
   if (!st.score) return;
   const { saved, step, bars, known, next, pct, nextName } = learnProgress();
+  // Guardado antes de haver a % na lista "My songs": acrescenta-a agora que se sabe as secções
+  if (saved && typeof saved.pct !== 'number' && !st.isSample) storage.set(learnKey(), { ...saved, pct });
   const track = $('learnCtaTrack');
   track.replaceChildren(...learnSegs(known, next, bars));
   const count = known.filter(Boolean).length;
@@ -2470,7 +2479,7 @@ $('learnBack').addEventListener('click', () => goLearnStep(learn.step - 1));
 $('learnNext').addEventListener('click', () => {
   if (learn.step >= learnSteps().length - 1) {
     toast('You can play “' + ($('songTitle').textContent || 'the song') + '” with no tab. Well done!');
-    storage.set(learnKey(), { v: 2, step: 0, done: true } satisfies SavedLearn); exitLearn(); return;
+    storage.set(learnKey(), { v: 2, step: 0, done: true, pct: 100 } satisfies SavedLearn); exitLearn(); return;
   }
   goLearnStep(learn.step + 1);
 });
